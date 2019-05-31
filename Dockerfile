@@ -24,5 +24,7 @@ ADD composer.local.json .
 RUN php composer.phar update --no-dev
 
 RUN cd extensions && set -ex; \
-  git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-Variables.git; \
-  git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-EditSubpages.git;
+  git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-Variables.git Variables \
+  ; \
+  git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-EditSubpages.git EditSubpages \
+  ;
