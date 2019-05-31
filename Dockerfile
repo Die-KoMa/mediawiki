@@ -27,4 +27,6 @@ RUN cd extensions && set -ex; \
   git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-Variables.git Variables \
   ; \
   git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-EditSubpages.git EditSubpages \
+  ; \
+  git clone --branch ${MW_VERSION} https://github.com/wikimedia/mediawiki-extensions-UserMerge.git UserMerge \
   ;
