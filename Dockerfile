@@ -20,3 +20,5 @@ RUN docker-php-ext-install zip
 
 ADD composer.local.json .
 RUN php composer.phar update --no-dev
+
+RUN git clone https://github.com/wikimedia/mediawiki-extensions-Variables.git --branch REL1_28 extensions/Variables
