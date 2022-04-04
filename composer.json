@@ -67,8 +67,7 @@
 		"wikimedia/wait-condition-loop": "1.0.1",
 		"wikimedia/wrappedstring": "3.2.0",
 		"wikimedia/xmp-reader": "0.7.0",
-		"zordius/lightncandy": "1.2.5",
-		"stephank/composer-plugin-nixify": "^1.1"
+		"zordius/lightncandy": "1.2.5"
 	},
 	"require-dev": {
 		"ext-simplexml": "*",

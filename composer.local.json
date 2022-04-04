@@ -2,6 +2,7 @@
     "require": {
         "mediawiki/semantic-media-wiki": "~4.0",
         "mediawiki/semantic-result-formats": "~4.0",
-        "mediawiki/page-forms": "~5.0 "
+        "mediawiki/page-forms": "~5.0 ",
+        "stephank/composer-plugin-nixify": "^1.1"
     }
 }
