@@ -8,7 +8,7 @@
     let
       pkgs = import nixpkgs { system = "x86_64-linux"; };
       composer = pkgs.phpPackages.composer;
-      upgrade = pkgs.writeScript "mw-upgrade" ''
+      upgrade = pkgs.writeShellScript "mw-upgrade" ''
         set -euo pipefail
         if [[ $# -ne 1 ]]; then
           echo "usage: $0 <RELEASE_BRANCH>"
@@ -17,10 +17,10 @@
         ${pkgs.curl}/bin/curl https://raw.githubusercontent.com/wikimedia/mediawiki/$1/composer.json -o composer.json
         ${pkgs.git}/bin/git add composer.json
       '';
-      update = pkgs.writeScript "composer-update" ''
+      update = pkgs.writeShellScript "composer-update" ''
         ${composer}/bin/composer update --no-dev
       '';
-      nixify = pkgs.writeScript "composer-nixify" ''
+      nixify = pkgs.writeShellScript "composer-nixify" ''
         ${composer}/bin/composer nixify
       '';
     in
