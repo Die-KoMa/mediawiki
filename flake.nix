@@ -9,11 +9,12 @@
       pkgs = import nixpkgs { system = "x86_64-linux"; };
       composer = pkgs.phpPackages.composer;
       upgrade = pkgs.writeScript "mw-upgrade" ''
+        set -euo pipefail
         if [[ $# -ne 1 ]]; then
           echo "usage: $0 <RELEASE_BRANCH>"
           exit 1
         fi
-        ${pkgs.curl}/bin/curl https://raw.githubusercontent.com/wikimedia/mediawiki/$1/composer.json > composer.json
+        ${pkgs.curl}/bin/curl https://raw.githubusercontent.com/wikimedia/mediawiki/$1/composer.json -o composer.json
         ${pkgs.git}/bin/git add composer.json
       '';
       update = pkgs.writeScript "composer-update" ''
