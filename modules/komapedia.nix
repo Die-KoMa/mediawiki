@@ -98,7 +98,7 @@ with lib; {
       '';
 
     in
-    mkIf config.koma.komapedia.enable
+    mkIf config.die-koma.komapedia.enable
       {
         services = {
           mediawiki = rec {
