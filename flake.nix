@@ -40,6 +40,6 @@
         pkgs.mkShell {
           nativeBuildInputs = [ composer ];
         };
-
+      nixosModules.komapedia = import ./modules/komapedia.nix;
     };
 }
