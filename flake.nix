@@ -26,7 +26,7 @@
     in
     {
       overlay = final: prev: {
-        komapedia-mediawiki = final.pkgs.callPackage ./composer-project.nix { };
+        komapedia-mediawiki = final.pkgs.callPackage ./composer-project.nix { } ./.;
       };
 
       apps.x86_64-linux = {
@@ -40,6 +40,7 @@
         pkgs.mkShell {
           nativeBuildInputs = [ composer ];
         };
+      packages.x86_64-linux.komapedia-mediawiki = pkgs.callPackage ./composer-project.nix { } ./.;
       nixosModules.komapedia = import ./modules/komapedia.nix;
     };
 }
