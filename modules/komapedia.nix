@@ -113,12 +113,12 @@ with lib; {
             };
           };
           httpd = {
-            enable = mkForce 75 false;
-            virtualHosts.${cfg.virtualHost.hostName} = mkForce 75 null;
+            enable = mkOverride 75 false;
+            virtualHosts.${cfg.virtualHost.hostName} = mkOverride 75 null;
           };
         };
 
-        systemd.services.mediawiki-init.script = mkForce 75 ''
+        systemd.services.mediawiki-init.script = mkOverride 75 ''
           ${pkgs.php}/bin/php ${pkg}/share/mediawiki/maintenance/update.php --conf ${mediawikiConfig} --quick
         '';
       };
