@@ -6,10 +6,12 @@ with lib; {
     hostName = mkOption {
       type = types.str;
       description = "Hostname for the MediaWiki";
+      default = "de.komapedia.org";
     };
     adminAddr = mkOption {
       type = types.str;
       description = "Mail address for the admin user";
+      default = "homepage@die-koma.org";
     };
   };
 
