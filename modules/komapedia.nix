@@ -19,6 +19,9 @@ with lib; {
     let
       cfg = config.services.mediawiki;
 
+      cacheDir = "/var/cache/mediawiki";
+      stateDir = "/var/lib/mediawiki";
+
       mediawikiConfig = pkgs.writeText "LocalSettings.php" ''
         <?php
           # Protect against web entry
