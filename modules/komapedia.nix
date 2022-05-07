@@ -1,7 +1,17 @@
 { config, pkgs, lib, ... }:
 
 with lib; {
-  options.die-koma.komapedia.enable = mkEnableOption "Configure the KoMaPedia MediaWiki";
+  options.die-koma.komapedia = {
+    enable = mkEnableOption "Configure the KoMaPedia MediaWiki";
+    hostName = mkOption {
+      type = types.str;
+      description = "Hostname for the MediaWiki";
+    };
+    adminAddr = mkOption {
+      type = types.str;
+      description = "Mail address for the admin user";
+    };
+  };
 
   config =
     let
@@ -22,7 +32,7 @@ with lib; {
           ## https://www.mediawiki.org/wiki/Manual:Short_URL
           $wgScriptPath = "";
           ## The protocol and server name to use in fully-qualified URLs
-          $wgServer = "${if cfg.virtualHost.addSSL || cfg.virtualHost.forceSSL || cfg.virtualHost.onlySSL then "https" else "http"}://${cfg.virtualHost.hostName}";
+          $wgServer = "https://${config.die-koma.komapedia.hostName}";
           ## The URL path to static resources (images, scripts, etc.)
           $wgResourceBasePath = $wgScriptPath;
           ## The URL path to the logo.  Make sure you change this from the default,
@@ -31,7 +41,7 @@ with lib; {
           ## UPO means: this is also a user preference option
           $wgEnableEmail = true;
           $wgEnableUserEmail = true; # UPO
-          $wgEmergencyContact = "${if cfg.virtualHost.adminAddr != null then cfg.virtualHost.adminAddr else config.services.httpd.adminAddr}";
+          $wgEmergencyContact = "${config.die-koma.komapedia.adminAddr}";
           $wgPasswordSender = $wgEmergencyContact;
           $wgEnotifUserTalk = false; # UPO
           $wgEnotifWatchlist = false; # UPO
