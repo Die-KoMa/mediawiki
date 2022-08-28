@@ -89,8 +89,9 @@
           cp --recursive --reflink=auto ${src} $out
         '';
       };
+    packages = {inherit php71 komapedia-mediawiki;};
   in {
-    overlays.default = final: prev: {inherit komapedia-mediawiki;};
+    overlays.default = final: prev: packages;
 
     apps.x86_64-linux = let
       update = {
@@ -115,7 +116,7 @@
     };
     devShells.x86_64-linux.default =
       pkgs.mkShell {nativeBuildInputs = [composer1 composer2];};
-    packages.x86_64-linux = {inherit php71 komapedia-mediawiki;};
+    packages.x86_64-linux = packages;
     nixosModules.komapedia = import ./modules/komapedia.nix;
     formatter.x86_64-linux = pkgs.alejandra;
   };
