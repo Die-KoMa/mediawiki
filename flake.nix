@@ -69,11 +69,15 @@
         head
       ];
     in
-      pkgs.stdenv.mkDerivation {
+      pkgs.stdenv.mkDerivation rec {
         pname = "KoMapedia mediawiki";
         inherit version;
 
         src = ./mediawiki;
+
+        installPhase = ''
+          cp --recursive --reflink=auto ${src} $out
+        '';
       };
   in {
     overlay = final: prev: {inherit komapedia-mediawiki;};
