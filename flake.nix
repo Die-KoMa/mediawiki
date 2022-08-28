@@ -12,7 +12,17 @@
     system = "x86_64-linux";
 
     pkgs = import nixpkgs {inherit system;};
-    composer1 = (import legacy-packages {inherit system;}).phpPackages.composer;
+    legacyPkgs = import legacy-packages {inherit system;};
+    php71 = legacyPkgs.php72.overrideAttrs (oldAttrs: rec {
+      name = "php-7.1.33";
+      version = "7.1.33";
+      sha256 = "0jsgiwawlais8s1l38lz51h1x2ci5ildk0ksfdmkg6xpwbrfb9cm";
+      src = builtins.fetchurl {
+        url = "https://www.php.net/distributions/php-${version}.tar.bz2";
+        inherit sha256;
+      };
+    });
+    composer1 = legacyPkgs.phpPackages.composer;
     composer2 = pkgs.phpPackages.composer;
     git = pkgs.git;
 
@@ -80,7 +90,7 @@
         '';
       };
   in {
-    overlay = final: prev: {inherit komapedia-mediawiki;};
+    overlays.default = final: prev: {inherit komapedia-mediawiki;};
 
     apps.x86_64-linux = let
       update = {
@@ -103,9 +113,9 @@
       };
       default = update;
     };
-    devShell.x86_64-linux =
+    devShells.x86_64-linux.default =
       pkgs.mkShell {nativeBuildInputs = [composer1 composer2];};
-    packages.x86_64-linux = {inherit komapedia-mediawiki;};
+    packages.x86_64-linux = {inherit php71 komapedia-mediawiki;};
     nixosModules.komapedia = import ./modules/komapedia.nix;
     formatter.x86_64-linux = pkgs.alejandra;
   };

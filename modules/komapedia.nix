@@ -153,7 +153,7 @@ with lib; {
       };
 
       systemd.services.mediawiki-init.script = mkOverride 75 ''
-        ${pkgs.php}/bin/php ${config.services.mediawiki.package}/share/mediawiki/maintenance/update.php --conf ${mediawikiConfig} --quick
+        ${pkgs.php71}/bin/php ${config.services.mediawiki.package}/share/mediawiki/maintenance/update.php --conf ${mediawikiConfig} --quick
       '';
     };
 }
