@@ -25,7 +25,7 @@
       fi
 
       COMPOSER=${composer2}
-      for legacy in "REL1_28"; do
+      for legacy in "REL1_28" "REL1_29" "REL1_30" "REL1_31" "REL1_32" "REL1_33" "REL1_34"; do
         if [[ "$1" == "$legacy" ]]; then
           COMPOSER=${composer1}
         fi
