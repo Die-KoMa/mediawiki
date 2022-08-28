@@ -137,7 +137,9 @@ with lib; {
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
+        phpfpm.pools.mediawiki.phpPackage = pkgs.php71;
         mediawiki = rec {
+          enable = true;
           package = pkgs.komapedia-mediawiki;
           extensions = pipe "${package}/extensions" [
             builtins.readDir
