@@ -1,46 +1,84 @@
 {
-  inputs =
-    {
-      nixpkgs.url = github:NixOS/nixpkgs/nixos-21.11;
-    };
+  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05"; };
 
   outputs = { self, nixpkgs }:
     let
       pkgs = import nixpkgs { system = "x86_64-linux"; };
       composer = pkgs.phpPackages.composer;
-      upgrade = pkgs.writeShellScript "mw-upgrade" ''
+      git = pkgs.git;
+
+      upgradeScript = pkgs.writeShellScript "mw-upgrade" ''
         set -euo pipefail
         if [[ $# -ne 1 ]]; then
+          echo "Upgrade mediawiki tree using the given upstream release branch"
           echo "usage: $0 <RELEASE_BRANCH>"
           exit 1
         fi
-        ${pkgs.curl}/bin/curl https://raw.githubusercontent.com/wikimedia/mediawiki/$1/composer.json -o composer.json
-        ${pkgs.git}/bin/git add composer.json
-      '';
-      update = pkgs.writeShellScript "composer-update" ''
-        ${composer}/bin/composer update --no-dev
-      '';
-      nixify = pkgs.writeShellScript "composer-nixify" ''
-        ${composer}/bin/composer nixify
-      '';
-    in
-    {
-      overlay = final: prev: {
-        komapedia-mediawiki = final.pkgs.callPackage ./composer-project.nix { } ./.;
-      };
 
-      apps.x86_64-linux = {
-        upgrade = { type = "app"; program = "${upgrade}"; };
-        update = { type = "app"; program = "${update}"; };
-        nixify = { type = "app"; program = "${nixify}"; };
-        composer = { type = "app"; program = "${composer}/bin/composer"; };
+        echo "Upgrade mediawiki tree using upstream release branch \`$1'"
+        ${git}/bin/git rm -rf --ignore-unmatch mediawiki
+        rm -rf mediawiki
+        ${git}/bin/git clone --depth 1 --recurse-submodules -b $1 -- https://github.com/wikimedia/mediawiki.git mediawiki
+        cp composer.local.json mediawiki
+        pushd mediawiki
+        ${composer}/bin/composer update --no-dev
+        ${composer}/bin/composer dump-autoload
+        popd
+        find mediawiki -name .git -exec rm -rf {} +
+        ${git}/bin/git add mediawiki
+      '';
+
+      updateScript = pkgs.writeShellScript "composer-update" ''
+        echo "Running \`composer update' in mediawiki tree"
+        pushd mediawiki
+        ${composer}/bin/composer update --no-dev
+        ${composer}/bin/composer dump-autoloads
+        popd
+        ${git}/bin/git add mediawiki
+      '';
+
+      komapedia-mediawiki = let
+        inherit (pkgs.lib) attrNames filter filterAttrs hasPrefix head pipe;
+        inherit (builtins) elemAt match readDir;
+
+        version = pipe ./mediawiki [
+          readDir
+          (filterAttrs (name: _type: hasPrefix "RELEASE-NOTES-" name))
+          attrNames
+          (map (name:
+            builtins.match "^RELEASE-NOTES-([[:digit:]]+\\.[[:digit:]]+)$"
+            name))
+          (filter (elt: !isNull elt))
+          head
+          head
+        ];
+      in pkgs.stdenv.mkDerivation {
+        pname = "KoMapedia mediawiki";
+        inherit version;
+
+        src = ./mediawiki;
       };
-      defaultApp.x86_64-linux = self.apps.x86_64-linux.nixify;
-      devShell.x86_64-linux =
-        pkgs.mkShell {
-          nativeBuildInputs = [ composer ];
+    in {
+      overlay = final: prev: { inherit komapedia-mediawiki; };
+
+      apps.x86_64-linux = rec {
+        upgrade = {
+          type = "app";
+          program = "${upgradeScript}";
         };
-      packages.x86_64-linux.komapedia-mediawiki = pkgs.callPackage ./composer-project.nix { } ./.;
+        update = {
+          type = "app";
+          program = "${updateScript}";
+        };
+        composer = {
+          type = "app";
+          program = "${composer}/bin/composer";
+        };
+        default = update;
+      };
+      devShell.x86_64-linux =
+        pkgs.mkShell { nativeBuildInputs = [ composer ]; };
+      packages.x86_64-linux = { inherit komapedia-mediawiki; };
       nixosModules.komapedia = import ./modules/komapedia.nix;
     };
 }

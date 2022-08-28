@@ -2,3 +2,4 @@
 /vendor/
 /extensions/
 *~
+/mediawiki/**/.git
