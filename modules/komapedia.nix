@@ -150,7 +150,7 @@ with lib; {
           extensions = pipe "${package}/share/mediawiki/extensions" [
             builtins.readDir
             (filterAttrs (key: val: !hasPrefix "." key && val == "directory"))
-            (mapAttrs (_: null))
+            (mapAttrs (_: _: null))
           ];
           skins.VectorV2 = "${cfg.package}/share/mediawiki/skins/VectorV2";
           database = {createLocally = mkDefault false;};
