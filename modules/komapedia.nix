@@ -153,6 +153,9 @@ with lib; {
             (mapAttrs (_: null))
           ];
           database = {createLocally = mkDefault false;};
+          virtualHost = {
+            inherit (config.die-koma.komapedia) hostName adminAddr;
+          };
         };
         httpd = {
           enable = mkOverride 75 false;
