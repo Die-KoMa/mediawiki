@@ -44,9 +44,18 @@
       echo "Upgrade mediawiki tree using upstream release branch \`$1'"
       ${git}/bin/git rm -rf --ignore-unmatch mediawiki
       rm -rf mediawiki
-      ${git}/bin/git clone --depth 1 --recurse-submodules -b $1 -- https://github.com/wikimedia/mediawiki.git mediawiki
+      ${git}/bin/git clone --depth 1 \
+        --recurse-submodules \
+        --branch $1 -- https://github.com/wikimedia/mediawiki.git mediawiki
       cp composer.local.json mediawiki
       pushd mediawiki
+      rm -rf skins
+      ${git}/bin/git clone --depth 1 \
+        --recurse-submodules=Vector \
+        --recurse-submodules=VectorV2 \
+        --recurse-submodules=Timeless \
+        --recurse-submodules=Monobook \
+        --branch $1 -- https://github.com/wikimedia/mediawiki-skins.git skins
       $COMPOSER/bin/composer update --no-dev
       $COMPOSER/bin/composer dump-autoload
       popd
@@ -86,7 +95,8 @@
         src = ./mediawiki;
 
         installPhase = ''
-          cp --recursive --reflink=auto ${src} $out
+          mkdir -p $out/share/mediawiki
+          cp --recursive --reflink=auto ${src} $out/share/mediawiki
         '';
       };
     packages = {inherit php71 komapedia-mediawiki;};
