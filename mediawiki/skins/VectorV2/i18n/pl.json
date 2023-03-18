@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Chrumps"
+		]
+	},
+	"vectorv2-skin-desc": "Odświeżona wersja skórki Książka, z nowym wyglądem i usprawnieniami",
+	"vectorv2-action-addsection": "Dodaj wątek",
+	"vectorv2-action-delete": "Usuń",
+	"vectorv2-action-move": "Przenieś",
+	"vectorv2-action-protect": "Zabezpiecz",
+	"vectorv2-action-undelete": "Odtwórz",
+	"vectorv2-action-unprotect": "Zmień zabezpieczenie",
+	"vectorv2-view-create": "Utwórz",
+	"vectorv2-view-edit": "Edytuj",
+	"vectorv2-view-history": "Wyświetl historię",
+	"vectorv2-view-view": "Czytaj",
+	"vectorv2-view-viewsource": "Pokaż źródło",
+	"vectorv2-more-actions": "Więcej"
+}

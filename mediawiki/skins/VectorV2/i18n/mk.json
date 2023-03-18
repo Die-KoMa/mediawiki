@@ -1,0 +1,23 @@
+{
+	"@metadata": {
+		"authors": [
+			"Bjankuloski06"
+		]
+	},
+	"skinname-vectorv2": "Векторско В2",
+	"vectorv2-skin-desc": "Современа верзија на рувото „МоноБук“ со свеж изглед и многу подобрувања на употребливоста",
+	"vectorv2.css": "/* Тука поставениот CSS се однесува на корисниците на рувото „Векторско В2“ */",
+	"vectorv2.js": "/* Тука поставениот JavaScript  ќе им се вчитува на корисниците што го користат рувото „Векторско В2“ */",
+	"vectorv2-action-addsection": "Додај тема",
+	"vectorv2-action-delete": "Избриши",
+	"vectorv2-action-move": "Премести",
+	"vectorv2-action-protect": "Заштити",
+	"vectorv2-action-undelete": "Врати",
+	"vectorv2-action-unprotect": "Измени заштита",
+	"vectorv2-view-create": "Создај",
+	"vectorv2-view-edit": "Уреди",
+	"vectorv2-view-history": "Историја",
+	"vectorv2-view-view": "Читај",
+	"vectorv2-view-viewsource": "Извор",
+	"vectorv2-more-actions": "Повеќе"
+}

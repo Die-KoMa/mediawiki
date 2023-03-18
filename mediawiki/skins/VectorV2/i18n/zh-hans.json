@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Liuxinyu970226"
+		]
+	},
+	"vectorv2-skin-desc": "提供清新的外观和许多可用性改进的现代版MonoBook",
+	"vectorv2-action-addsection": "添加话题",
+	"vectorv2-action-delete": "删除",
+	"vectorv2-action-move": "移动",
+	"vectorv2-action-protect": "保护",
+	"vectorv2-action-undelete": "还原",
+	"vectorv2-action-unprotect": "更改保护",
+	"vectorv2-view-create": "创建",
+	"vectorv2-view-edit": "编辑",
+	"vectorv2-view-history": "查看历史",
+	"vectorv2-view-view": "阅读",
+	"vectorv2-view-viewsource": "查看源代码",
+	"vectorv2-more-actions": "更多"
+}

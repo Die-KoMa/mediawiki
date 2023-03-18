@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Liuxinyu970226",
+			"Wehwei"
+		]
+	},
+	"vectorv2-skin-desc": "有著新穎外觀與許多使用性改進的現代版 MonoBook",
+	"vectorv2-action-addsection": "新增話題",
+	"vectorv2-action-delete": "刪除",
+	"vectorv2-action-move": "移動",
+	"vectorv2-action-protect": "保護",
+	"vectorv2-action-undelete": "取消刪除",
+	"vectorv2-action-unprotect": "變更保護",
+	"vectorv2-view-create": "建立",
+	"vectorv2-view-edit": "編輯",
+	"vectorv2-view-history": "檢視歷史",
+	"vectorv2-view-view": "閱讀",
+	"vectorv2-view-viewsource": "檢視原始碼",
+	"vectorv2-more-actions": "更多"
+}

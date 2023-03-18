@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Jon Harald Søby"
+		]
+	},
+	"vectorv2-skin-desc": "Moderne versjon av Monobook med et friskt utseende og mange brukervenlighetsforbedringer",
+	"vectorv2-action-addsection": "Legg til emne",
+	"vectorv2-action-delete": "Slett",
+	"vectorv2-action-move": "Flytt",
+	"vectorv2-action-protect": "Beskytt",
+	"vectorv2-action-undelete": "Gjenopprett",
+	"vectorv2-action-unprotect": "Endre beskyttelse",
+	"vectorv2-view-create": "Opprett",
+	"vectorv2-view-edit": "Rediger",
+	"vectorv2-view-history": "Vis historikk",
+	"vectorv2-view-view": "Les",
+	"vectorv2-view-viewsource": "Vis kilde",
+	"vectorv2-more-actions": "Mer"
+}

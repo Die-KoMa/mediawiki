@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Guycn2"
+		]
+	},
+	"vectorv2-skin-desc": "גרסה מודרנית של העיצוב \"מונובוק\" עם מראה רענן ושיפורי שמישות רבים",
+	"vectorv2-action-addsection": "פסקה חדשה",
+	"vectorv2-action-delete": "מחיקה",
+	"vectorv2-action-move": "העברה",
+	"vectorv2-action-protect": "הגנה",
+	"vectorv2-action-undelete": "שחזור",
+	"vectorv2-action-unprotect": "שינוי הגנה",
+	"vectorv2-view-create": "יצירה",
+	"vectorv2-view-edit": "עריכה",
+	"vectorv2-view-history": "גרסאות קודמות",
+	"vectorv2-view-view": "קריאה",
+	"vectorv2-view-viewsource": "הצגת מקור",
+	"vectorv2-more-actions": "עוד"
+}

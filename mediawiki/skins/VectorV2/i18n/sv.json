@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"WikiPhoenix"
+		]
+	},
+	"vectorv2-skin-desc": "Modern version av MonoBook med ett nytt utseende och flera användarvänlighetsförbättringar",
+	"vectorv2-action-addsection": "Lägg till ämne",
+	"vectorv2-action-delete": "Radera",
+	"vectorv2-action-move": "Flytta",
+	"vectorv2-action-protect": "Skydda",
+	"vectorv2-action-undelete": "Återställ",
+	"vectorv2-action-unprotect": "Ändra skydd",
+	"vectorv2-view-create": "Skapa",
+	"vectorv2-view-edit": "Redigera",
+	"vectorv2-view-history": "Visa historik",
+	"vectorv2-view-view": "Läs",
+	"vectorv2-view-viewsource": "Visa källa",
+	"vectorv2-more-actions": "Mer"
+}

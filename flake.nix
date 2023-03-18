@@ -54,7 +54,7 @@
         --recurse-submodules=Vector \
         --recurse-submodules=VectorV2 \
         --recurse-submodules=Timeless \
-        --recurse-submodules=Monobook \
+        --recurse-submodules=MonoBook \
         --branch $1 -- https://github.com/wikimedia/mediawiki-skins.git skins
       $COMPOSER/bin/composer update --no-dev
       $COMPOSER/bin/composer dump-autoload

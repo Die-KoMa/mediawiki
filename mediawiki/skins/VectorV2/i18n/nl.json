@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": [
+			"Sjoerddebruin"
+		]
+	},
+	"vectorv2-action-addsection": "Onderwerp toevoegen",
+	"vectorv2-action-delete": "Verwijderen",
+	"vectorv2-action-move": "Hernoemen",
+	"vectorv2-action-protect": "Beveiligen",
+	"vectorv2-action-undelete": "Terugplaatsen",
+	"vectorv2-action-unprotect": "Beveiliging wijzigen",
+	"vectorv2-view-create": "Aanmaken",
+	"vectorv2-view-edit": "Bewerken",
+	"vectorv2-view-history": "Geschiedenis weergeven",
+	"vectorv2-view-view": "Lezen",
+	"vectorv2-view-viewsource": "Brontekst bekijken",
+	"vectorv2-more-actions": "Meer"
+}

@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Otokoume",
+			"Fryed-peach"
+		]
+	},
+	"vectorv2-skin-desc": "新しい外観と多くのユーザビリティ上の改善を含んだ、現代的なバージョンのモノブック",
+	"vectorv2-action-addsection": "話題を追加",
+	"vectorv2-action-delete": "削除",
+	"vectorv2-action-move": "移動",
+	"vectorv2-action-protect": "保護",
+	"vectorv2-action-undelete": "復元",
+	"vectorv2-action-unprotect": "保護を変更",
+	"vectorv2-view-create": "作成",
+	"vectorv2-view-edit": "編集",
+	"vectorv2-view-history": "履歴を表示",
+	"vectorv2-view-view": "閲覧",
+	"vectorv2-view-viewsource": "ソースを表示",
+	"vectorv2-more-actions": "その他"
+}

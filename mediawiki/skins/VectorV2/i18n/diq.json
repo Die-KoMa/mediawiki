@@ -1,0 +1,22 @@
+{
+	"@metadata": {
+		"authors": [
+			"Kumkumuk",
+			"Mirzali",
+			"Asmen"
+		]
+	},
+	"vectorv2-skin-desc": "Asayışo de newe be versiyonê MonoBookiyo modern ra û weşkerdışê ke şenê bıgureniyê",
+	"vectorv2-action-addsection": "Mewzu dek",
+	"vectorv2-action-delete": "Bestere",
+	"vectorv2-action-move": "Bıkırışe",
+	"vectorv2-action-protect": "Bısıtarne",
+	"vectorv2-action-undelete": "Peyser biya",
+	"vectorv2-action-unprotect": "Sıtarnayışi bıvurne",
+	"vectorv2-view-create": "Vıraze",
+	"vectorv2-view-edit": "Bıvurne",
+	"vectorv2-view-history": "Verori bıvêne",
+	"vectorv2-view-view": "Bıwane",
+	"vectorv2-view-viewsource": "Çımey bıvêne",
+	"vectorv2-more-actions": "Tayêna"
+}

@@ -1,0 +1,23 @@
+{
+	"@metadata": {
+		"authors": [
+			"Minh Nguyen"
+		]
+	},
+	"skinname-vectorv2": "Vectơ V2",
+	"vectorv2-skin-desc": "Giao diện làm lại từ MonoBook có màu tươi và khả dụng hơn",
+	"vectorv2.css": "/* Mã CSS đặt ở đây sẽ ảnh hưởng đến thành viên sử dụng giao diện Vectơ V2 */",
+	"vectorv2.js": "/* Mã JavaScript tại đây sẽ được tải khi người dùng sử dụng giao diện Vectơ V2 */",
+	"vectorv2-action-addsection": "Thêm đề tài",
+	"vectorv2-action-delete": "Xóa",
+	"vectorv2-action-move": "Di chuyển",
+	"vectorv2-action-protect": "Khóa",
+	"vectorv2-action-undelete": "Phục hồi",
+	"vectorv2-action-unprotect": "Đổi mức khóa",
+	"vectorv2-view-create": "Tạo",
+	"vectorv2-view-edit": "Sửa đổi",
+	"vectorv2-view-history": "Xem lịch sử",
+	"vectorv2-view-view": "Đọc",
+	"vectorv2-view-viewsource": "Xem mã nguồn",
+	"vectorv2-more-actions": "Khác"
+}

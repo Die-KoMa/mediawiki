@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Vitorvicentevalente",
+			"Hamilton Abreu"
+		]
+	},
+	"vectorv2-skin-desc": "Versão moderna do Monobook com aspecto atualizado e muitas melhorias de utilização",
+	"vectorv2-action-addsection": "Adicionar tópico",
+	"vectorv2-action-delete": "Eliminar",
+	"vectorv2-action-move": "Mover",
+	"vectorv2-action-protect": "Proteger",
+	"vectorv2-action-undelete": "Restaurar",
+	"vectorv2-action-unprotect": "Alterar proteção",
+	"vectorv2-view-create": "Criar",
+	"vectorv2-view-edit": "Editar",
+	"vectorv2-view-history": "Ver histórico",
+	"vectorv2-view-view": "Ler",
+	"vectorv2-view-viewsource": "Ver código-fonte",
+	"vectorv2-more-actions": "Mais"
+}

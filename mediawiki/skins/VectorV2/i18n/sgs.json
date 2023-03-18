@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": [
+			"Hugo.arg"
+		]
+	},
+	"vectorv2-action-addsection": "Pridietė tema",
+	"vectorv2-action-delete": "Trintė",
+	"vectorv2-action-move": "Parvadintė",
+	"vectorv2-action-protect": "Apsergietė",
+	"vectorv2-action-undelete": "Atstatītė",
+	"vectorv2-action-unprotect": "Keistė apsarga",
+	"vectorv2-view-create": "Padėrbtė",
+	"vectorv2-view-edit": "Taisītė",
+	"vectorv2-view-history": "Istuorėjė",
+	"vectorv2-view-view": "Skaitītė",
+	"vectorv2-view-viewsource": "Veizietė kuoda",
+	"vectorv2-more-actions": "Dā"
+}

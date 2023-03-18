@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Red Winged Duck"
+		]
+	},
+	"vectorv2-skin-desc": "Сучасная вэрсія MonoBook з абноўленым выглядам і шматлікімі паляпшэньнямі",
+	"vectorv2-action-addsection": "Дадаць тэму",
+	"vectorv2-action-delete": "Выдаліць",
+	"vectorv2-action-move": "Перанесьці",
+	"vectorv2-action-protect": "Абараніць",
+	"vectorv2-action-undelete": "Аднавіць",
+	"vectorv2-action-unprotect": "Зьмяніць абарону",
+	"vectorv2-view-create": "Стварыць",
+	"vectorv2-view-edit": "Рэдагаваць",
+	"vectorv2-view-history": "Паказаць гісторыю",
+	"vectorv2-view-view": "Чытаць",
+	"vectorv2-view-viewsource": "Паказаць вікітэкст",
+	"vectorv2-more-actions": "Болей"
+}

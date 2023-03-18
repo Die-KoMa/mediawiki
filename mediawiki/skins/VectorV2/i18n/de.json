@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Metalhead64"
+		]
+	},
+	"vectorv2-skin-desc": "Eine moderne Version von Monobook mit einem frischen Aussehen und vielen Verbesserungen an der Benutzerfreundlichkeit",
+	"vectorv2-action-addsection": "Thema hinzufügen",
+	"vectorv2-action-delete": "Löschen",
+	"vectorv2-action-move": "Verschieben",
+	"vectorv2-action-protect": "Schützen",
+	"vectorv2-action-undelete": "Wiederherstellen",
+	"vectorv2-action-unprotect": "Seitenschutz ändern",
+	"vectorv2-view-create": "Erstellen",
+	"vectorv2-view-edit": "Bearbeiten",
+	"vectorv2-view-history": "Versionsgeschichte",
+	"vectorv2-view-view": "Lesen",
+	"vectorv2-view-viewsource": "Quelltext ansehen",
+	"vectorv2-more-actions": "Mehr"
+}

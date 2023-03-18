@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Termininja",
+			"StanProg"
+		]
+	},
+	"vectorv2-skin-desc": "Модерна версия на MonoBook с обновен дизайн и много подобрения на ползваемостта",
+	"vectorv2-action-addsection": "Добавяне на тема",
+	"vectorv2-action-delete": "Изтриване",
+	"vectorv2-action-move": "Преместване",
+	"vectorv2-action-protect": "Защита",
+	"vectorv2-action-undelete": "Възстановяване",
+	"vectorv2-action-unprotect": "Промяна на защитата",
+	"vectorv2-view-create": "Създаване",
+	"vectorv2-view-edit": "Редактиране",
+	"vectorv2-view-history": "Показване на историята",
+	"vectorv2-view-view": "Прочети",
+	"vectorv2-view-viewsource": "Преглед на кода",
+	"vectorv2-more-actions": "Още"
+}

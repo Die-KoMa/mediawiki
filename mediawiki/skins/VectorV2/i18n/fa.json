@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Reza1615"
+		]
+	},
+	"vectorv2-skin-desc": "نسخه مدرن منوبوک با نگاه تازه و بهبود قابلیت استفاده",
+	"vectorv2-action-addsection": "افزودن مبحث",
+	"vectorv2-action-delete": "حذف",
+	"vectorv2-action-move": "انتقال",
+	"vectorv2-action-protect": "محافظت",
+	"vectorv2-action-undelete": "احیا",
+	"vectorv2-action-unprotect": "تغییر سطح محافظت",
+	"vectorv2-view-create": "ایجاد",
+	"vectorv2-view-edit": "ویرایش",
+	"vectorv2-view-history": "نمایش تاریخچه",
+	"vectorv2-view-view": "خواندن",
+	"vectorv2-view-viewsource": "نمایش مبدأ",
+	"vectorv2-more-actions": "بیشتر"
+}

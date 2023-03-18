@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Alex Khimich",
+			"Base"
+		]
+	},
+	"vectorv2-skin-desc": "Сучасна версія MonoBook з освіженим виглядом та багатьма покращеннями функціоналу",
+	"vectorv2-action-addsection": "Додати тему",
+	"vectorv2-action-delete": "Вилучити",
+	"vectorv2-action-move": "Перемістити",
+	"vectorv2-action-protect": "Захистити",
+	"vectorv2-action-undelete": "Відновити",
+	"vectorv2-action-unprotect": "Змінити захист",
+	"vectorv2-view-create": "Створити",
+	"vectorv2-view-edit": "Редагувати",
+	"vectorv2-view-history": "Перегляд історії",
+	"vectorv2-view-view": "Читати",
+	"vectorv2-view-viewsource": "Перегляд джерела",
+	"vectorv2-more-actions": "Детальніше"
+}

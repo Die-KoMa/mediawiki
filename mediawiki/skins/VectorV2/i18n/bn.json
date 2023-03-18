@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Aftabuzzaman"
+		]
+	},
+	"vectorv2-skin-desc": "নতুন চেহারা মনোবুকের আধুনিক সংস্করণ এবং আরো অনেক ব্যবহারযোগ্যতার উন্নতি",
+	"vectorv2-action-addsection": "প্রসঙ্গ যোগ করুন",
+	"vectorv2-action-delete": "অপসারণ",
+	"vectorv2-action-move": "স্থানান্তর",
+	"vectorv2-action-protect": "সুরক্ষা",
+	"vectorv2-action-undelete": "পুনরুদ্ধার",
+	"vectorv2-action-unprotect": "সুরক্ষা পরিবর্তন",
+	"vectorv2-view-create": "তৈরি",
+	"vectorv2-view-edit": "সম্পাদনা",
+	"vectorv2-view-history": "ইতিহাস দেখুন",
+	"vectorv2-view-view": "পড়ুন",
+	"vectorv2-view-viewsource": "উৎস দেখুন",
+	"vectorv2-more-actions": "আরও"
+}

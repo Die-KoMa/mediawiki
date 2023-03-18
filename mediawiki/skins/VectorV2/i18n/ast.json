@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Tokvo",
+			"Xuacu"
+		]
+	},
+	"vectorv2-skin-desc": "Versión moderna de MonoBook, con un aspeutu frescu y munchos ameyoramientos d'usabilidá",
+	"vectorv2-action-addsection": "Amestar un asuntu",
+	"vectorv2-action-delete": "Desaniciar",
+	"vectorv2-action-move": "Mover",
+	"vectorv2-action-protect": "Protexer",
+	"vectorv2-action-undelete": "Restaurar",
+	"vectorv2-action-unprotect": "Camudar la proteición",
+	"vectorv2-view-create": "Crear",
+	"vectorv2-view-edit": "Editar",
+	"vectorv2-view-history": "Ver historial",
+	"vectorv2-view-view": "Lleer",
+	"vectorv2-view-viewsource": "Ver fonte",
+	"vectorv2-more-actions": "Más"
+}

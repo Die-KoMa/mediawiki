@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Tow"
+		]
+	},
+	"vectorv2-skin-desc": "ਮੋਨੋਬੁੱਕ ਦੀ ਆਧੁਨਿਕ ਵਰਜਨ ਜਿਸ ਵਿਚ ਤਾਜ਼ਾ ਦਿੱਖ ਅਤੇ ਬਹੁਤ ਸਾਰੇ ਉਪਯੋਗਤਾ ਸੁਧਾਰ ਹਨ",
+	"vectorv2-action-addsection": "ਵਿਸ਼ਾ ਜੋੜੋ",
+	"vectorv2-action-delete": "ਮਿਟਾਓ",
+	"vectorv2-action-move": "ਹਿਲਾਓ",
+	"vectorv2-action-protect": "ਸੁਰੱਖਿਅਤ ਕਰੋ",
+	"vectorv2-action-undelete": "ਮਿਟਾਉਣਾ-ਵਾਪਸ",
+	"vectorv2-action-unprotect": "ਸੁਰੱਖਿਆ ਬਦਲੋ",
+	"vectorv2-view-create": "ਬਣਾਓ",
+	"vectorv2-view-edit": "ਸੋਧੋ",
+	"vectorv2-view-history": "ਅਤੀਤ ਵੇਖੋ",
+	"vectorv2-view-view": "ਪੜ੍ਹੋ",
+	"vectorv2-view-viewsource": "ਸਰੋਤ ਵੇਖੋ",
+	"vectorv2-more-actions": "ਹੋਰ"
+}

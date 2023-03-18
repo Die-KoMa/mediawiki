@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ykhwong",
+			"Jonghaya"
+		]
+	},
+	"vectorv2-skin-desc": "참신한 디자인과 다수의 사용성 개선 사항이 반영된 MonoBook의 모던 버전",
+	"vectorv2-action-addsection": "새 주제",
+	"vectorv2-action-delete": "삭제",
+	"vectorv2-action-move": "이동",
+	"vectorv2-action-protect": "보호",
+	"vectorv2-action-undelete": "삭제 취소",
+	"vectorv2-action-unprotect": "보호 설정 바꾸기",
+	"vectorv2-view-create": "만들기",
+	"vectorv2-view-edit": "편집",
+	"vectorv2-view-history": "역사 보기",
+	"vectorv2-view-view": "읽기",
+	"vectorv2-view-viewsource": "원본 보기",
+	"vectorv2-more-actions": "더 보기"
+}

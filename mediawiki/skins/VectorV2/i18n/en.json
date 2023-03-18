@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": []
+	},
+	"skinname-vectorv2": "VectorV2",
+	"vectorv2-skin-desc": "Modern version of MonoBook with fresh look and many usability improvements",
+	"vectorv2.css": "/* CSS placed here will affect users of the VectorV2 skin */",
+	"vectorv2.js": "/* Any JavaScript here will be loaded for users using the VectorV2 skin */",
+	"vectorv2-action-addsection": "Add topic",
+	"vectorv2-action-delete": "Delete",
+	"vectorv2-action-move": "Move",
+	"vectorv2-action-protect": "Protect",
+	"vectorv2-action-undelete": "Undelete",
+	"vectorv2-action-unprotect": "Change protection",
+	"vectorv2-view-create": "Create",
+	"vectorv2-view-edit": "Edit",
+	"vectorv2-view-history": "View history",
+	"vectorv2-view-view": "Read",
+	"vectorv2-view-viewsource": "View source",
+	"vectorv2-more-actions": "More"
+}

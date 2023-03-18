@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Matteocng",
+			"Beta16"
+		]
+	},
+	"vectorv2-skin-desc": "Versione moderna del MonoBook con un aspetto rinnovato e molti miglioramenti dell'usabilità",
+	"vectorv2-action-addsection": "Aggiungi argomento",
+	"vectorv2-action-delete": "Cancella",
+	"vectorv2-action-move": "Sposta",
+	"vectorv2-action-protect": "Proteggi",
+	"vectorv2-action-undelete": "Ripristina",
+	"vectorv2-action-unprotect": "Cambia protezione",
+	"vectorv2-view-create": "Crea",
+	"vectorv2-view-edit": "Modifica",
+	"vectorv2-view-history": "Cronologia",
+	"vectorv2-view-view": "Leggi",
+	"vectorv2-view-viewsource": "Visualizza wikitesto",
+	"vectorv2-more-actions": "Altro"
+}

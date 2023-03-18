@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"V.narsikar"
+		]
+	},
+	"vectorv2-skin-desc": "मोनोबुकची आधुनिक आवृत्ती टवटवीत दिसण्यासह व अनेक वापर सुधारणा असलेली",
+	"vectorv2-action-addsection": "विषय जोडा",
+	"vectorv2-action-delete": "वगळा",
+	"vectorv2-action-move": "हलवा",
+	"vectorv2-action-protect": "सुरक्षित करा",
+	"vectorv2-action-undelete": "वगळलेले पुनर्स्थापित करा",
+	"vectorv2-action-unprotect": "सुरक्षा पातळी बदला",
+	"vectorv2-view-create": "निर्मित करा",
+	"vectorv2-view-edit": "संपादन",
+	"vectorv2-view-history": "इतिहास बघा",
+	"vectorv2-view-view": "वाचा",
+	"vectorv2-view-viewsource": "स्रोत पहा",
+	"vectorv2-more-actions": "अधिक"
+}

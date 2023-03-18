@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ильнар"
+		]
+	},
+	"vectorv2-skin-desc": "Хәзерге заманга туры килгән MonoBook күренеше, яңа бизәлеш һәм яңа мөмкинлекләр",
+	"vectorv2-action-addsection": "Тема өстәү",
+	"vectorv2-action-delete": "Бетерү",
+	"vectorv2-action-move": "Күчерү",
+	"vectorv2-action-protect": "Яклау",
+	"vectorv2-action-undelete": "Кайтару",
+	"vectorv2-action-unprotect": "Яклауны үзгәртү",
+	"vectorv2-view-create": "Төзү",
+	"vectorv2-view-edit": "Үзгәртү",
+	"vectorv2-view-history": "Тарихын карау",
+	"vectorv2-view-view": "Уку",
+	"vectorv2-view-viewsource": "Чыганагын карау",
+	"vectorv2-more-actions": "Тагын"
+}

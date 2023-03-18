@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Wladek92"
+		]
+	},
+	"vectorv2-skin-desc": "Version moderne de MonoBook avec un aspect rajeuni et beaucoup d’améliorations ergonomiques",
+	"vectorv2-action-addsection": "Ajouter un sujet",
+	"vectorv2-action-delete": "Supprimer",
+	"vectorv2-action-move": "Déplacer",
+	"vectorv2-action-protect": "Protéger",
+	"vectorv2-action-undelete": "Rétablir",
+	"vectorv2-action-unprotect": "Modifier la protection",
+	"vectorv2-view-create": "Créer",
+	"vectorv2-view-edit": "Modifier",
+	"vectorv2-view-history": "Afficher l’historique",
+	"vectorv2-view-view": "Lire",
+	"vectorv2-view-viewsource": "Voir le texte source",
+	"vectorv2-more-actions": "Plus"
+}

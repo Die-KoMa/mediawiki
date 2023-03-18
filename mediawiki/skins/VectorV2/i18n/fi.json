@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"01miki10"
+		]
+	},
+	"vectorv2-skin-desc": "Uudistettu versio MonoBookista raikkaalla ulkoasulla ja useilla käytettävyysparannuksilla",
+	"vectorv2-action-addsection": "Lisää aihe",
+	"vectorv2-action-delete": "Poista",
+	"vectorv2-action-move": "Siirrä",
+	"vectorv2-action-protect": "Suojaa",
+	"vectorv2-action-undelete": "Palauta",
+	"vectorv2-action-unprotect": "Muuta suojausta",
+	"vectorv2-view-create": "Luo",
+	"vectorv2-view-edit": "Muokkaa",
+	"vectorv2-view-history": "Näytä historia",
+	"vectorv2-view-view": "Lue",
+	"vectorv2-view-viewsource": "Näytä lähdekoodi",
+	"vectorv2-more-actions": "Lisää"
+}

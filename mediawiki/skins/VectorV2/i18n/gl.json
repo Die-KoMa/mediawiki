@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Elisardojm"
+		]
+	},
+	"vectorv2-skin-desc": "Versión moderna da aparencia MonoBook, cun aspecto actualizado e moitas melloras na usabilidade",
+	"vectorv2-action-addsection": "Engadir tema",
+	"vectorv2-action-delete": "Borrar",
+	"vectorv2-action-move": "Mover",
+	"vectorv2-action-protect": "Protexer",
+	"vectorv2-action-undelete": "Restaurar",
+	"vectorv2-action-unprotect": "Cambiar a protección",
+	"vectorv2-view-create": "Crear",
+	"vectorv2-view-edit": "Editar",
+	"vectorv2-view-history": "Ver o historial",
+	"vectorv2-view-view": "Ler",
+	"vectorv2-view-viewsource": "Ver o código fonte",
+	"vectorv2-more-actions": "Máis"
+}

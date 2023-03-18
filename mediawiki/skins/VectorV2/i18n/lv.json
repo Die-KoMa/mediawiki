@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Silraks"
+		]
+	},
+	"vectorv2-skin-desc": "Moderna MonoBook versija ar jaunu saskarni un daudziem lietojamības uzlabojumiem",
+	"vectorv2-action-addsection": "Pievienot tēmu",
+	"vectorv2-action-delete": "Dzēst",
+	"vectorv2-action-move": "Pārvietot",
+	"vectorv2-action-protect": "Aizsargāt",
+	"vectorv2-action-undelete": "Atjaunot",
+	"vectorv2-action-unprotect": "Mainīt aizsardzību",
+	"vectorv2-view-create": "Izveidot",
+	"vectorv2-view-edit": "Labot",
+	"vectorv2-view-history": "Skatīt vēsturi",
+	"vectorv2-view-view": "Lasīt",
+	"vectorv2-view-viewsource": "Aplūkot kodu",
+	"vectorv2-more-actions": "Vairāk"
+}

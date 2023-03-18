@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": [
+			"VASANTH S.N."
+		]
+	},
+	"vectorv2-action-addsection": "ವಿಸಯೊ ಸೇರಾಲೆ",
+	"vectorv2-action-delete": "ಮಾಜಾಲೆ",
+	"vectorv2-action-move": "ಸ್ಥಳಾಂತರ ಮಲ್ಪುಲೆ",
+	"vectorv2-action-protect": "ಸ೦ರಕ್ಷಿಸಾಲೆ",
+	"vectorv2-action-undelete": "ಮಾಜಾವಡೆ",
+	"vectorv2-action-unprotect": "ಬದಲಾವಣೆನ್ ರಕ್ಷಿಸಾಲೆ",
+	"vectorv2-view-create": "ಸೃಷ್ಟಿಸಾಲೆ",
+	"vectorv2-view-edit": "ಸಂಪಾದನೆ ಮಲ್ಪುಲೆ",
+	"vectorv2-view-history": "ಇತಿಹಾಸೊನು ತೂಲೆ",
+	"vectorv2-view-view": "ಓದ್‍ಲೆ",
+	"vectorv2-view-viewsource": "ಮೂಲೊನು ತೂಲೆ",
+	"vectorv2-more-actions": "ನನಾತ್"
+}

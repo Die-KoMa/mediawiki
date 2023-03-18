@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Okras",
+			"Kaganer"
+		]
+	},
+	"vectorv2-skin-desc": "Современная версия MonoBook с обновлённым оформлением и многими улучшениями в юзабилити",
+	"vectorv2-action-addsection": "Добавить тему",
+	"vectorv2-action-delete": "Удалить",
+	"vectorv2-action-move": "Переименовать",
+	"vectorv2-action-protect": "Защитить",
+	"vectorv2-action-undelete": "Восстановить",
+	"vectorv2-action-unprotect": "Изменить защиту",
+	"vectorv2-view-create": "Создать",
+	"vectorv2-view-edit": "Править",
+	"vectorv2-view-history": "Посмотреть историю",
+	"vectorv2-view-view": "Читать",
+	"vectorv2-view-viewsource": "Просмотр кода",
+	"vectorv2-more-actions": "Ещё"
+}

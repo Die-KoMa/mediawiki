@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Robby"
+		]
+	},
+	"vectorv2-skin-desc": "Modern Versioun vu Monobook mat frëschem Look a ville Verbesserunge vun der Benotzerfrëndlechkeet",
+	"vectorv2-action-addsection": "Sujet derbäisetzen",
+	"vectorv2-action-delete": "Läschen",
+	"vectorv2-action-move": "Réckelen",
+	"vectorv2-action-protect": "Spären",
+	"vectorv2-action-undelete": "Restauréieren",
+	"vectorv2-action-unprotect": "Spär änneren",
+	"vectorv2-view-create": "Uleeën",
+	"vectorv2-view-edit": "Änneren",
+	"vectorv2-view-history": "Versioune weisen",
+	"vectorv2-view-view": "Liesen",
+	"vectorv2-view-viewsource": "Quellcode weisen",
+	"vectorv2-more-actions": "Méi"
+}

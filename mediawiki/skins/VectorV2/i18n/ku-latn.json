@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": [
+			"George Animal"
+		]
+	},
+	"vectorv2-action-addsection": "Mijarekê lê zêde bike",
+	"vectorv2-action-delete": "Jê bibe",
+	"vectorv2-action-move": "Nav biguherîne",
+	"vectorv2-action-protect": "Biparêze",
+	"vectorv2-action-undelete": "Dîsa çêke",
+	"vectorv2-action-unprotect": "Parastinê biguherîne",
+	"vectorv2-view-create": "Biafirîne",
+	"vectorv2-view-edit": "Biguherîne",
+	"vectorv2-view-history": "Dîrokê bibîne",
+	"vectorv2-view-view": "Bixwîne",
+	"vectorv2-view-viewsource": "Çavkaniyê bibîne",
+	"vectorv2-more-actions": "Bêhtir"
+}

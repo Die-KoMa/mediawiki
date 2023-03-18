@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Bencoke",
+			"Wolf Rex"
+		]
+	},
+	"vectorv2-skin-desc": "A MonoBook felület modern változata frissebb kinézettel és sok használhatóságot javító fejlesztéssel",
+	"vectorv2-action-addsection": "Téma hozzáadása",
+	"vectorv2-action-delete": "Törlés",
+	"vectorv2-action-move": "Átnevezés",
+	"vectorv2-action-protect": "Lapvédelem",
+	"vectorv2-action-undelete": "Helyreállítás",
+	"vectorv2-action-unprotect": "Védelem módosítása",
+	"vectorv2-view-create": "Létrehozás",
+	"vectorv2-view-edit": "Szerkesztés",
+	"vectorv2-view-history": "Laptörténet",
+	"vectorv2-view-view": "Olvasás",
+	"vectorv2-view-viewsource": "Lapforrás",
+	"vectorv2-more-actions": "Több"
+}

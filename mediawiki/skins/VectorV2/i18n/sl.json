@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Dbc334"
+		]
+	},
+	"vectorv2-skin-desc": "Sodobna različica MonoBook s svežim videzom in mnogimi izboljšavami uporabnosti",
+	"vectorv2-action-addsection": "Dodaj temo",
+	"vectorv2-action-delete": "Izbriši",
+	"vectorv2-action-move": "Prestavi",
+	"vectorv2-action-protect": "Zaščiti",
+	"vectorv2-action-undelete": "Obnovi",
+	"vectorv2-action-unprotect": "Spremeni zaščito",
+	"vectorv2-view-create": "Ustvari",
+	"vectorv2-view-edit": "Uredi",
+	"vectorv2-view-history": "Ogled zgodovine",
+	"vectorv2-view-view": "Preberi",
+	"vectorv2-view-viewsource": "Izvorno besedilo",
+	"vectorv2-more-actions": "Več"
+}

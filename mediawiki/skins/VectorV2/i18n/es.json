@@ -1,0 +1,21 @@
+{
+	"@metadata": {
+		"authors": [
+			"Rubentl134",
+			"Macofe"
+		]
+	},
+	"vectorv2-skin-desc": "Versión moderna de MonoBook, con un aspecto actualizado y muchas mejoras de usabilidad",
+	"vectorv2-action-addsection": "Añadir tema",
+	"vectorv2-action-delete": "Borrar",
+	"vectorv2-action-move": "Trasladar",
+	"vectorv2-action-protect": "Proteger",
+	"vectorv2-action-undelete": "Restaurar",
+	"vectorv2-action-unprotect": "Cambiar protección",
+	"vectorv2-view-create": "Crear",
+	"vectorv2-view-edit": "Editar",
+	"vectorv2-view-history": "Ver historial",
+	"vectorv2-view-view": "Leer",
+	"vectorv2-view-viewsource": "Ver código fuente",
+	"vectorv2-more-actions": "Más"
+}

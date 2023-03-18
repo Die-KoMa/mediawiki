@@ -1,0 +1,16 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ләйсән"
+		]
+	},
+	"vectorv2-action-addsection": "Тема өҫтәргә",
+	"vectorv2-action-delete": "Юйырға",
+	"vectorv2-action-protect": "Һаҡларға",
+	"vectorv2-action-undelete": "Тергеҙергә",
+	"vectorv2-action-unprotect": "Һаҡлауҙы үҙгәртергә",
+	"vectorv2-view-create": "Төҙөргә",
+	"vectorv2-view-edit": "Мөхәррирләү",
+	"vectorv2-view-view": "Уҡырға",
+	"vectorv2-more-actions": "Тағы"
+}
