@@ -51,15 +51,6 @@ class Site {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @return string
-	 */
-	public static function searchType() {
-		return $GLOBALS['wgSearchType'];
-	}
-
-	/**
 	 * @since 3.0
 	 *
 	 * @return string
@@ -102,20 +93,6 @@ class Site {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @return int
-	 */
-	public static function getCacheExpireTime( $key ) {
-
-		if ( $key === 'parser' ) {
-			return $GLOBALS['wgParserCacheExpireTime'];
-		}
-
-		return 0;
-	}
-
-	/**
 	 * @since 3.0
 	 *
 	 * @param $affix string
@@ -124,7 +101,7 @@ class Site {
 	 */
 	public static function id( $affix = '' ) {
 
-		if ( $affix !== '' && $affix[0] !== ':' ) {
+		if ( $affix !== '' && $affix{0} !== ':' ) {
 			$affix = ':' . $affix;
 		}
 

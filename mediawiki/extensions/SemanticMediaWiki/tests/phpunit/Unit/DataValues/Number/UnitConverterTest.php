@@ -21,7 +21,6 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 	private $testEnvironment;
 	private $dataItemFactory;
 	private $propertySpecificationLookup;
-	private $entityCache;
 
 	protected function setUp() {
 		$this->testEnvironment = new TestEnvironment();
@@ -31,10 +30,7 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->entityCache = $this->getMockBuilder( '\SMW\EntityCache' )
-			->disableOriginalConstructor()
-			->setMethods( [ 'fetch', 'save', 'associate' ] )
-			->getMock();
+		$this->testEnvironment->registerObject( 'PropertySpecificationLookup', $this->propertySpecificationLookup );
 	}
 
 	protected function tearDown() {
@@ -43,31 +39,28 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$numberValue = $this->getMockBuilder( '\SMWNumberValue' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$this->assertInstanceOf(
 			UnitConverter::class,
-			new UnitConverter( $this->propertySpecificationLookup, $this->entityCache )
+			new UnitConverter( $numberValue )
 		);
 	}
 
 	public function testErrorOnMissingConversionData() {
 
-		$property = $this->dataItemFactory->newDIProperty( 'Foo' );
-
 		$numberValue = $this->getMockBuilder( '\SMWNumberValue' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$numberValue->expects( $this->any() )
-			->method( 'getProperty' )
-			->will( $this->returnValue( $property ) );
-
 		$instance = new UnitConverter(
-			$this->propertySpecificationLookup,
-			$this->entityCache
+			$numberValue
 		);
 
 		$instance->fetchConversionData(
-			$numberValue
+			$this->dataItemFactory->newDIProperty( 'Foo' )
 		);
 
 		$this->assertNotEmpty(
@@ -80,14 +73,17 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testFetchConversionData( $thousands, $decimal, $correspondsTo, $unitIds, $unitFactors, $mainUnit, $prefixalUnitPreference ) {
 
-		$property = $this->dataItemFactory->newDIProperty( 'Foo' );
+		$cachedPropertyValuesPrefetcher = $this->getMockBuilder( '\SMW\CachedPropertyValuesPrefetcher' )
+			->disableOriginalConstructor()
+			->getMock();
 
-		$this->propertySpecificationLookup->expects( $this->once() )
-			->method( 'getSpecification' )
-			->will( $this->returnValue( [ $this->dataItemFactory->newDIBlob( $correspondsTo ) ] ) );
+		$cachedPropertyValuesPrefetcher->expects( $this->once() )
+			->method( 'getPropertyValues' )
+			->will( $this->returnValue( [
+				$this->dataItemFactory->newDIBlob( $correspondsTo )
+			] ) );
 
 		$numberValue = new NumberValue();
-		$numberValue->setProperty( $property );
 
 		$numberValue->setOption(
 			NumberValue::THOUSANDS_SEPARATOR,
@@ -100,12 +96,12 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$instance = new UnitConverter(
-			$this->propertySpecificationLookup,
-			$this->entityCache
+			$numberValue,
+			$cachedPropertyValuesPrefetcher
 		);
 
 		$instance->fetchConversionData(
-			$numberValue
+			$this->dataItemFactory->newDIProperty( 'Foo' )
 		);
 
 		$this->assertEmpty(
@@ -133,44 +129,54 @@ class UnitConverterTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testLoadConversionData() {
+	public function testInitConversionData() {
+
+		$container = $this->getMockBuilder( '\Onoi\BlobStore\Container' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$container->expects( $this->any() )
+			->method( 'has' )
+			->will( $this->onConsecutiveCalls( false, true ) );
+
+		$blobStore = $this->getMockBuilder( '\Onoi\BlobStore\BlobStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$blobStore->expects( $this->exactly( 2 ) )
+			->method( 'read' )
+			->will( $this->returnValue( $container ) );
+
+		$blobStore->expects( $this->once() )
+			->method( 'save' );
+
+		$cachedPropertyValuesPrefetcher = $this->getMockBuilder( '\SMW\CachedPropertyValuesPrefetcher' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$cachedPropertyValuesPrefetcher->expects( $this->atLeastOnce() )
+			->method( 'getBlobStore' )
+			->will( $this->returnValue( $blobStore ) );
+
+		$cachedPropertyValuesPrefetcher->expects( $this->once() )
+			->method( 'getPropertyValues' )
+			->will( $this->returnValue( [
+				$this->dataItemFactory->newDIBlob( 'Foo' )
+			] ) );
+
+		$numberValue = new NumberValue();
+
+		$instance = new UnitConverter(
+			$numberValue,
+			$cachedPropertyValuesPrefetcher
+		);
 
 		$property = $this->dataItemFactory->newDIProperty( 'Foo' );
 
-		$data = [
-			'ids' => '',
-			'factors' => '',
-			'main' => '',
-			'prefix' => ''
-		];
-
-		$this->entityCache->expects( $this->atLeastOnce() )
-			->method( 'fetch' )
-			->will( $this->onConsecutiveCalls( false, $data ) );
-
-		$this->entityCache->expects( $this->once() )
-			->method( 'save' );
-
-		$this->entityCache->expects( $this->once() )
-			->method( 'associate' )
-			->with( $this->equalTo( $property->getDiWikiPage() ) );
-
-		$this->propertySpecificationLookup->expects( $this->once() )
-			->method( 'getSpecification' )
-			->will( $this->returnValue( [ $this->dataItemFactory->newDIBlob( 'Foo' ) ] ) );
-
-		$numberValue = new NumberValue();
-		$numberValue->setProperty( $property );
-
-		$instance = new UnitConverter(
-			$this->propertySpecificationLookup,
-			$this->entityCache
-		);
-
-		$instance->loadConversionData( $numberValue );
+		$instance->initConversionData( $property );
 
 		// Cached
-		$instance->loadConversionData( $numberValue );
+		$instance->initConversionData( $property);
 	}
 
 	public function conversionDataProvider() {

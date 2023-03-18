@@ -6,7 +6,7 @@ use SMW\Query\Language\Description;
 use SMW\Query\Language\ThingDescription;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreter;
 use SMW\SQLStore\QueryEngine\QuerySegment;
-use SMW\SQLStore\QueryEngine\ConditionBuilder;
+use SMW\SQLStore\QueryEngine\QuerySegmentListBuilder;
 
 /**
  * @license GNU GPL v2+
@@ -17,17 +17,17 @@ use SMW\SQLStore\QueryEngine\ConditionBuilder;
 class ThingDescriptionInterpreter implements DescriptionInterpreter {
 
 	/**
-	 * @var ConditionBuilder
+	 * @var QuerySegmentListBuilder
 	 */
-	private $conditionBuilder;
+	private $querySegmentListBuilder;
 
 	/**
 	 * @since 2.2
 	 *
-	 * @param ConditionBuilder $conditionBuilder
+	 * @param QuerySegmentListBuilder $querySegmentListBuilder
 	 */
-	public function __construct( ConditionBuilder $conditionBuilder ) {
-		$this->conditionBuilder = $conditionBuilder;
+	public function __construct( QuerySegmentListBuilder $querySegmentListBuilder ) {
+		$this->querySegmentListBuilder = $querySegmentListBuilder;
 	}
 
 	/**

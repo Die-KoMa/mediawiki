@@ -123,7 +123,7 @@ class MediaWikiIntegrationForRegisteredHookTest extends MwDBaseUnitTestCase {
 			->createPage( $this->title )
 			->doEdit( '[[EditPageToGetNewRevisionHookTest::Foo]]' );
 
-		$parserOutput = $pageCreator->getEditInfo()->getOutput();
+		$parserOutput = $pageCreator->getEditInfo()->output;
 
 		$this->assertInstanceOf(
 			'ParserOutput',
@@ -155,7 +155,7 @@ class MediaWikiIntegrationForRegisteredHookTest extends MwDBaseUnitTestCase {
 			->createPage( $this->title )
 			->doEdit( '[[Has function hook test::output page]]' );
 
-		$parserOutput = $pageCreator->getEditInfo()->getOutput();
+		$parserOutput = $pageCreator->getEditInfo()->output;
 
 		$this->assertInstanceOf(
 			'ParserOutput',

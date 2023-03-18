@@ -47,6 +47,24 @@ class QueryDependencyLinksStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testCanConstructEntityIdListRelevanceDetectionFilter() {
+
+		$store = $this->getMockBuilder( '\SMW\Store' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
+		$changeOp = $this->getMockBuilder( '\SMW\SQLStore\ChangeOp\ChangeOp' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$instance = new QueryDependencyLinksStoreFactory();
+
+		$this->assertInstanceOf(
+			'\SMW\SQLStore\QueryDependency\EntityIdListRelevanceDetectionFilter',
+			$instance->newEntityIdListRelevanceDetectionFilter( $store, $changeOp )
+		);
+	}
+
 	public function testCanConstructQueryReferenceBacklinks() {
 
 		$store = $this->getMockBuilder( '\SMW\Store' )
@@ -61,7 +79,7 @@ class QueryDependencyLinksStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructDependencyLinksValidator() {
+	public function testCanConstructDependencyLinksUpdateJournal() {
 
 		$store = $this->getMockBuilder( '\SMW\Store' )
 			->disableOriginalConstructor()
@@ -70,22 +88,8 @@ class QueryDependencyLinksStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		$instance = new QueryDependencyLinksStoreFactory();
 
 		$this->assertInstanceOf(
-			'\SMW\SQLStore\QueryDependency\DependencyLinksValidator',
-			$instance->newDependencyLinksValidator()
-		);
-	}
-
-	public function testCanConstructQueryLinksTableDisposer() {
-
-		$store = $this->getMockBuilder( '\SMW\Store' )
-			->disableOriginalConstructor()
-			->getMockForAbstractClass();
-
-		$instance = new QueryDependencyLinksStoreFactory();
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\QueryDependency\QueryLinksTableDisposer',
-			$instance->newQueryLinksTableDisposer( $store )
+			'\SMW\SQLStore\QueryDependency\DependencyLinksUpdateJournal',
+			$instance->newDependencyLinksUpdateJournal()
 		);
 	}
 

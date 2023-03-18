@@ -15,9 +15,9 @@ use SMWQuery as Query;
 class ConceptQuerySegmentBuilder {
 
 	/**
-	 * @var ConditionBuilder
+	 * @var QuerySegmentListBuilder
 	 */
-	private $conditionBuilder;
+	private $querySegmentListBuilder;
 
 	/**
 	 * @var QuerySegmentListProcessor
@@ -32,11 +32,11 @@ class ConceptQuerySegmentBuilder {
 	/**
 	 * @since 2.2
 	 *
-	 * @param ConditionBuilder $conditionBuilder
+	 * @param QuerySegmentListBuilder $querySegmentListBuilder
 	 * @param QuerySegmentListProcessor $querySegmentListProcessor
 	 */
-	public function __construct( ConditionBuilder $conditionBuilder, QuerySegmentListProcessor $querySegmentListProcessor ) {
-		$this->conditionBuilder = $conditionBuilder;
+	public function __construct( QuerySegmentListBuilder $querySegmentListBuilder, QuerySegmentListProcessor $querySegmentListProcessor ) {
+		$this->querySegmentListBuilder = $querySegmentListBuilder;
 		$this->querySegmentListProcessor = $querySegmentListProcessor;
 	}
 
@@ -60,19 +60,19 @@ class ConceptQuerySegmentBuilder {
 
 		QuerySegment::$qnum = 0;
 
-		$conditionBuilder = $this->conditionBuilder;
-		$conditionBuilder->setSortKeys( [] );
+		$querySegmentListBuilder = $this->querySegmentListBuilder;
+		$querySegmentListBuilder->setSortKeys( [] );
 
 		if ( $this->queryParser === null ) {
 			throw new RuntimeException( 'Missing a QueryParser instance' );
 		}
 
-		$conditionBuilder->buildFromDescription(
+		$querySegmentListBuilder->getQuerySegmentFrom(
 			$this->queryParser->getQueryDescription( $conceptDescriptionText )
 		);
 
-		$qid = $conditionBuilder->getLastQuerySegmentId();
-		$querySegmentList = $conditionBuilder->getQuerySegmentList();
+		$qid = $querySegmentListBuilder->getLastQuerySegmentId();
+		$querySegmentList = $querySegmentListBuilder->getQuerySegmentList();
 
 		if ( $qid < 0 ) {
 			return null;
@@ -106,7 +106,7 @@ class ConceptQuerySegmentBuilder {
 	 * @return array
 	 */
 	public function getErrors() {
-		return $this->conditionBuilder->getErrors();
+		return $this->querySegmentListBuilder->getErrors();
 	}
 
 }

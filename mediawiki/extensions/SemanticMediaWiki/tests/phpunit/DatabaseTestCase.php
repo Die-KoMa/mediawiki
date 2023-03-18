@@ -3,15 +3,13 @@
 namespace SMW\Tests;
 
 use RuntimeException;
-use SMW\Services\ServicesFactory;
+use SMW\ApplicationFactory;
 use SMW\NamespaceExaminer;
 use SMW\PropertyRegistry;
 use SMW\Settings;
 use SMW\StoreFactory;
 use SMW\Tests\Utils\Connection\TestDatabaseTableBuilder;
 use SMWExporter as Exporter;
-use HashBagOStuff;
-use ObjectCache;
 
 /**
  * @group semantic-mediawiki
@@ -72,14 +70,12 @@ abstract class DatabaseTestCase extends \PHPUnit_Framework_TestCase {
 		$this->checkIfDatabaseCanBeUsedOtherwiseSkipTest();
 		$this->checkIfStoreCanBeUsedOtherwiseSkipTest();
 
-		$fixedInMemoryLruCache = ServicesFactory::getInstance()->create( 'FixedInMemoryLruCache' );
+		ApplicationFactory::getInstance()->registerObject( 'Store', $this->getStore() );
 
-		$this->testEnvironment->registerObject( 'Store', $this->getStore() );
-		$this->testEnvironment->registerObject( 'Cache', $fixedInMemoryLruCache );
-
-		/**
-		 * MediaWiki specific setup
-		 */
+		ApplicationFactory::getInstance()->registerObject(
+			'Cache',
+			ApplicationFactory::getInstance()->newCacheFactory()->newFixedInMemoryCache()
+		);
 
 		// Avoid surprise on revisions etc.
 		// @see MediaWikiTestCase::doLightweightServiceReset
@@ -88,25 +84,6 @@ abstract class DatabaseTestCase extends \PHPUnit_Framework_TestCase {
 		$this->testEnvironment->resetMediaWikiService( 'MainWANObjectCache' );
 
 		$this->testEnvironment->clearPendingDeferredUpdates();
-
-		// #3916
-		// Reset $wgUser, which is probably 127.0.0.1, as its loaded data is probably not valid
-		// @todo Should we start setting $wgUser to something nondeterministic
-		//  to encourage tests to be updated to not depend on it?
-		$GLOBALS['wgUser']->clearInstanceCache( $GLOBALS['wgUser']->mFrom );
-
-		ObjectCache::$instances[CACHE_DB] = new HashBagOStuff();
-
-		// Avoid Error while sending QUERY packet / SqlBagOStuff seen on MW 1.24
-		// https://s3.amazonaws.com/archive.travis-ci.org/jobs/30408638/log.txt
-		ObjectCache::$instances[CACHE_ANYTHING] = new HashBagOStuff();
-
-		$GLOBALS['wgDevelopmentWarnings'] = true;
-		$GLOBALS['wgMainCacheType'] = CACHE_NONE;
-		$GLOBALS['wgMessageCacheType'] = CACHE_NONE;
-		$GLOBALS['wgParserCacheType'] = CACHE_NONE;
-		$GLOBALS['wgLanguageConverterCacheType'] = CACHE_NONE;
-		$GLOBALS['wgUseDatabaseMessages'] = false;
 	}
 
 	protected function tearDown() {
@@ -116,7 +93,8 @@ abstract class DatabaseTestCase extends \PHPUnit_Framework_TestCase {
 			$this->testEnvironment->tearDown();
 		}
 
-		ServicesFactory::clear();
+		ApplicationFactory::clear();
+		NamespaceExaminer::clear();
 		PropertyRegistry::clear();
 		Settings::clear();
 		Exporter::getInstance()->clear();
@@ -176,10 +154,10 @@ abstract class DatabaseTestCase extends \PHPUnit_Framework_TestCase {
 	protected function skipTestForMediaWikiVersionLowerThan( $version, $message = '' ) {
 
 		if ( $message === '' ) {
-			$message = "This test is skipped for MediaWiki version " . MW_VERSION;
+			$message = "This test is skipped for MediaWiki version {$GLOBALS['wgVersion']}";
 		}
 
-		if ( version_compare( MW_VERSION, $version, '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], $version, '<' ) ) {
 			$this->markTestSkipped( $message );
 		}
 	}

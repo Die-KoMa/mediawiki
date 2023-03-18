@@ -3,7 +3,7 @@
 namespace SMW\Tests\Utils;
 
 use RuntimeException;
-use SMW\MediaWiki\Hooks;
+use SMW\MediaWiki\Hooks\HookRegistry;
 
 /**
  * @license GNU GPL v2+
@@ -23,9 +23,6 @@ class MwHooksHandler {
 
 	private $listOfSmwHooks = [
 		'SMWStore::updateDataBefore',
-		'SMW::Store::BeforeDataUpdateComplete',
-		'SMWStore::updateDataAfter',
-		'SMW::Store::AfterDataUpdateComplete',
 
 		// Those shoudl not be disabled so that extension used
 		// by a test will run the registration in case an instance
@@ -47,10 +44,7 @@ class MwHooksHandler {
 		'SMW::SQLStore::AddCustomFixedPropertyTables',
 		'SMW::SQLStore::AfterDataUpdateComplete',
 		'SMW::Browse::AfterIncomingPropertiesLookupComplete',
-		'SMW::Browse::BeforeIncomingPropertyValuesFurtherLinkCreate',
-
-		'SMWSQLStore3::updateDataBefore',
-		'SMW::SQLStore::BeforeDataUpdateComplete'
+		'SMW::Browse::BeforeIncomingPropertyValuesFurtherLinkCreate'
 	];
 
 	/**
@@ -130,7 +124,7 @@ class MwHooksHandler {
 	 * @return MwHooksHandler
 	 */
 	public function invokeHooksFromRegistry() {
-		$this->getHookRegistry()->register( $GLOBALS );
+		$this->getHookRegistry()->register();
 		return $this;
 	}
 
@@ -142,7 +136,7 @@ class MwHooksHandler {
 	public function getHookRegistry() {
 
 		if ( $this->hookRegistry === null ) {
-			 $this->hookRegistry = new Hooks( '' );
+			 $this->hookRegistry = new HookRegistry( $GLOBALS, '' );
 		}
 
 		return $this->hookRegistry;

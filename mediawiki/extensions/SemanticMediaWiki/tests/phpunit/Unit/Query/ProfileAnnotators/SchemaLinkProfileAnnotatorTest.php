@@ -93,7 +93,7 @@ class SchemaLinkProfileAnnotatorTest extends \PHPUnit_Framework_TestCase {
 			[
 				'propertyCount'  => 1,
 				'propertyKeys'   => [ '_SCHEMA_LINK' ],
-				'propertyValues' => [ 'smw/schema:Foo' ]
+				'propertyValues' => [ 'Foo' ]
 			]
 		];
 	}

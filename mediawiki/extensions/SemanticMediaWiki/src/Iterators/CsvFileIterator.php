@@ -4,10 +4,7 @@ namespace SMW\Iterators;
 
 use Exception;
 use Iterator;
-use Countable;
 use SMW\Exception\FileNotFoundException;
-use RuntimeException;
-use SplFileObject;
 
 /**
  * @see http://php.net/manual/en/function.fgetcsv.php
@@ -15,12 +12,7 @@ use SplFileObject;
  * @license GNU GPL v2+
  * @since 3.0
  */
-class CsvFileIterator implements Iterator, Countable {
-
-	/**
-	 * @var SplFileObject
-	 */
-	private $file;
+class CsvFileIterator implements Iterator {
 
 	/**
 	 * @var Resource
@@ -53,11 +45,6 @@ class CsvFileIterator implements Iterator, Countable {
 	private $key = 0;
 
 	/**
-	 * @var boolean
-	 */
-	private $count = false;
-
-	/**
 	 * @since 3.0
 	 *
 	 * @param string $file
@@ -68,8 +55,8 @@ class CsvFileIterator implements Iterator, Countable {
 	public function __construct( $file, $parseHeader = false, $delimiter = ",", $length = 8000 ) {
 
 		try {
-			$this->file = new SplFileObject( $file , 'r' );
-		} catch ( RuntimeException $e ) {
+			$this->handle = fopen( $file, "r" );
+		} catch ( Exception $e ) {
 			throw new FileNotFoundException( 'File "'. $file . '" is not accessible.' );
 		}
 
@@ -82,26 +69,9 @@ class CsvFileIterator implements Iterator, Countable {
 	 * @since 3.0
 	 */
 	public function __destruct() {
-		$this->handle = null;
-	}
-	/**
-	 * @see Countable::count
-	 * @since 2.5
-	 *
-	 * {@inheritDoc}
-	 */
-	public function count() {
-
-		if ( $this->count ) {
-			return $this->count;
+		if( is_resource( $this->handle ) ) {
+			fclose( $this->handle );
 		}
-
-		// https://stackoverflow.com/questions/21447329/how-can-i-get-the-total-number-of-rows-in-a-csv-file-with-php
-		$this->file->seek(PHP_INT_MAX);
-		$this->count = $this->file->key() + 1;
-		$this->file->rewind();
-
-		return $this->count;
 	}
 
 	/**
@@ -122,7 +92,7 @@ class CsvFileIterator implements Iterator, Countable {
 	 */
 	public function rewind() {
 		$this->key = 0;
-		$this->file->rewind();
+		rewind( $this->handle );
 	}
 
 	/**
@@ -136,10 +106,10 @@ class CsvFileIterator implements Iterator, Countable {
 
 		// First iteration to match the header
 		if ( $this->parseHeader && $this->key == 0 ) {
-			$this->header = $this->file->fgetcsv( $this->delimiter );
+			$this->header = fgetcsv( $this->handle, $this->length, $this->delimiter );
 		}
 
-		$currentElement =  $this->file->fgetcsv( $this->delimiter );
+		$currentElement = fgetcsv( $this->handle, $this->length, $this->delimiter );
 		$this->key++;
 
 		return $currentElement;
@@ -164,7 +134,7 @@ class CsvFileIterator implements Iterator, Countable {
 	 * {@inheritDoc}
 	 */
 	public function next() {
-		return !$this->file->eof();
+		return !feof( $this->handle );
 	}
 
 	/**
@@ -180,6 +150,7 @@ class CsvFileIterator implements Iterator, Countable {
 			return true;
 		}
 
+		fclose( $this->handle );
 		return false;
 	}
 

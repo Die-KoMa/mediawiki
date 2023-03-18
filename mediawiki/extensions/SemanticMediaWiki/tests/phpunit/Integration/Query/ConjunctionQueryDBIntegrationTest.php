@@ -38,10 +38,6 @@ class ConjunctionQueryDBIntegrationTest extends MwDBaseUnitTestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		if ( $GLOBALS['wgLanguageCode'] !== 'en' ) {
-			return $this->markTestSkipped( 'Category title produces different fingerprint!' );
-		}
-
 		$utilityFactory = UtilityFactory::getInstance();
 
 		$this->semanticDataFactory  = $utilityFactory->newSemanticDataFactory();

@@ -22,7 +22,7 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 	use PHPUnitCompat;
 
 	private $logger;
-	private $lockManager;
+	private $cache;
 
 	protected function setUp() {
 
@@ -30,7 +30,7 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->lockManager = $this->getMockBuilder( '\SMW\Elastic\Connection\LockManager' )
+		$this->cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -41,25 +41,8 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			ConnectionProvider::class,
-			new ConnectionProvider( $this->lockManager, $this->options )
+			new ConnectionProvider( $this->options, $this->cache  )
 		);
-	}
-
-	public function testGetConnection_MissingEndpointsThrowsException() {
-
-		$options = new Options (
-			[
-				'is.elasticstore' => true
-			]
-		);
-
-		$instance = new ConnectionProvider(
-			$this->lockManager,
-			$options
-		);
-
-		$this->setExpectedException( '\SMW\Elastic\Exception\MissingEndpointConfigException' );
-		$instance->getConnection();
 	}
 
 	public function testGetConnection_DummyClient() {
@@ -67,13 +50,13 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 		$options = new Options (
 			[
 				'is.elasticstore' => false,
-				'endpoints' => [ 'foo' ]
+				'endpoints' => []
 			]
 		);
 
 		$instance = new ConnectionProvider(
-			$this->lockManager,
-			$options
+			$options,
+			$this->cache
 		);
 
 		$instance->setLogger( $this->logger );
@@ -93,13 +76,13 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 		$options = new Options (
 			[
 				'is.elasticstore' => true,
-				'endpoints' => [ 'foo' ]
+				'endpoints' => []
 			]
 		);
 
 		$instance = new ConnectionProvider(
-			$this->lockManager,
-			$options
+			$options,
+			$this->cache
 		);
 
 		$instance->setLogger( $this->logger );
@@ -113,19 +96,19 @@ class ConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 	public function testGetConnectionThrowsExceptionWhenNotInstalled() {
 
 		if ( class_exists( '\Elasticsearch\ClientBuilder' ) ) {
-			$this->markTestSkipped( "\Elasticsearch\ClientBuilder is available, no exception is thrown" );
+			$this->markTestSkipped( "No exception thrown when ClientBuilder is available!" );
 		}
 
 		$options = new Options (
 			[
 				'is.elasticstore' => true,
-				'endpoints' => [ 'foo' ]
+				'endpoints' => []
 			]
 		);
 
 		$instance = new ConnectionProvider(
-			$this->lockManager,
-			$options
+			$options,
+			$this->cache
 		);
 
 		$this->setExpectedException( '\SMW\Elastic\Exception\ClientBuilderNotFoundException' );

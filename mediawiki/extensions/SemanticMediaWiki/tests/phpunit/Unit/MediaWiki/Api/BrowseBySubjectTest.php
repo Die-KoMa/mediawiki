@@ -174,10 +174,6 @@ class BrowseBySubjectTest extends \PHPUnit_Framework_TestCase {
 			->with( $this->equalTo( $dataItem ) )
 			->will( $this->returnValue( $semanticData ) );
 
-		$store->expects( $this->any() )
-			->method( 'getPropertySubjects' )
-			->will( $this->returnValue( [] ) );
-
 		$this->testEnvironment->registerObject( 'Store', $store );
 
 		$instance = new BrowseBySubject(

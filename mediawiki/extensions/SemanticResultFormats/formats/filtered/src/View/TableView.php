@@ -86,12 +86,12 @@ class TableView extends View {
 	private function getTableHeaders() {
 		$headers = [];
 
-		$queryResults = $this->getQueryResults();
-		$queryResultValue = reset( $queryResults );
-
-		if ( !is_a( $queryResultValue, ResultItem::class ) ) {
-			return '';
-		}
+		/**
+		 * Get first QueryResult and assign array members to variables
+		 *
+		 * @var \SRF\Filtered\ResultItem $queryResultValue
+		 */
+		list( , $queryResultValue ) = each( $this->getQueryResults() );
 
 		foreach ( $queryResultValue->getValue() as $field ) {
 			$printRequest = $field->getPrintRequest();

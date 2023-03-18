@@ -25,7 +25,7 @@ class DefaultParamDefinition {
 	 * @param integer|null $context
 	 * @param ResultPrinter|null $resultPrinter
 	 *
-	 * @return ParamDefinition[]
+	 * @return IParamDefinition[]
 	 */
 	public static function getParamDefinitions( $context = null, ResultPrinter $resultPrinter = null ) {
 		return self::buildParamDefinitions( $GLOBALS, $context, $resultPrinter );
@@ -47,7 +47,7 @@ class DefaultParamDefinition {
 	 * @param integer|null $context
 	 * @param ResultPrinter|null $resultPrinter
 	 *
-	 * @return ParamDefinition[]
+	 * @return IParamDefinition[]
 	 */
 	public static function buildParamDefinitions( $vars, $context = null, ResultPrinter $resultPrinter = null ) {
 		$params = [];
@@ -61,7 +61,6 @@ class DefaultParamDefinition {
 		$allowedFormats[] = 'auto';
 
 		$params['format'] = [
-			// @see $wgParamDefinitions['smwformat']
 			'type' => 'smwformat',
 			'default' => 'auto',
 		];
@@ -74,13 +73,13 @@ class DefaultParamDefinition {
 		$params['limit'] = [
 			'type' => 'integer',
 			'default' => $vars['smwgQDefaultLimit'],
-			'lowerbound' => 0,
+			'negatives' => false,
 		];
 
 		$params['offset'] = [
 			'type' => 'integer',
 			'default' => 0,
-			'lowerbound' => 0,
+			'negatives' => false,
 			'upperbound' => $vars['smwgQUpperbound'],
 		];
 

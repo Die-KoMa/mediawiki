@@ -155,19 +155,12 @@ class CachedListLookup implements ListLookup {
 
 		$data = unserialize( $this->cache->fetch( $optionsKey ) );
 
-		if ( !is_array( $data ) || $data === [] ) {
+		if ( $data === [] ) {
 			return null;
 		}
 
 		$this->isFromCache = true;
 		$this->timestamp = $data['time'];
-
-		// This is a hack! but as long as Store::getStatistics returns a simple
-		// array it is the only way to inform the consumer about the state of
-		// the lookup.
-		if ( $this->listLookup instanceof UsageStatisticsListLookup ) {
-			$data['list'] += [ '_cache' => true ];
-		}
 
 		return $data['list'];
 	}

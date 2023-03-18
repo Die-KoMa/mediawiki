@@ -49,9 +49,7 @@ class MySQLTableBuilder extends TableBuilder {
 			'char_nocase'      => 'VARCHAR(255) CHARSET utf8 COLLATE utf8_general_ci',
 			'char_long_nocase' => "VARCHAR($charLongLength) CHARSET utf8 COLLATE utf8_general_ci",
 			'usage_count'      => 'INT(8) UNSIGNED',
-			'integer_unsigned' => 'INT(8) UNSIGNED',
-			'enum' => 'ENUM',
-			'timestamp' => 'BINARY(14)'
+			'integer_unsigned' => 'INT(8) UNSIGNED'
 		];
 
 		return FieldType::mapType( $fieldType, $fieldTypes );
@@ -149,12 +147,7 @@ class MySQLTableBuilder extends TableBuilder {
 		$currentFields = [];
 
 		foreach ( $res as $row ) {
-
-			if ( strpos( $row->Type, 'enum' ) !== false ) {
-				$type = str_replace( 'enum', 'ENUM', $row->Type );
-			} else {
-				$type = strtoupper( $row->Type );
-			}
+			$type = strtoupper( $row->Type );
 
 			if ( substr( $type, 0, 8 ) == 'VARCHAR(' ) {
 				$type .= ' binary'; // just assume this to be the case for VARCHAR, though DESCRIBE will not tell us
@@ -164,9 +157,7 @@ class MySQLTableBuilder extends TableBuilder {
 				$type .= ' NOT NULL';
 			}
 
-			// Indicates PRIMARY KEY or index and since updating "KEY" is not
-			// possible only allow it in combination with a `auto_increment`
-			if ( $row->Key == 'PRI' && $row->Extra == 'auto_increment' ) {
+			if ( $row->Key == 'PRI' ) { /// FIXME: updating "KEY" is not possible, the below query will fail in this case.
 				$type .= ' KEY';
 			}
 
@@ -292,14 +283,6 @@ class MySQLTableBuilder extends TableBuilder {
 		// the length information from the temporary mirror when comparing new and
 		// old; of course we won't detect length changes!
 		foreach ( $indices as $k => $columns ) {
-
-			// Avoid "Error: 1068 Multiple primary key defined " when a primary
-			// index already exists and you try to add another one (e.g. defined
-			// for the same DI type but a fixed table)
-			if ( isset( $currentIndices['PRIMARY'] ) && is_array( $columns ) && $columns[1] === 'PRIMARY KEY' ) {
-				unset( $indices[$k] );
-			}
-
 			$idx[$k] = preg_replace("/\([^)]+\)/", "", $columns );
 		}
 
@@ -359,7 +342,7 @@ class MySQLTableBuilder extends TableBuilder {
 		$tableName = $this->connection->tableName( $tableName );
 		$indexOption = '';
 
-		$this->reportMessage( "   ... creating new $indexType $columns ..." );
+		$this->reportMessage( "   ... creating new index $columns ..." );
 
 		// @see MySQLTableBuilder::createExtraSQLFromattributes
 		// @see https://dev.mysql.com/doc/refman/5.7/en/fulltext-search-ngram.html

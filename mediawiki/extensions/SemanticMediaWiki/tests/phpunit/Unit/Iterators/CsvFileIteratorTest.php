@@ -76,11 +76,6 @@ class CsvFileIteratorTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->assertEquals(
-			2,
-			$instance->count()
-		);
-
-		$this->assertEquals(
 			$res,
 			[
 				[ '1', 'Foo', 'abc' ],

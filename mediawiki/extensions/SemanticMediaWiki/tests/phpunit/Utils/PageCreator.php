@@ -7,7 +7,6 @@ use SMW\Tests\TestEnvironment;
 use SMW\Tests\Utils\Mock\MockSuperUser;
 use Title;
 use UnexpectedValueException;
-use SMW\MediaWiki\EditInfo;
 
 /**
  * @license GNU GPL v2+
@@ -21,15 +20,6 @@ class PageCreator {
 	 * @var null
 	 */
 	protected $page = null;
-
-	/**
-	 * @since 3.1
-	 *
-	 * @return WikiPage
-	 */
-	public function setPage( \WikiPage $page ) {
-		$this->page = $page;
-	}
 
 	/**
 	 * @since 1.9.1
@@ -91,15 +81,20 @@ class PageCreator {
 	 */
 	public function doEdit( $pageContent = '', $editMessage = '' ) {
 
-		$content = \ContentHandler::makeContent(
-			$pageContent,
-			$this->getPage()->getTitle()
-		);
+		if ( class_exists( 'ContentHandler' ) ) {
+			$content = \ContentHandler::makeContent(
+				$pageContent,
+				$this->getPage()->getTitle()
+			);
 
-		$this->getPage()->doEditContent(
-			$content,
-			$editMessage
-		);
+			$this->getPage()->doEditContent(
+				$content,
+				$editMessage
+			);
+
+		} else {
+			$this->getPage()->doEdit( $pageContent, $editMessage );
+		}
 
 		TestEnvironment::executePendingDeferredUpdates();
 
@@ -129,11 +124,7 @@ class PageCreator {
 
 		TestEnvironment::executePendingDeferredUpdates();
 
-		if ( $status->isOK() ) {
-			return true;
-		} else {
-			return $status->getErrorsArray();
-		}
+		return $this;
 	}
 
 	/**
@@ -143,11 +134,28 @@ class PageCreator {
 	 */
 	public function getEditInfo() {
 
-		$editInfo = new EditInfo(
-			$this->getPage()
-		);
+		$revision = $this->getPage()->getRevision();
 
-		return $editInfo->fetchEditInfo();
+		if ( class_exists( 'ContentHandler' ) ) {
+
+			$content = $revision->getContent();
+			$format  = $content->getContentHandler()->getDefaultFormat();
+
+			return $this->getPage()->prepareContentForEdit(
+				$content,
+				null,
+				null,
+				$format
+			);
+		}
+
+		$text = method_exists( $revision, 'getContent' ) ? $revision->getContent( Revision::RAW ) : $revision->getRawText();
+
+		return $this->getPage()->prepareTextForEdit(
+			$text,
+			null,
+			null
+		);
 	}
 
 }

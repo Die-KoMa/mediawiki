@@ -77,7 +77,7 @@
 	"pf_viewform": "Sjå skjema",
 	"pf_editsource": "Endra kjelda",
 	"pf_formedit_edittitle": "Endra $1: $2",
-	"pf_formedit_formwarning": "Åtvaring: Sida [[$1|finst frå før]], men nyttar ikkje dette skjemaet.",
+	"pf_formedit_formwarning": "Åtvaring: Sida <a href=\"$1\">finst frå før</a>, men nyttar ikkje dette skjemaet.",
 	"pf_formedit_remove": "Fjern",
 	"pf_formedit_addanother": "Legg til enno ein",
 	"pf_formedit_none": "Ingen",
@@ -86,7 +86,6 @@
 	"pf_bad_url_error": "må ha korrekt adresseformat, inkludert 'http'",
 	"pf_bad_email_error": "må ha gyldig format på e-postadressa",
 	"pf_bad_number_error": "må vera eit gyldig tal",
-	"pf_bad_integer_error": "må vera eit gyldig heiltal",
 	"pf_bad_date_error": "må vera ein gyldig dato",
 	"uploadwindow": "Opplastingsvindauga",
 	"pf_property_isproperty": "Dette er ein eigenskap av typen $1.",
@@ -98,6 +97,5 @@
 	"pf_form_freetextlabel": "Fritekst",
 	"pf_category_hasdefaultform": "Denne kategorien nyttar skjemaet «$1».",
 	"pf_category_desc": "Dett er kategorien $1.",
-	"pf_blank_namespace": "Hovud",
-	"pf-maps-lookupcoordinates": "Rekn ut koordinatar frå adressa"
+	"pf_blank_namespace": "Hovud"
 }

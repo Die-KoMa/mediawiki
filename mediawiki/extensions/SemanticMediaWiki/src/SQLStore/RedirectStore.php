@@ -3,6 +3,7 @@
 namespace SMW\SQLStore;
 
 use Onoi\Cache\Cache;
+use SMW\HashBuilder;
 use SMW\InMemoryPoolCache;
 use SMW\MediaWiki\Jobs\UpdateJob;
 use SMW\SQLStore\TableBuilder\FieldType;
@@ -35,11 +36,6 @@ class RedirectStore {
 	private $hasEqualitySupport = false;
 
 	/**
-	 * @var boolean
-	 */
-	private $isCommandLineMode = false;
-
-	/**
 	 * @since 2.1
 	 *
 	 * @param Store $store
@@ -54,15 +50,6 @@ class RedirectStore {
 		}
 
 		$this->setEqualitySupportFlag( $GLOBALS['smwgQEqualitySupport'] );
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param boolean $isCommandLineMode
-	 */
-	public function setCommandLineMode( $isCommandLineMode ) {
-		$this->isCommandLineMode = (bool)$isCommandLineMode;
 	}
 
 	/**
@@ -98,7 +85,7 @@ class RedirectStore {
 	 */
 	public function findRedirect( $title, $namespace ) {
 
-		$hash = $this->makeHash(
+		$hash = HashBuilder::createHashIdFromSegments(
 			$title,
 			$namespace
 		);
@@ -125,7 +112,7 @@ class RedirectStore {
 
 		$this->insert( $id, $title, $namespace );
 
-		$hash = $this->makeHash(
+		$hash = HashBuilder::createHashIdFromSegments(
 			$title,
 			$namespace
 		);
@@ -193,26 +180,8 @@ class RedirectStore {
 			}
 		}
 
-
-		// Generally, redirect updates can be lazily run during the online processing
-		$immediateMode = false;
-
-		// #4082, #4323
-		// If possible allow an immediate execution but ensure that no section
-		// transaction is open and causes the redirect update to run before the
-		// initial transaction which otherwise could cause data inconsistencies
-		if (
-			$this->isCommandLineMode &&
-			!$connection->inSectionTransaction( SQLStore::UPDATE_TRANSACTION ) ) {
-			$immediateMode = true;
-		}
-
 		foreach ( $jobs as $job ) {
-			if ( $immediateMode ) {
-				$job->run();
-			} else {
-				$job->lazyPush();
-			}
+			$job->insert();
 		}
 	}
 
@@ -226,7 +195,7 @@ class RedirectStore {
 
 		$this->delete( $title, $namespace );
 
-		$hash = $this->makeHash(
+		$hash = HashBuilder::createHashIdFromSegments(
 			$title,
 			$namespace
 		);
@@ -255,34 +224,12 @@ class RedirectStore {
 
 		$connection = $this->store->getConnection( 'mw.db' );
 
-		$row = $connection->selectRow(
-			self::TABLE_NAME,
-			[
-				'o_id'
-			],
-			[
-				's_title' => $title,
-				's_namespace' => $namespace,
-				'o_id' => $id
-			],
-			__METHOD__
-		);
-
-		// Found a match, avoid duplicates!
-		if ( $row !== false ) {
-			return;
-		}
-
-		// Only allow one active redirection from source to target
-		$this->delete( $title, $namespace );
-
 		$connection->insert(
 			self::TABLE_NAME,
 			[
 				's_title' => $title,
 				's_namespace' => $namespace,
-				'o_id' => $id
-			],
+				'o_id' => $id ],
 			__METHOD__
 		);
 	}
@@ -317,15 +264,11 @@ class RedirectStore {
 			$title = Title::makeTitleSafe( $row->ns, $row->t );
 
 			if ( $title !== null ) {
-				$jobs[] = new UpdateJob( $title, [ 'origin' => 'RedirectStore' ] );
+				$jobs[] = new UpdateJob( $title );
 			}
 		}
 
 		$connection->freeResult( $res );
-	}
-
-	private function makeHash( $title, $namespace ) {
-		return "$title#$namespace";
 	}
 
 }

@@ -2,13 +2,11 @@
 
 namespace SMW\Tests;
 
-use SMW\Tests\Utils\JSONScript\JsonTestCaseContentHandler;
-use SMW\Tests\Utils\JSONScript\JsonTestCaseFileHandler;
 use SMW\Tests\Utils\UtilityFactory;
 use Title;
 
 /**
- * The `JsonTestCaseScriptRunner` is a convenience provider for `Json` formatted
+ * The JsonTestCaseScriptRunner is a convenience provider for `Json` formatted
  * integration tests to allow writing tests quicker without the need to setup
  * or tear down specific data structures.
  *
@@ -24,7 +22,7 @@ use Title;
  *
  * @author mwjames
  */
-abstract class JsonTestCaseScriptRunner extends DatabaseTestCase {
+abstract class JsonTestCaseScriptRunner extends MwDBaseUnitTestCase {
 
 	/**
 	 * @var FileReader
@@ -121,15 +119,6 @@ abstract class JsonTestCaseScriptRunner extends DatabaseTestCase {
 	 * @return array
 	 */
 	protected function getAllowedTestCaseFiles() {
-		return [];
-	}
-
-	/**
-	 * @since 3.0
-	 *
-	 * @return []
-	 */
-	protected function getDependencyDefinitions() {
 		return [];
 	}
 
@@ -257,6 +246,15 @@ abstract class JsonTestCaseScriptRunner extends DatabaseTestCase {
 	}
 
 	/**
+	 * @since 3.0
+	 *
+	 * @return []
+	 */
+	protected function getDependencyDefinitions() {
+		return [];
+	}
+
+	/**
 	 * @since 2.2
 	 *
 	 * @param JsonTestCaseFileHandler $jsonTestCaseFileHandler
@@ -275,11 +273,7 @@ abstract class JsonTestCaseScriptRunner extends DatabaseTestCase {
 			$this->markTestSkipped( $jsonTestCaseFileHandler->getReasonForSkip() );
 		}
 
-		if ( $jsonTestCaseFileHandler->requiredToSkipForMwVersion( MW_VERSION ) ) {
-			$this->markTestSkipped( $jsonTestCaseFileHandler->getReasonForSkip() );
-		}
-
-		if ( $jsonTestCaseFileHandler->requiredToSkipOnSiteLanguage( $GLOBALS['wgLanguageCode'] ) ) {
+		if ( $jsonTestCaseFileHandler->requiredToSkipForMwVersion( $GLOBALS['wgVersion'] ) ) {
 			$this->markTestSkipped( $jsonTestCaseFileHandler->getReasonForSkip() );
 		}
 

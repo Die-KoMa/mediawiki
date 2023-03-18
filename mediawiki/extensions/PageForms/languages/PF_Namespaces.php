@@ -8,12 +8,12 @@
  * @file PF_Namespaces.php
  * @ingroup PageForms
  *
- * @license GPL-2.0-or-later
+ * @licence GNU GPL v2+
  * @author Jeroen De Dauw < jeroendedauw@gmail.com >
  * @author Yaron Koren
  */
 
-$namespaceNames = [];
+$namespaceNames = array();
 
 if ( !defined( 'PF_NS_FORM' ) ) {
 	define( 'PF_NS_FORM', 106 );
@@ -23,133 +23,120 @@ if ( !defined( 'PF_NS_FORM' ) ) {
 /**
  * @author Meno25
  */
-$namespaceNames['ar'] = [
+$namespaceNames['ar'] = array(
 	PF_NS_FORM           => 'استمارة',
 	PF_NS_FORM_TALK      => 'نقاش_الاستمارة'
-];
+);
 
 /**
  * @author Meno25
  */
-$namespaceNames['arz'] = [
+$namespaceNames['arz'] = array(
 	PF_NS_FORM           => 'استمارة',
 	PF_NS_FORM_TALK      => 'نقاش_الاستمارة'
-];
+);
 
-$namespaceNames['ca'] = [
+$namespaceNames['ca'] = array(
 	PF_NS_FORM           => 'Formulari',
 	PF_NS_FORM_TALK      => 'Discussió_formulari'
-];
+);
 
 /**
  * @author Dominik Rodler
  */
-$namespaceNames['de'] = [
+$namespaceNames['de'] = array(
 	PF_NS_FORM           => 'Formular',
 	PF_NS_FORM_TALK      => 'Formular_Diskussion'
-];
+);
 
 /**
  * @author Protnet
  */
-$namespaceNames['el'] = [
+$namespaceNames['el'] = array(
 	PF_NS_FORM           => 'Φόρμα',
 	PF_NS_FORM_TALK      => 'Συζήτηση_φόρμας'
-];
+);
 
-$namespaceNames['en'] = [
+$namespaceNames['en'] = array(
 	PF_NS_FORM       => 'Form',
 	PF_NS_FORM_TALK  => 'Form_talk',
-];
+);
 
-$namespaceNames['es'] = [
+$namespaceNames['es'] = array(
 	PF_NS_FORM           => 'Formulario',
-	PF_NS_FORM_TALK      => 'Formulario_discusión'
-];
+	PF_NS_FORM_TALK      => 'Discusión_formulario'
+);
 
 /**
  * @author Ghassem Tofighi
  */
-$namespaceNames['fa'] = [
+$namespaceNames['fa'] = array(
 	PF_NS_FORM           => 'فرم',
 	PF_NS_FORM_TALK      => 'بحث_فرم'
-];
+);
 
 /**
  * @author Niklas Laxström
  */
-$namespaceNames['fi'] = [
+$namespaceNames['fi'] = array(
 	PF_NS_FORM           => 'Lomake',
 	PF_NS_FORM_TALK      => 'Keskustelu_lomakkeesta'
-];
+);
 
-$namespaceNames['fr'] = [
+$namespaceNames['fr'] = array(
 	PF_NS_FORM           => 'Formulaire',
 	PF_NS_FORM_TALK      => 'Discussion_formulaire'
-];
-
-/**
- * Hebrew (עברית)
- * @author FreedomFightrerSparrow
- */
-$namespaceNames['he'] = [
-	PF_NS_FORM           => 'טופס',
-	PF_NS_FORM_TALK      => 'שיחת_טופס'
-];
+);
 
 /**
  * @author Ivan Lanin
  */
-$namespaceNames['id'] = [
+$namespaceNames['id'] = array(
 	PF_NS_FORM           => 'Formulir',
 	PF_NS_FORM_TALK      => 'Pembicaraan_Formulir'
-];
+);
 
 /**
- * @author Michele.Fella
- * We can't use "Modulo" here because it's used already for
- * the Scribunto "Module" namespace.
- * "Maschera" is an alternate term, short for "Maschera di
- * inserimento".
+ * @author Melos
  */
-$namespaceNames['it'] = [
-	PF_NS_FORM           => 'Maschera',
-	PF_NS_FORM_TALK      => 'Discussione_maschera'
-];
+$namespaceNames['it'] = array(
+	PF_NS_FORM           => 'Modulo',
+	PF_NS_FORM_TALK      => 'Discussione_modulo'
+);
 
 /**
  * @author Jon Harald Søby
  */
-$namespaceNames['nb'] = [
+$namespaceNames['nb'] = array(
 	PF_NS_FORM           => 'Skjema',
 	PF_NS_FORM_TALK      => 'Skjemadiskusjon'
-];
+);
 
 /**
  * @author Siebrand Mazeland
  */
-$namespaceNames['nl'] = [
+$namespaceNames['nl'] = array(
 	PF_NS_FORM      => 'Formulier',
 	PF_NS_FORM_TALK => 'Overleg_formulier'
-];
+);
 
-$namespaceNames['ru'] = [
+$namespaceNames['ru'] = array(
 	PF_NS_FORM           => 'Форма',
 	PF_NS_FORM_TALK      => 'Обсуждение_формы'
-];
+);
 
 /**
  * @author Roc Michael
  */
-$namespaceNamess['zh-cn'] = [
+$namespaceNamess['zh-cn'] = array(
 	PF_NS_FORM           => '表单',
 	PF_NS_FORM_TALK      => '表单讨论'
-];
+);
 
 /**
  * @author Roc Michael
  */
-$namespaceNames['zh-tw'] = [
+$namespaceNames['zh-tw'] = array(
 	PF_NS_FORM           => '表單',
 	PF_NS_FORM_TALK      => '表單討論'
-];
+);

@@ -14,14 +14,15 @@
 	 * @since 2.5
 	 * @constructor
 	 *
-	 * @param {Object} mwapi
+	 * @param {Object} mwApi
 	 * @param {Object} util
 	 *
 	 * @return {this}
 	 */
-	var admin = function ( mwapi ) {
+	var admin = function ( mwApi ) {
+
 		this.VERSION = "2.5";
-		this.mwapi = mwapi;
+		this.api = mwApi;
 
 		return this;
 	};
@@ -55,110 +56,32 @@
 	 * @since 2.5
 	 * @method
 	 */
-	admin.prototype.info = function( data ) {
-
-		if ( data.info.jobcount.length === 0 ) {
-			return this.replace(  mw.msg( 'smw-no-data-available' ) );
-		}
-
-		this.replace(
-			'<pre>' + JSON.stringify( data.info.jobcount, null, 2 ) + '</pre>'
-		);
-	}
-
-	/**
-	 * @since 2.5
-	 * @method
-	 */
-	admin.prototype.task = function( data, parameters, pre_content ) {
-
-		var msg = data.task.count > 1 ? 'smw-list-count-plural' : 'smw-list-count';
-		var content = '';
-
-		if ( data.task.hasOwnProperty( 'isFromCache' ) ) {
-			var time = new Date( data.task.time * 1000 );
-			content = '<p>' + mw.msg( msg + '-from-cache', data.task.count, time.toUTCString() ) + '</p>';
-		} else {
-			content = '<p>' + mw.msg( msg, data.task.count ) + '</p>';
-		}
-
-		if ( data.task.list.length === 0 ) {
-			this.replace( mw.msg( 'smw-no-data-available' ) );
-		} else if ( data.task.hasOwnProperty( 'query-continue-offset' ) && data.task['query-continue-offset'] > 0 ) {
-
-			if ( data.task.hasOwnProperty( 'from' ) ) {
-				pre_content.push( smw.merge(
-				{
-					'from': data.task.from,
-					'to': data.task.to
-				}, data.task.list ) );
-
-				$( '#smw-request-update' ).replaceWith(
-					'<div id="smw-request-update" style="clear:both;width:100%;">' +
-					mw.msg( 'smw-processing' ) +
-					'&nbsp;' +
-					mw.msg( 'smw-api-data-collection-processing', data.task.from, data.task.to ) +
-					'</div>'
-				)
-			} else {
-				pre_content.push( data.task.list );
-			};
-
-			var params = JSON.parse( parameters.params );
-
-			parameters.params = JSON.stringify( {
-				'limit': params.limit,
-				'offset': data.task['query-continue-offset']
-			} )
-
-			this.api( parameters, pre_content );
-		} else {
-			if ( pre_content.length > 0 ) {
-				content = '';
-			};
-
-			if ( data.task.hasOwnProperty( 'from' ) ) {
-				pre_content.push(
-					smw.merge(
-						{
-							'from': data.task.from,
-							'to': data.task.to
-						},
-						data.task.list
-					)
-				);
-			} else if ( data.task.hasOwnProperty( 'isFromCache' ) ) {
-				pre_content = smw.merge(
-					data.task.list,
-					{
-						'isFromCache': data.task.isFromCache,
-						'cacheLifetime': data.task.cacheTTL,
-						'timestamp': data.task.time
-					}
-				);
-			} else {
-				pre_content = data.task.list;
-			};
-
-			this.jsonview( JSON.stringify( pre_content, null, 2 ) );
-		}
-	}
-
-	/**
-	 * @since 2.5
-	 * @method
-	 */
-	admin.prototype.api = function( parameters, pre_content = [] ) {
+	admin.prototype.doApiRequest = function( parameters ) {
 
 		var self = this,
 			content = mw.msg( 'smw-no-data-available' );
 
-		self.mwapi.postWithToken( 'csrf', parameters ).done( function( data ) {
+		self.api.postWithToken( 'csrf', parameters ).done( function( data ) {
+
 			if ( data.hasOwnProperty( 'info' ) ) {
-				self.info( data );
+				content = data.info.jobcount.length === 0 ? content : '<pre>' + JSON.stringify( data.info.jobcount, null, 2 ) + '</pre>';
 			} else if ( data.hasOwnProperty( 'task' ) ) {
-				self.task( data, parameters, pre_content );
+
+				if ( data.task.hasOwnProperty( 'isFromCache' ) ) {
+					var time = new Date( data.task.time * 1000 );
+					content = '<p>' + mw.msg( 'smw-list-count-from-cache', data.task.count, time.toUTCString() ) + '</p>';
+				} else {
+					content = '<p>' + mw.msg( 'smw-list-count', data.task.count ) + '</p>';
+				}
+
+				if ( data.task.list.length === 0 ) {
+					content = mw.msg( 'smw-no-data-available' );
+				} else {
+					content = content + '<pre>' + JSON.stringify( data.task.list, null, 2 ) + '</pre>';
+				}
 			}
+
+			self.replace( content );
 		} ).fail ( function( xhr, status, error ) {
 
 			var text = 'The API encountered an unknown error';
@@ -213,35 +136,11 @@
 		this.context.find( '.' + this.contentClass ).replaceWith( '<div class="' + this.contentClass + '">' + content + '</div>' );
 	};
 
-	admin.prototype.jsonview = function( json ) {
-
-		if ( this.contentClass === '' ) {
-			return;
-		};
-
-		var self = this;
-		this.context.css( 'opacity', 1 );
-
-		mw.loader.using( [ 'smw.jsonview' ] ).then( function () {
-			smw.jsonview.init( self.context.find( '.' + self.contentClass ), json )
-		} );
-	};
-
 	var instance = new admin(
 		new mw.Api()
 	);
 
 	$( document ).ready( function() {
-
-		// JS is loaded, now remove the "soft" disabled functionality
-		$( "#smw-json" ).removeClass( 'smw-schema-placeholder' );
-
-		var container = $( "#smw-json" ),
-			json = container.find( '.smw-data' ).text();
-
-		if ( json !== '' ) {
-			smw.jsonview.init( container, json );
-		};
 
 		/**
 		 * Find job count via the API
@@ -253,7 +152,7 @@
 				info: 'jobcount'
 			};
 
-			instance.setContext( $( this ) ).api( parameters );
+			instance.setContext( $( this ) ).doApiRequest( parameters );
 		} );
 
 		/**
@@ -266,17 +165,17 @@
 				$( this ).data( 'parameters' )
 			);
 
-			instance.setContext( $( this ) )
-
-			instance.api( {
+			var parameters = {
 				action: 'smwtask',
-				task: 'insert-job',
+				task: 'job',
 				params: JSON.stringify( {
 					'subject': $( this ).data( 'subject' ),
 					'job': $( this ).data( 'job' ),
 					'parameters': params
 				} )
-			} );
+			};
+
+			instance.setContext( $( this ) ).doApiRequest( parameters );
 		} );
 
 		/**
@@ -292,64 +191,15 @@
 		/**
 		 * Find duplicate entities via the API
 		 */
-		$( '.smw-admin-supplementary-duplicate-lookup' ).each( function() {
+		$( '.smw-admin-supplementary-duplookup' ).each( function() {
 
-			instance.setContext( $( this ) )
-
-			instance.api( {
+			var parameters = {
 				action: 'smwtask',
-				task: 'duplicate-lookup',
-				formatversion:2,
-				params: JSON.stringify( [] )
-			} );
-		} );
+				task: 'duplookup',
+				params: []
+			};
 
-		/**
-		 * Generate replication report via the API
-		 */
-		$( '.smw-admin-supplementary-es-replication-report' ).each( function() {
-
-			instance.setContext( $( this ) );
-
-			instance.api( {
-				action: 'smwtask',
-				task: 'es-replication-report',
-				params: JSON.stringify( {
-					'waitOnCommandLine': true,
-					'limit': $( this ).data( 'limit' ),
-					'offset': 0
-				} )
-			} );
-		} );
-
-		/**
-		 * Prettify the JSON display
-		 */
-		$( '#smw-admin-querycache-json,#smw-admin-configutation-json' ).each( function() {
-
-				$( this ).removeClass( 'smw-json-placeholder' );
-
-				var container = $( "#smw-json-container" ),
-					json = container.find( '.smw-json-data' ).text();
-
-				if ( json !== '' ) {
-					smw.jsonview.init( container, json );
-				};
-		} );
-
-		/**
-		 * Generate table statistics via the API
-		 */
-		$( '#smw-admin-supplementary-table-statistics' ).each( function() {
-
-			instance.setContext( $( this ) );
-
-			instance.api( {
-				formatversion: 2,
-				action: 'smwtask',
-				task: 'table-statistics',
-				params: JSON.stringify( [] )
-			} );
+			instance.setContext( $( this ) ).doApiRequest( parameters );
 		} );
 
 	} );

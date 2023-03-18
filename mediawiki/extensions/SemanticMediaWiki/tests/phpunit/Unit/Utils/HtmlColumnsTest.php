@@ -55,7 +55,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 				'a' => [ 'Foo', 'Bar' ],
 				'B' => [ 'Ichi', 'Ni' ]
 			],
-			HtmlColumns::INDEXED_LIST
+			HtmlColumns::INDX_CONTENT
 		);
 
 		$expected = [
@@ -81,7 +81,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 				'a' => [ 'Foo', 'Bar' ],
 				'B' => [ 'Baz', 'Fom', 'Fin', 'Fum' ]
 			],
-			HtmlColumns::INDEXED_LIST
+			HtmlColumns::INDX_CONTENT
 		);
 
 		$instance->setColumns( 2 );
@@ -114,7 +114,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 				'a' => [ 'Foo', 'Bar' ],
 				'B' => [ 'Ichi', 'Ni' ]
 			],
-			HtmlColumns::INDEXED_LIST
+			HtmlColumns::INDX_CONTENT
 		);
 
 		$instance->setColumns( 3 );
@@ -142,7 +142,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 				'a' => [ 'Foo', 'Bar' ],
 				'B' => [ 'Ichi', 'Ni' ]
 			],
-			HtmlColumns::INDEXED_LIST
+			HtmlColumns::INDX_CONTENT
 		);
 
 		$instance->setColumns( 2 );
@@ -170,7 +170,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 			[
 				'Foo', 'Baz', 'Bar'
 			],
-			HtmlColumns::PLAIN_LIST
+			HtmlColumns::LIST_CONTENT
 		);
 
 		$instance->setColumns( 2 );
@@ -200,47 +200,17 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 			[
 				'Foo', 'Baz', 'Bar'
 			],
-			HtmlColumns::PLAIN_LIST
+			HtmlColumns::LIST_CONTENT
 		);
 
 		$instance->setColumns( 2 );
 		$instance->setColumnListClass( 'foo-class' );
-		$instance->setResponsiveCols();
-		$instance->setResponsiveColsThreshold( 1 );
+		$instance->setColumnClass( 'bar-responsive' );
 		$instance->setListType( 'ul' );
 		$instance->isRTL( true );
 
 		$expected = [
-			'<div class="foo-class" dir="rtl"><div class="smw-column-responsive" style="width:100%;columns:2 20em;" dir="rtl">',
-			'<ul start=1><li>Foo</li><li>Baz</li><li>Bar</li></ul></div> <!-- end column -->'
-		];
-
-		$this->stringValidator->assertThatStringContains(
-			$expected,
-			$instance->getHtml()
-		);
-	}
-
-	public function testResponsiveColumnsOnResponsiveColsThreshold() {
-
-		$instance = new HtmlColumns();
-
-		$instance->addContents(
-			[
-				'Foo', 'Baz', 'Bar'
-			],
-			HtmlColumns::PLAIN_LIST
-		);
-
-		$instance->setColumns( 2 );
-		$instance->setColumnListClass( 'foo-class' );
-		$instance->setResponsiveCols();
-		$instance->setResponsiveColsThreshold( 4 );
-		$instance->setListType( 'ul' );
-		$instance->isRTL( true );
-
-		$expected = [
-			'<div class="foo-class" dir="rtl"><div class="smw-column-responsive" style="width:100%;columns:1 20em;" dir="rtl">',
+			'<div class="foo-class" dir="rtl"><div class="bar-responsive" style="width:100%;" dir="rtl">',
 			'<ul start=1><li>Foo</li><li>Baz</li><li>Bar</li></ul></div> <!-- end column -->'
 		];
 
@@ -258,13 +228,12 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 			[
 				'Foo', 'Baz', 'Bar'
 			],
-			HtmlColumns::PLAIN_LIST
+			HtmlColumns::LIST_CONTENT
 		);
 
 		$instance->setColumns( 2 );
 		$instance->setColumnListClass( 'foo-class' );
-		$instance->setResponsiveCols();
-		$instance->setResponsiveColsThreshold( 1 );
+		$instance->setColumnClass( 'bar-responsive' );
 		$instance->setListType( 'ul' );
 		$instance->isRTL( true );
 
@@ -278,7 +247,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$expected = [
-			'<div class="foo-class" dir="rtl"><div class="smw-column-responsive" style="width:100%;columns:2 20em;" dir="rtl">',
+			'<div class="foo-class" dir="rtl"><div class="bar-responsive" style="width:100%;" dir="rtl">',
 			'<ul start=1><li id="123">Foo</li><li>Baz</li><li 0="456">Bar</li></ul></div> <!-- end column -->'
 		];
 
@@ -296,13 +265,12 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 			[
 				'Foo', 'Baz', 'Bar'
 			],
-			HtmlColumns::PLAIN_LIST
+			HtmlColumns::LIST_CONTENT
 		);
 
 		$instance->setColumns( 2 );
 		$instance->setColumnListClass( 'foo-class' );
-		$instance->setResponsiveCols();
-		$instance->setResponsiveColsThreshold( 1 );
+		$instance->setColumnClass( 'bar-responsive' );
 		$instance->setListType( 'ol', 'i' );
 		$instance->isRTL( true );
 
@@ -316,7 +284,7 @@ class HtmlColumnListFormatterTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$expected = [
-			'<div class="foo-class" dir="rtl"><div class="smw-column-responsive" style="width:100%;columns:2 20em;" dir="rtl">',
+			'<div class="foo-class" dir="rtl"><div class="bar-responsive" style="width:100%;" dir="rtl">',
 			'<ol type=i start=1><li id="123">Foo</li><li>Baz</li><li 0="456">Bar</li></ol></div> <!-- end column -->'
 		];
 

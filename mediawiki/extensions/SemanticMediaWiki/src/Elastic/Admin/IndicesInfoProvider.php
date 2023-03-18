@@ -5,7 +5,6 @@ namespace SMW\Elastic\Admin;
 use Html;
 use SMW\Message;
 use WebRequest;
-use SMW\Utils\HtmlTabs;
 
 /**
  * @license GNU GPL v2+
@@ -84,43 +83,19 @@ class IndicesInfoProvider extends InfoProviderHandler {
 
 		$this->outputFormatter->addHtml( $html );
 
+		$this->outputFormatter->addHtml( '<h2>Indices</h2>' );
+
 		$indices = $connection->cat( 'indices' );
 		ksort( $indices );
 
-		$htmlTabs = new HtmlTabs();
-		$htmlTabs->setGroup( 'es-indices' );
-		$htmlTabs->setActiveTab( 'indices' );
-
-		$htmlTabs->tab(
-			'indices',
-			$this->msg( 'smw-admin-supplementary-elastic-indices-title' )
+		$this->outputFormatter->addAsPreformattedText(
+			$this->outputFormatter->encodeAsJson( $indices )
 		);
 
-		$htmlTabs->content(
-			'indices',
-			'<pre>' . $this->outputFormatter->encodeAsJson( $indices ) . '</pre>'
-		);
+		$this->outputFormatter->addHtml( '<h2>Statistics</h2>' );
 
-		$htmlTabs->tab(
-			'statistics',
-			$this->msg( 'smw-admin-supplementary-elastic-statistics-title' )
-		);
-
-		$htmlTabs->content(
-			'statistics',
-			'<pre>' . $this->outputFormatter->encodeAsJson( $connection->stats( 'indices' ) ) . '</pre>'
-		);
-
-		$html = $htmlTabs->buildHTML( [ 'class' => 'es-indices' ] );
-
-		$this->outputFormatter->addHtml(
-			$html
-		);
-
-		$this->outputFormatter->addInlineStyle(
-			'.es-indices #tab-indices:checked ~ #tab-content-indices,' .
-			'.es-indices #tab-statistics:checked ~ #tab-content-statistics {' .
-			'display: block;}'
+		$this->outputFormatter->addAsPreformattedText(
+			$this->outputFormatter->encodeAsJson( $connection->stats( 'indices' ) )
 		);
 	}
 

@@ -3,7 +3,6 @@
 namespace SMW;
 
 use Html;
-use SMW\MediaWiki\MessageBuilder;
 use SMWRequestOptions;
 use SMWStringCondition;
 use Xml;
@@ -137,11 +136,10 @@ abstract class QueryPage extends \QueryPage {
 		// during doQuery() which is processed before this form is generated
 		$resultCount = wfShowingResults( $this->selectOptions['offset'], $this->selectOptions['count'] );
 
-		$msgBuilder =  new MessageBuilder( $this->getLanguage() );
-		$selection = $msgBuilder->prevNextToText(
+		$selection = $this->getLanguage()->viewPrevNext(
 			$this->getContext()->getTitle(),
-			$this->selectOptions['limit'],
 			$this->selectOptions['offset'],
+			$this->selectOptions['limit'],
 			$this->linkParameters(),
 			$this->selectOptions['end']
 		);

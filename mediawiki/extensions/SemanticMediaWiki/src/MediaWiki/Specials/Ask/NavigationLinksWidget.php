@@ -6,11 +6,10 @@ use Html;
 use SMW\Localizer;
 use SMW\Message;
 use SMW\Utils\HtmlModal;
-use SMW\Utils\Pager;
+use SMW\Page\ListPager;
 use SMWInfolink as Infolink;
 use Title;
 use SMW\Utils\HtmlTabs;
-use SMW\Utils\UrlArgs;
 
 /**
  * @license GNU GPL v2+
@@ -162,8 +161,8 @@ class NavigationLinksWidget {
 		}
 
 		$urlArgs = clone $urlArgs;
-		$limit = (int)$urlArgs->get( 'limit' );
-		$offset = (int)$urlArgs->get( 'offset' );
+		$limit = $urlArgs->get( 'limit' );
+		$offset = $urlArgs->get( 'offset' );
 
 		// Remove any contents that is cruft
 		if ( strpos( $urlArgs->get( 'p' ), 'cl=' ) !== false ) {
@@ -183,7 +182,7 @@ class NavigationLinksWidget {
 			[
 				'id' => 'ask-pagination'
 			],
-			Pager::pagination( $title, $limit, $offset, $count, $urlArgs->toArray() + [ '_target' => '#search' ] , $html )
+			ListPager::pagination( $title, $limit, $offset, $count, $urlArgs->toArray() + [ '_target' => '#search' ] , $html )
 		);
 	}
 

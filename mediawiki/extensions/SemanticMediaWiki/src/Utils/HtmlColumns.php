@@ -15,12 +15,22 @@ class HtmlColumns {
 	/**
 	 * Indexed content
 	 */
-	const INDEXED_LIST = 'list/indexed';
+	const INDX_CONTENT = 'indexed.list';
+
+	/**
+	 * Indexed content
+	 */
+	const INDEXED_LIST = 'indexed.list';
 
 	/**
 	 * List content
 	 */
-	const PLAIN_LIST = 'list/plain';
+	const LIST_CONTENT = 'list.content';
+
+	/**
+	 * List content
+	 */
+	const PLAIN_LIST = 'plain.list';
 
 	/**
 	 * @var integer
@@ -50,7 +60,12 @@ class HtmlColumns {
 	/**
 	 * @var integer
 	 */
-	private $columnStyle = 0;
+	private $rowsPerColumn = 0;
+
+	/**
+	 * @var integer
+	 */
+	private $columnWidth = 0;
 
 	/**
 	 * @var string
@@ -83,16 +98,6 @@ class HtmlColumns {
 	private $isRTL = false;
 
 	/**
-	 * @var boolean
-	 */
-	private $isResponsiveCols = false;
-
-	/**
-	 * @var integer
-	 */
-	private $responsiveColsThreshold = 10;
-
-	/**
 	 * @since 3.0
 	 *
 	 * @param string $columnListClass
@@ -117,24 +122,6 @@ class HtmlColumns {
 	 */
 	public function isRTL( $isRTL ) {
 		$this->isRTL = (bool)$isRTL;
-	}
-
-	/**
-	 * @since 3.0
-	 *
-	 * @param boolean $isResponsiveCols
-	 */
-	public function setResponsiveCols( $isResponsiveCols = true ) {
-		$this->isResponsiveCols = (bool)$isResponsiveCols;
-	}
-
-	/**
-	 * @since 3.0
-	 *
-	 * @param integer $responsiveColsThreshold
-	 */
-	public function setResponsiveColsThreshold( $responsiveColsThreshold ) {
-		$this->responsiveColsThreshold = (int)$responsiveColsThreshold;
 	}
 
 	/**
@@ -193,7 +180,7 @@ class HtmlColumns {
 	 * @param string[] $cnts
 	 * @param string $type
 	 */
-	public function addContents( array $cnts, $type = self::PLAIN_LIST ) {
+	public function addContents( array $cnts, $type = self::LIST_CONTENT ) {
 		$this->setContents( $cnts, $type );
 	}
 
@@ -203,16 +190,16 @@ class HtmlColumns {
 	 * @param string[] $cnts
 	 * @param string $type
 	 */
-	public function setContents( array $cnts, $type = self::PLAIN_LIST ) {
+	public function setContents( array $cnts, $type = self::LIST_CONTENT ) {
 
-		if ( $type === self::PLAIN_LIST ) {
+		if ( $type === self::LIST_CONTENT ) {
 			$contents[''] = [];
 
 			foreach ( $cnts as $value ) {
 				$contents[''][] = $value;
 			}
 
-		} elseif ( $type === self::INDEXED_LIST ) {
+		} elseif ( $type === self::INDX_CONTENT ) {
 			$contents = $cnts;
 		} else {
 			throw new InvalidArgumentException( 'Missing a recognized type!');
@@ -233,30 +220,15 @@ class HtmlColumns {
 		$usedColumnCloser = false;
 		$this->numRows = 0;
 
-		// Directly influence the max columns especially in combination of `isResponsiveCols`
-		// so that the responsiveness is kept while limiting the output to only
-		// show a maximum of ... columns
-		$maxColumns = $this->columns;
-
-		if ( $this->isResponsiveCols && $this->count < $this->responsiveColsThreshold ) {
-			// A list with less than ... items will not benefit from a responsive
-			// column design
-			$maxColumns = 1;
-			$width = 100;
+		// Class to determine whether we want responsive columns width
+		if ( strpos( $this->columnClass, 'responsive' ) !== false ) {
+			$this->columnWidth = 100;
 			$this->columns = 1;
-			$this->columnStyle = "width:$width%;columns:$maxColumns 20em;";
-			$this->columnClass = 'smw-column-responsive';
-		} elseif ( $this->isResponsiveCols ) {
-			$width = 100;
-			$this->columns = 1;
-			$this->columnClass = 'smw-column-responsive';
-			$this->columnStyle = "width:$width%;columns:$maxColumns 20em;";
 		} else {
-			$width = floor( 100 / $this->columns );
-			$this->columnStyle = "width:$width%;";
+			$this->columnWidth = floor( 100 / $this->columns );
 		}
 
-		$rowsPerColumn = ceil( $this->count / $this->columns );
+		$this->rowsPerColumn = ceil( $this->count / $this->columns );
 
 		foreach ( $this->contents as $key => $items ) {
 
@@ -267,8 +239,6 @@ class HtmlColumns {
 			$result .= $this->makeList(
 				$key,
 				$items,
-				$rowsPerColumn,
-				$maxColumns,
 				$usedColumnCloser
 			);
 		}
@@ -287,7 +257,7 @@ class HtmlColumns {
 		);
 	}
 
-	private function makeList( $key, $items, $rowsPerColumn, $columns, &$usedColumnCloser ) {
+	private function makeList( $key, $items, &$usedColumnCloser ) {
 
 		$result = '';
 		$previousKey = "";
@@ -305,8 +275,8 @@ class HtmlColumns {
 				}
 			}
 
-			if ( $this->numRows % $rowsPerColumn == 0 ) {
-				$result .= "<div class=\"$this->columnClass\" style=\"$this->columnStyle\" dir=\"$dir\">";
+			if ( $this->numRows % $this->rowsPerColumn == 0 ) {
+				$result .= "<div class=\"$this->columnClass\" style=\"width:$this->columnWidth%;\" dir=\"$dir\">";
 
 				$numRowsInColumn = $this->numRows + 1;
 				$type = $this->olType !== '' ? " type={$this->olType}" : '';
@@ -329,7 +299,7 @@ class HtmlColumns {
 			// if we're at a new first letter, end
 			// the last list and start a new one
 			if ( $key != $previousKey ) {
-				$result .= $this->numRows % $rowsPerColumn > 0 ? "</{$this->listType}>" : '';
+				$result .= $this->numRows % $this->rowsPerColumn > 0 ? "</{$this->listType}>" : '';
 				$result .= ( $key !== '' ? $this->element( 'div', [ 'class' => 'smw-column-header' ], $key ) : '' ) . "<{$this->listType}>";
 			}
 
@@ -337,7 +307,7 @@ class HtmlColumns {
 			$result .= $this->element( 'li', $attributes, $item );
 			$usedColumnCloser = false;
 
-			if ( ( $this->numRows + 1 ) % $rowsPerColumn == 0 && ( $this->numRows + 1 ) < $this->count ) {
+			if ( ( $this->numRows + 1 ) % $this->rowsPerColumn == 0 && ( $this->numRows + 1 ) < $this->count ) {
 				$result .= "</{$this->listType}></div> <!-- end column -->";
 				$usedColumnCloser = true;
 			}

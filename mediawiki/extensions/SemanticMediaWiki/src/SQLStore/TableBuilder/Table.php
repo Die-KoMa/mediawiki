@@ -14,10 +14,6 @@ use RuntimeException;
  */
 class Table {
 
-	const TYPE_FIELDS = 'fields';
-	const TYPE_INDICES = 'indices';
-	const TYPE_DEFAULTS = 'defaults';
-
 	/**
 	 * @var string
 	 */
@@ -87,16 +83,7 @@ class Table {
 	 * @param string|array $fieldType
 	 */
 	public function addColumn( $fieldName, $fieldType ) {
-		$this->attributes[self::TYPE_FIELDS][$fieldName] = $fieldType;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string $key
-	 */
-	public function setPrimaryKey( $key ) {
-		$this->addIndex( [ $key, "PRIMARY KEY" ], 'pri' );
+		$this->attributes['fields'][$fieldName] = $fieldType;
 	}
 
 	/**
@@ -106,17 +93,10 @@ class Table {
 	 * @param string|null $key
 	 */
 	public function addIndex( $index, $key = null ) {
-
-		$val = is_array( $index ) ? $index[0] : $index;
-
-		if ( count( explode( ' ', $val ) ) > 1 ) {
-			throw new RuntimeException( "Index declaration `$val` contains a space!." );
-		}
-
 		if ( $key !== null ) {
-			$this->attributes[self::TYPE_INDICES][$key] = $index;
+			$this->attributes['indices'][$key] = $index;
 		} else {
-			$this->attributes[self::TYPE_INDICES][] = $index;
+			$this->attributes['indices'][] = $index;
 		}
 	}
 
@@ -127,7 +107,7 @@ class Table {
 	 * @param string|int $default
 	 */
 	public function addDefault( $fieldName, $default ) {
-		$this->attributes[self::TYPE_DEFAULTS][$fieldName] = $default;
+		$this->attributes['defaults'][$fieldName] = $default;
 	}
 
 	/**
@@ -140,7 +120,7 @@ class Table {
 	 */
 	public function addOption( $key, $option ) {
 
-		if ( in_array( $key, [ self::TYPE_FIELDS, self::TYPE_INDICES, self::TYPE_DEFAULTS ] ) ) {
+		if ( $key === 'fields' || $key === 'indices' || $key === 'defaults' ) {
 			throw new RuntimeException( "$key is a reserved option key." );
 		}
 

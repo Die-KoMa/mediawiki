@@ -8,7 +8,9 @@ Import definitions are defined using a `JSON` format which provides the structur
 
 The import files are sorted and therefore sequentially processed based on the file name. In case where content relies on other content an appropriate naming convention should be followed to ensure required definitions are imported in the expected order.
 
-Semantic MediaWiki deploys preselected import content which is defined in the "smw.vocab.json" file and includes:
+### Default definitions
+
+Preselected import content is defined in the "default.json" file and includes:
 
 * "Smw import skos"
 * "Smw import owl"
@@ -17,11 +19,15 @@ Semantic MediaWiki deploys preselected import content which is defined in the "s
 * "Foaf:name" and
 * "Foaf:homepage"
 
-It should be noted that `smw.vocab.json` is __not__ expected to be the __authority source__ of content for a wiki and is the reason why the option `replaceable` is set to `false` so that pre-existing content that matches the same name and namespace is not replaced by the importer.
+It should be noted that `default.json` is __not__ expected to be the __authority source__ of content for a wiki and is the reason why the option `canReplace` is set `false` so that pre-existing content with the same name and namespace is not replaced.
 
 ### Custom definitions
 
 It is possible to define one or more custom import definitions using [`$smwgImportFileDirs`](https://www.semantic-mediawiki.org/wiki/Help:$smwgImportFileDirs) with a custom location (directory) from where import definitions can be loaded.
+
+<pre>
+$GLOBALS['smwgImportFileDirs']['movie-actor-vocab'] = __DIR__ . '/import/movie-actor';
+</pre>
 
 <pre>
 $GLOBALS['smwgImportFileDirs']['custom-vocab'] = __DIR__ . '/custom';
@@ -37,9 +43,11 @@ $GLOBALS['smwgImportFileDirs']['custom-vocab'] = __DIR__ . '/custom';
 - `contents` it contains either the raw text or a parameter
   - `importFrom` link to a file from where the raw text (contains a relative path to the `$smwgImportFileDirs`)
 - `options`
-  - `replaceable` to indicate whether content is being allowed to be replaced during an import or not and can take `true`, `false`, or `{ "LAST_EDITOR": "IS_IMPORTER" }` to support a replacement when the last editor is the same as the import creator (hereby provides a method to extend content as long as the source page wasn't altered by someone or something else).
+  - `canReplace` to indicate whether content is being allowed to be replaced during
+  an import or not
 
-The [`$smwgImportReqVersion`](https://www.semantic-mediawiki.org/wiki/Help:$smwgImportReqVersion) stipulates the required version for an import where only definitions that match that version are permitted to be imported.
+The [`$smwgImportReqVersion`](https://www.semantic-mediawiki.org/wiki/Help:$smwgImportReqVersion) stipulates
+the required version for an import and only definitions that match that version are permitted to be imported.
 
 ### Examples
 
@@ -67,8 +75,6 @@ The location for the mentioned `custom.xml` is relative to the selected `$smwgIm
 }
 </pre>
 
-#### Text import
-
 <pre>
 {
 	"description": "Template import",
@@ -79,7 +85,7 @@ The location for the mentioned `custom.xml` is relative to the selected `$smwgIm
 			"namespace": "NS_TEMPLATE",
 			"contents": "<includeonly>{{{1}}}, {{{2}}}</includeonly>",
 			"options": {
-				"replaceable": false
+				"canReplace": false
 			}
 		},
 		{
@@ -90,7 +96,7 @@ The location for the mentioned `custom.xml` is relative to the selected `$smwgIm
 				"importFrom": "/templates/template-1.tmpl"
 			},
 			"options": {
-				"replaceable": false
+				"canReplace": false
 			}
 		}
 	],
@@ -106,7 +112,7 @@ During the setup process, the `Installer` will automatically run and inform
 about the process which will output something similar to:
 
 <pre>
-Import of smw.vocab.json ...
+Import of default.json ...
    ... replacing MediaWiki:Smw import foaf contents ...
    ... skipping Property:Foaf:knows, already exists ...
 
@@ -117,18 +123,29 @@ If not otherwise specified, content (a.k.a. pages) that pre-exists are going to 
 
 ## Technical notes
 
-`SMW::SQLStore::Installer::AfterCreateTablesComplete` is the event to import content during the setup
+<pre>
+SMW\Importer
+│	└─ ContentCreators
+│		├─ DispatchingContentCreator
+│		├─ XmlContentCreator
+│		└─ TextContentCreator
+│
+├─ ImporterServiceFactory # access to import services
+├─ ContentIterator
+├─ ContentCreator
+├─ JsonContentIterator
+├─ JsonImportContentsFileDirReader
+└─ ContentModeller
+</pre>
 
-- src
-  - Importer
-    - `ImporterServiceFactory` access to import services
-    - `Importer` is responsible for importing contents provided by a `ContentIterator`
-    - `ContentIterator` an interface to provide access to individual `ImportContents` instances
-    - `JsonContentIterator` implements the `ContentIterator` interface
-    - `JsonImportContentsFileDirReader` provides contents of all recursively fetched files from a location (e.g[`$smwgImportFileDirs`](https://www.semantic-mediawiki.org/wiki/Help:$smwgImportFileDirs) setting ) that meets the requirements
-    - `ContentModeller` interprets the `JSON` definition and returns a set of `ImportContents` instances
-    - `ContentCreator` an interface to specify different creation methods (e.g. text, XML etc.)
-    - ContentCreators
-      - `DispatchingContentCreator` dispatches to the actual content creation instance based on `ImportContents::getContentType`
-      - `XmlContentCreator` support the creation of MediaWiki XML specific content
-      - `TextContentCreator` support for raw wikitext
+- `SMW::SQLStore::Installer::AfterCreateTablesComplete` provides the hook and is the event to execute the import during the setup
+- `ImporterServiceFactory` access to import services
+- `Importer` is responsible for importing contents provided by a `ContentIterator`
+- `ContentIterator` an interface to provide access to individual `ImportContents` instances
+- `JsonContentIterator` implements the `ContentIterator` interface
+- `JsonImportContentsFileDirReader` provides contents of all recursively fetched files from a location (e.g[`$smwgImportFileDirs`](https://www.semantic-mediawiki.org/wiki/Help:$smwgImportFileDirs) setting ) that meets the requirements
+- `ContentModeller` interprets the `JSON` definition and returns a set of `ImportContents` instances
+- `ContentCreator` an interface to specify different creation methods (e.g. text, XML etc.)
+- `DispatchingContentCreator` dispatches to the actual content creation instance based on `ImportContents::getContentType`
+- `XmlContentCreator` support the creation of MediaWiki XML specific content
+- `TextContentCreator` support for raw wikitext

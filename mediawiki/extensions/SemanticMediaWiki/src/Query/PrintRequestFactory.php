@@ -42,13 +42,12 @@ class PrintRequestFactory {
 	 * @since 2.4
 	 *
 	 * @param string $text
-	 * @param boolean $showMode = false
-	 * @param boolean $asCanonicalLabel = false
+	 * @param $showMode = false
 	 *
 	 * @return PrintRequest|null
 	 */
-	public function newFromText( $text, $showMode = false, $asCanonicalLabel = false ) {
-		return PrintRequest::newFromText( $text, $showMode, $asCanonicalLabel );
+	public function newFromText( $text, $showMode = false ) {
+		return PrintRequest::newFromText( $text, $showMode );
 	}
 
 	/**

@@ -43,26 +43,16 @@ class Settings extends Options {
 	 */
 	public static function newFromGlobals() {
 
-		// #4150
-		// If someone tried to use SMW without proper initialization then something
-		// like "Notice: Undefined index: smwgNamespaceIndex ..." would appear and
-		// to produce a proper error message avoid those by adding a default.
-		if ( !defined( 'SMW_VERSION' ) || !isset( $GLOBALS['smwgNamespaceIndex'] ) ) {
-			NamespaceManager::initCustomNamespace( $GLOBALS );
-		}
-
 		$configuration = [
 			'smwgIP' => $GLOBALS['smwgIP'],
 			'smwgExtraneousLanguageFileDir' => $GLOBALS['smwgExtraneousLanguageFileDir'],
 			'smwgServicesFileDir' => $GLOBALS['smwgServicesFileDir'],
 			'smwgResourceLoaderDefFiles' => $GLOBALS['smwgResourceLoaderDefFiles'],
 			'smwgMaintenanceDir' => $GLOBALS['smwgMaintenanceDir'],
-			'smwgTemplateDir' => $GLOBALS['smwgTemplateDir'],
 			'smwgConfigFileDir' => $GLOBALS['smwgConfigFileDir'],
 			'smwgImportFileDirs' => $GLOBALS['smwgImportFileDirs'],
 			'smwgImportReqVersion' => $GLOBALS['smwgImportReqVersion'],
 			'smwgSemanticsEnabled' => $GLOBALS['smwgSemanticsEnabled'],
-			'smwgIgnoreExtensionRegistrationCheck' => $GLOBALS['smwgIgnoreExtensionRegistrationCheck'],
 			'smwgUpgradeKey' => $GLOBALS['smwgUpgradeKey'],
 			'smwgJobQueueWatchlist' => $GLOBALS['smwgJobQueueWatchlist'],
 			'smwgEnabledCompatibilityMode' => $GLOBALS['smwgEnabledCompatibilityMode'],
@@ -144,6 +134,9 @@ class Settings extends Options {
 			'smwgIQRunningNumber' => isset( $GLOBALS['smwgIQRunningNumber'] ) ? $GLOBALS['smwgIQRunningNumber'] : 0,
 			'smwgCacheUsage' => $GLOBALS['smwgCacheUsage'],
 			'smwgMainCacheType' => $GLOBALS['smwgMainCacheType'],
+			'smwgEntityLookupCacheType' => $GLOBALS['smwgEntityLookupCacheType'],
+			'smwgEntityLookupCacheLifetime' => $GLOBALS['smwgEntityLookupCacheLifetime'],
+			'smwgEntityLookupFeatures' => $GLOBALS['smwgEntityLookupFeatures'],
 			'smwgFixedProperties' => $GLOBALS['smwgFixedProperties'],
 			'smwgPropertyLowUsageThreshold' => $GLOBALS['smwgPropertyLowUsageThreshold'],
 			'smwgPropertyZeroCountDisplay' => $GLOBALS['smwgPropertyZeroCountDisplay'],
@@ -154,6 +147,7 @@ class Settings extends Options {
 			'smwgEnabledDeferredUpdate' => $GLOBALS['smwgEnabledDeferredUpdate'],
 			'smwgEnabledQueryDependencyLinksStore' => $GLOBALS['smwgEnabledQueryDependencyLinksStore'],
 			'smwgQueryDependencyPropertyExemptionList' => $GLOBALS['smwgQueryDependencyPropertyExemptionList'],
+			'smwgQueryDependencyAffiliatePropertyDetectionList' => $GLOBALS['smwgQueryDependencyAffiliatePropertyDetectionList'],
 			'smwgParserFeatures' => $GLOBALS['smwgParserFeatures'],
 			'smwgDVFeatures' => $GLOBALS['smwgDVFeatures'],
 			'smwgEnabledFulltextSearch' => $GLOBALS['smwgEnabledFulltextSearch'],
@@ -171,7 +165,6 @@ class Settings extends Options {
 			'smwgCreateProtectionRight' => $GLOBALS['smwgCreateProtectionRight'],
 			'smwgSimilarityLookupExemptionProperty' => $GLOBALS['smwgSimilarityLookupExemptionProperty'],
 			'smwgPropertyInvalidCharacterList' => $GLOBALS['smwgPropertyInvalidCharacterList'],
-			'smwgPropertyRetiredList' => $GLOBALS['smwgPropertyRetiredList'],
 			'smwgPropertyReservedNameList' => $GLOBALS['smwgPropertyReservedNameList'],
 			'smwgEntityCollation' => $GLOBALS['smwgEntityCollation'],
 			'smwgExperimentalFeatures' => $GLOBALS['smwgExperimentalFeatures'],
@@ -188,19 +181,11 @@ class Settings extends Options {
 			'smwgPostEditUpdate' => $GLOBALS['smwgPostEditUpdate'],
 			'smwgSpecialAskFormSubmitMethod' => $GLOBALS['smwgSpecialAskFormSubmitMethod'],
 			'smwgSupportSectionTag' => $GLOBALS['smwgSupportSectionTag'],
-			'smwgMandatorySubpropertyParentTypeInheritance' => $GLOBALS['smwgMandatorySubpropertyParentTypeInheritance'],
-			'smwgCheckForRemnantEntities' => $GLOBALS['smwgCheckForRemnantEntities'],
-			'smwgCheckForConstraintErrors' => $GLOBALS['smwgCheckForConstraintErrors'],
-			'smwgPlainList' => $GLOBALS['smwgPlainList'],
 		];
 
 		self::initLegacyMapping( $configuration );
 
-		// Deprecated since 3.1
 		\Hooks::run( 'SMW::Config::BeforeCompletion', [ &$configuration ] );
-
-		// Since 3.1
-		\Hooks::run( 'SMW::Settings::BeforeInitializationComplete', [ &$configuration ] );
 
 		if ( self::$instance === null ) {
 			self::$instance = self::newFromArray( $configuration );
@@ -367,6 +352,10 @@ class Settings extends Options {
 			$configuration['smwgQueryDependencyPropertyExemptionList'] = $GLOBALS['smwgQueryDependencyPropertyExemptionlist'];
 		}
 
+		if ( isset( $GLOBALS['smwgQueryDependencyAffiliatePropertyDetectionlist'] ) ) {
+			$configuration['smwgQueryDependencyAffiliatePropertyDetectionList'] = $GLOBALS['smwgQueryDependencyAffiliatePropertyDetectionlist'];
+		}
+
 		// smwgPropertyListLimit
 		if ( isset( $GLOBALS['smwgSubPropertyListLimit'] ) ) {
 			$configuration['smwgPropertyListLimit']['subproperty'] = $GLOBALS['smwgSubPropertyListLimit'];
@@ -458,6 +447,19 @@ class Settings extends Options {
 
 		if ( isset( $GLOBALS['smwgImportFileDir'] ) ) {
 			$configuration['smwgImportFileDirs'] = (array)$GLOBALS['smwgImportFileDir'];
+		}
+
+		// smwgValueLookupFeatures
+		if ( isset( $GLOBALS['smwgValueLookupCacheType'] ) ) {
+			$configuration['smwgEntityLookupCacheType'] = $GLOBALS['smwgValueLookupCacheType'];
+		}
+
+		if ( isset( $GLOBALS['smwgValueLookupCacheLifetime'] ) ) {
+			$configuration['smwgEntityLookupCacheLifetime'] = $GLOBALS['smwgValueLookupCacheLifetime'];
+		}
+
+		if ( isset( $GLOBALS['smwgValueLookupFeatures'] ) ) {
+			$configuration['smwgEntityLookupFeatures'] = $GLOBALS['smwgValueLookupFeatures'];
 		}
 
 		// smwgPagingLimit
@@ -553,6 +555,7 @@ class Settings extends Options {
 			'replacement' => [
 				'smwgAdminRefreshStore' => 'smwgAdminFeatures',
 				'smwgQueryDependencyPropertyExemptionlist' => 'smwgQueryDependencyPropertyExemptionList',
+				'smwgQueryDependencyAffiliatePropertyDetectionlist' => 'smwgQueryDependencyAffiliatePropertyDetectionList',
 				'smwgSubPropertyListLimit' => 'smwgPropertyListLimit',
 				'smwgRedirectPropertyListLimit' => 'smwgPropertyListLimit',
 				'smwgSparqlDatabaseConnector' => 'smwgSparqlRepositoryConnector',
@@ -572,6 +575,9 @@ class Settings extends Options {
 				'smwgQSortingSupport' => 'smwgQSortFeatures',
 				'smwgQRandSortingSupport' => 'smwgQSortFeatures',
 				'smwgImportFileDir' => 'smwgImportFileDirs',
+				'smwgValueLookupCacheType' => 'smwgEntityLookupCacheType',
+				'smwgValueLookupCacheLifetime' => 'smwgEntityLookupCacheLifetime',
+				'smwgValueLookupFeatures' => 'smwgEntityLookupFeatures',
 				'smwgTypePagingLimit'  => 'smwgPagingLimit',
 				'smwgConceptPagingLimit'  => 'smwgPagingLimit',
 				'smwgPropertyPagingLimit'  => 'smwgPagingLimit',
@@ -599,12 +605,7 @@ class Settings extends Options {
 				'smwgAutocompleteInSpecialAsk' => '3.0.0',
 				'smwgSparqlDatabaseMaster' => '3.0.0',
 				'smwgHistoricTypeNamespace' => '3.0.0',
-				'smwgEnabledHttpDeferredJobRequest' => '3.0.0',
-				'smwgQueryDependencyAffiliatePropertyDetectionList' => '3.1.0',
-				'smwgValueLookupCacheType' => '3.1.0',
-				'smwgEntityLookupCacheType' => '3.1.0',
-				'smwgEntityLookupCacheLifetime' => '3.1.0',
-				'smwgEntityLookupFeatures' => '3.1.0',
+				'smwgEnabledHttpDeferredJobRequest' => '3.0.0'
 			]
 		];
 	}

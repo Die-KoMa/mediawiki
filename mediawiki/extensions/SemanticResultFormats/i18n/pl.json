@@ -1,19 +1,20 @@
 {
 	"@metadata": {
 		"authors": [
-			"Alan ffm",
 			"BeginaFelicysym",
-			"Chrumps",
 			"Maire",
-			"Nemo bis",
-			"Rzuwig",
 			"Sp5uhe",
 			"ToSter",
-			"Wojtas",
-			"Woytecr"
+			"Rzuwig",
+			"Alan ffm",
+			"Chrumps",
+			"Nemo bis",
+			"Woytecr",
+			"Wojtas"
 		]
 	},
 	"srf-desc": "Dodatkowe formaty dla zapytań Semantycznej MediaWiki",
+	"srf-name": "Formaty semantycznych wyników",
 	"prefs-srf-eventcalendar-options": "Opcje kalendarza wydarzeń",
 	"prefs-srf-datatables-options": "Ustawienia tabel danych",
 	"srf-module-loading": "Ładowanie...",
@@ -213,5 +214,7 @@
 	"srf-ui-mediaplayer-label-repeat-off": "Powtarzanie wyłączone",
 	"srf-ui-mediaplayer-label-full-screen": "Pełny ekran",
 	"srf-ui-mediaplayer-label-restore-screen": "Przywróć ekran",
+	"srf-excel-link": "Excel",
+	"srf-excel-missing-phpexcel": "Nie można eksportować do MS Excel, ponieważ rozszerzenie [https://www.mediawiki.org/wiki/Extension:PHPExcel PHPExcel] nie jest zainstalowane.",
 	"srf-paramdesc-icalendar-timezone": "Lista stref czasowych przedzielana przecinkami"
 }

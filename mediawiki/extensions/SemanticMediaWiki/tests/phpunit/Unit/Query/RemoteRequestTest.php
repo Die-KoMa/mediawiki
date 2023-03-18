@@ -60,15 +60,13 @@ class RemoteRequestTest extends \PHPUnit_Framework_TestCase {
 
 	public function testGetQueryResult_Connect() {
 
-		$output = 'Foobar <!--COUNT:42--><!--FURTHERRESULTS:1-->' . RemoteRequest::REQUEST_ID;
-
 		$this->httpRequest->expects( $this->once() )
 			->method( 'ping' )
 			->will( $this->returnValue( true ) );
 
 		$this->httpRequest->expects( $this->once() )
 			->method( 'execute' )
-			->will( $this->returnValue( $output ) );
+			->will( $this->returnValue( 'Foobar' ) );
 
 		$this->httpRequest->expects( $this->once() )
 			->method( 'getLastError' )
@@ -84,20 +82,10 @@ class RemoteRequestTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$instance->clear();
-		$res = $instance->getQueryResult( $this->query );
 
 		$this->assertInstanceOf(
 			'\SMW\Query\Result\StringResult',
-			$res
-		);
-
-		$this->assertSame(
-			42,
-			$res->getCount()
-		);
-
-		$this->assertTrue(
-			$res->hasFurtherResults()
+			$instance->getQueryResult( $this->query )
 		);
 	}
 

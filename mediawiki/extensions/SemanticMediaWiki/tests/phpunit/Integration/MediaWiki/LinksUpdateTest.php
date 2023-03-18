@@ -88,7 +88,7 @@ class LinksUpdateTest extends MwDBaseUnitTestCase {
 
 		$parserData = $this->applicationFactory->newParserData(
 			$this->title,
-			$this->pageCreator->getEditInfo()->getOutput()
+			$this->pageCreator->getEditInfo()->output
 		);
 
 		$contentParser = $this->applicationFactory->newContentParser( $this->title );

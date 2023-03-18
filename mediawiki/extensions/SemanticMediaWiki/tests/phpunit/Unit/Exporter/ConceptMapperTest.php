@@ -61,7 +61,7 @@ class ConceptMapperTest extends \PHPUnit_Framework_TestCase {
 			'rdf'
 		);
 
-		$result = $instance->newExpDataFromDescription(
+		$result = $instance->getExpDataFromDescription(
 			$description,
 			$exact
 		);
@@ -107,7 +107,7 @@ class ConceptMapperTest extends \PHPUnit_Framework_TestCase {
 			'owl'
 		);
 
-		$result = $instance->newExpDataFromDescription(
+		$result = $instance->getExpDataFromDescription(
 			$description,
 			$exact
 		);
@@ -129,7 +129,7 @@ class ConceptMapperTest extends \PHPUnit_Framework_TestCase {
 
 		$description = $this->descriptionFactory->newThingDescription();
 
-		$result = $instance->newExpDataFromDescription(
+		$result = $instance->getExpDataFromDescription(
 			$description,
 			$exact
 		);

@@ -837,27 +837,24 @@
         },
         {
             "name": "mediawiki/page-forms",
-            "version": "4.9.5",
+            "version": "4.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wikimedia/mediawiki-extensions-PageForms.git",
-                "reference": "70295d4310900e9b15f9dfd2b3fd6357f98856bd"
+                "reference": "f97847ff3c0634f5b64d77fe77312fbe2877b6d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/70295d4310900e9b15f9dfd2b3fd6357f98856bd",
-                "reference": "70295d4310900e9b15f9dfd2b3fd6357f98856bd",
+                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/f97847ff3c0634f5b64d77fe77312fbe2877b6d8",
+                "reference": "f97847ff3c0634f5b64d77fe77312fbe2877b6d8",
                 "shasum": ""
             },
             "require": {
                 "composer/installers": "1.*,>=1.0.1",
-                "php": ">=5.5.9"
+                "php": ">=5.3.0"
             },
             "require-dev": {
-                "mediawiki/mediawiki-codesniffer": "31.0.0",
-                "mediawiki/minus-x": "1.1.0",
-                "php-parallel-lint/php-console-highlighter": "0.5.0",
-                "php-parallel-lint/php-parallel-lint": "1.2.0"
+                "jakub-onderka/php-parallel-lint": "0.9.2"
             },
             "suggest": {
                 "mediawiki/open-layers": "Allow us to use ResourceLoader for OpenLayers."
@@ -875,7 +872,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "GPL-2.0-or-later"
+                "GPL-2.0+"
             ],
             "authors": [
                 {
@@ -894,7 +891,7 @@
                 "mediawiki",
                 "wiki"
             ],
-            "time": "2020-08-04T17:58:09+00:00"
+            "time": "2016-11-15T17:30:47+00:00"
         },
         {
             "name": "mediawiki/parser-hooks",
@@ -952,16 +949,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "3.1.5",
+            "version": "3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "1a5a6574a78a39e5883f0578eb7ad507a847e142"
+                "reference": "5623547d2c3e1c073093bdc1001c7062e98638e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/1a5a6574a78a39e5883f0578eb7ad507a847e142",
-                "reference": "1a5a6574a78a39e5883f0578eb7ad507a847e142",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/5623547d2c3e1c073093bdc1001c7062e98638e1",
+                "reference": "5623547d2c3e1c073093bdc1001c7062e98638e1",
                 "shasum": ""
             },
             "require": {
@@ -978,7 +975,7 @@
                 "onoi/shared-resources": "~0.3",
                 "onoi/tesa": "~0.1",
                 "param-processor/param-processor": "~1.2",
-                "php": ">=7.0",
+                "php": ">=5.6.0",
                 "psr/log": "~1.0",
                 "serialization/serialization": "~3.2",
                 "symfony/css-selector": "^3.3"
@@ -996,7 +993,7 @@
             "type": "mediawiki-extension",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.1.x-dev"
+                    "dev-master": "3.0.x-dev"
                 }
             },
             "autoload": {
@@ -1017,6 +1014,11 @@
             ],
             "authors": [
                 {
+                    "name": "James Hong Kong",
+                    "homepage": "https://www.semantic-mediawiki.org/wiki/User:MWJames",
+                    "role": "Core developer"
+                },
+                {
                     "name": "Markus Krötzsch",
                     "homepage": "http://korrekt.org/",
                     "role": "Original author"
@@ -1025,11 +1027,6 @@
                     "name": "Jeroen De Dauw",
                     "email": "jeroendedauw@gmail.com",
                     "homepage": "https://www.entropywins.wtf/",
-                    "role": "Core developer"
-                },
-                {
-                    "name": "James Hong Kong",
-                    "homepage": "https://www.semantic-mediawiki.org/wiki/User:MWJames",
                     "role": "Core developer"
                 }
             ],
@@ -1041,20 +1038,20 @@
                 "mediawiki",
                 "wiki"
             ],
-            "time": "2020-02-29T11:20:03+00:00"
+            "time": "2019-04-11T08:16:51+00:00"
         },
         {
             "name": "mediawiki/semantic-result-formats",
-            "version": "3.2.0",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticResultFormats.git",
-                "reference": "ecbf369424ae5cd59315a4dca24f50d3af70702a"
+                "reference": "e1956df8796b8df9a156083801e7dcc0ab2b9a25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticResultFormats/zipball/ecbf369424ae5cd59315a4dca24f50d3af70702a",
-                "reference": "ecbf369424ae5cd59315a4dca24f50d3af70702a",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticResultFormats/zipball/e1956df8796b8df9a156083801e7dcc0ab2b9a25",
+                "reference": "e1956df8796b8df9a156083801e7dcc0ab2b9a25",
                 "shasum": ""
             },
             "require": {
@@ -1062,19 +1059,17 @@
                 "data-values/geo": "~4.0|~3.0|~2.0",
                 "mediawiki/semantic-media-wiki": "~3.0",
                 "nicmart/tree": "^0.2.7",
-                "php": ">=7.1",
+                "php": ">=5.6.0",
                 "symfony/css-selector": "^3.3"
             },
             "suggest": {
                 "mediawiki/graph-viz": "Required for 'format=graph' and 'format=process'",
-                "mediawiki/mermaid": "Required for 'format=gantt'",
-                "phpoffice/phpexcel": "Required for 'format=excel'",
-                "phpoffice/phpspreadsheet": "Required for 'format=spreadsheet'"
+                "phpoffice/phpexcel": "Required for 'format=excel'"
             },
             "type": "mediawiki-extension",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.2.x-dev"
+                    "dev-master": "3.0.x-dev"
                 }
             },
             "autoload": {
@@ -1099,7 +1094,7 @@
                 {
                     "name": "Jeroen De Dauw",
                     "email": "jeroendedauw@gmail.com",
-                    "homepage": "https://www.entropywins.wtf/mediawiki",
+                    "homepage": "https://www.entropywins.wtf/",
                     "role": "Developer"
                 },
                 {
@@ -1129,25 +1124,7 @@
                 "mediawiki",
                 "wiki"
             ],
-            "funding": [
-                {
-                    "url": "https://github.com/JeroenDeDauw",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/[user1",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/kghbln] # Replace with up to 4 GitHub Sponsors-enabled usernames e.g.",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/user2",
-                    "type": "github"
-                }
-            ],
-            "time": "2020-08-27T17:44:05+00:00"
+            "time": "2019-03-27T22:43:56+00:00"
         },
         {
             "name": "nicmart/tree",

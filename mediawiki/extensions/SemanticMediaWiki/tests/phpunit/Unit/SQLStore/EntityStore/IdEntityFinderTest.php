@@ -70,7 +70,6 @@ class IdEntityFinderTest extends \PHPUnit_Framework_TestCase {
 	public function testGetDataItemForNonCachedId() {
 
 		$row = new \stdClass;
-		$row->smw_id = 42;
 		$row->smw_title = 'Foo';
 		$row->smw_namespace = 0;
 		$row->smw_iw = '';
@@ -90,12 +89,12 @@ class IdEntityFinderTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( false ) );
 
 		$this->connection->expects( $this->once() )
-			->method( 'selectRow' )
+			->method( 'select' )
 			->with(
 				$this->anything(),
 				$this->anything(),
 				$this->equalTo( [ 'smw_id' => 42 ] ) )
-			->will( $this->returnValue( $row ) );
+			->will( $this->returnValue( [ $row ] ) );
 
 		$instance = new IdEntityFinder(
 			$this->store,
@@ -138,7 +137,6 @@ class IdEntityFinderTest extends \PHPUnit_Framework_TestCase {
 		$dataItem->setOption( 'sort', 'BAR' );
 
 		$row = new \stdClass;
-		$row->smw_id = 42;
 		$row->smw_title = '_MDAT';
 		$row->smw_namespace = SMW_NS_PROPERTY;
 		$row->smw_iw = '';
@@ -152,12 +150,12 @@ class IdEntityFinderTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( false ) );
 
 		$this->connection->expects( $this->once() )
-			->method( 'selectRow' )
+			->method( 'select' )
 			->with(
 				$this->anything(),
 				$this->anything(),
 				$this->equalTo( [ 'smw_id' => 42 ] ) )
-			->will( $this->returnValue( $row ) );
+			->will( $this->returnValue( [ $row ] ) );
 
 		$instance = new IdEntityFinder(
 			$this->store,
@@ -178,7 +176,7 @@ class IdEntityFinderTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( false ) );
 
 		$this->connection->expects( $this->once() )
-			->method( 'selectRow' )
+			->method( 'select' )
 			->will( $this->returnValue( false ) );
 
 		$instance = new IdEntityFinder(

@@ -2,7 +2,6 @@
 
 namespace SRF\iCalendar;
 
-use SMW\Query\Result\ResultArray;
 use SMWDataValueFactory as DataValueFactory;
 use SMWExportPrinter as FileExportPrinter;
 use SMWQuery as Query;
@@ -40,11 +39,6 @@ class iCalendarFileExportPrinter extends FileExportPrinter {
 	 * @var IcalTimezoneFormatter
 	 */
 	private $icalTimezoneFormatter;
-
-	/**
-	 * @var DateParser
-	 */
-	private $dateParser;
 
 	/**
 	 * @see ResultPrinter::getName
@@ -154,35 +148,39 @@ class iCalendarFileExportPrinter extends FileExportPrinter {
 	 */
 	private function getIcal( QueryResult $res ) {
 
+		$this->icalTimezoneFormatter = new IcalTimezoneFormatter();
+
+		$this->icalTimezoneFormatter->setLocalTimezones(
+			isset( $this->params['timezone'] ) ? $this->params['timezone'] : []
+		);
+
+		$result = '';
+
 		if ( $this->title == '' ) {
 			$this->title = $GLOBALS['wgSitename'];
 		}
 
-		$this->dateParser = new DateParser();
+		$result .= "BEGIN:VCALENDAR\r\n";
+		$result .= "PRODID:-//SMW Project//Semantic Result Formats\r\n";
+		$result .= "VERSION:2.0\r\n";
+		$result .= "METHOD:PUBLISH\r\n";
+		$result .= "X-WR-CALNAME:" . $this->title . "\r\n";
 
-		$this->icalTimezoneFormatter = new IcalTimezoneFormatter();
-
-		$this->icalTimezoneFormatter->setLocalTimezones(
-			$this->params['timezone'] ?? []
-		);
-
-		$icalFormatter = new IcalFormatter(
-			$this->icalTimezoneFormatter
-		);
-
-		$icalFormatter->setCalendarName(
-			$this->title
-		);
-
-		$icalFormatter->setDescription(
-			$this->description
-		);
-
-		while ( $row = $res->getNext() ) {
-			$icalFormatter->addEvent( $this->getEventParams( $row ) );
+		if ( $this->description !== '' ) {
+			$result .= "X-WR-CALDESC:" . $this->description . "\r\n";
 		}
 
-		return $icalFormatter->getIcal();
+		$events = '';
+
+		while ( $row = $res->getNext() ) {
+			$events .= $this->getIcalForItem( $row );
+		}
+
+		$result .= $this->icalTimezoneFormatter->getTransitions();
+		$result .= $events;
+		$result .= "END:VCALENDAR\r\n";
+
+		return $result;
 	}
 
 	/**
@@ -221,86 +219,144 @@ class iCalendarFileExportPrinter extends FileExportPrinter {
 
 	/**
 	 * Returns the iCal for a single item.
-	 *
-	 * @param ResultArray[] $row
-	 *
-	 * @return []
 	 */
-	private function getEventParams( array $row ) {
-
+	private function getIcalForItem( array $row ) {
 		$result = '';
 
 		$subject = $row[0]->getResultSubject(); // get the object
-		$dataValue = DataValueFactory::getInstance()->newDataValueByItem( $subject, null );
+		$subject = DataValueFactory::getInstance()->newDataValueByItem( $subject, null );
 
 		$params = [
-			'summary' => $dataValue->getShortWikiText()
+			'summary' => $subject->getShortWikiText()
 		];
 
-		$params['from'] = null;
-		$params['to'] = null;
+		$from = null;
+		$to = null;
+		foreach ( $row as /* SMWResultArray */
+				  $field ) {
+			// later we may add more things like a generic
+			// mechanism to add whatever you want :)
+			// could include funny things like geo, description etc. though
+			$req = $field->getPrintRequest();
+			$label = strtolower( $req->getLabel() );
 
-		foreach ( $row as /* SMWResultArray */ $field ) {
-			$this->filterField( $field, $params );
-		}
+			switch ( $label ) {
+				case 'start':
+				case 'end':
+					if ( $req->getTypeID() == '_dat' ) {
+						$dataValue = $field->getNextDataValue();
 
-		$this->icalTimezoneFormatter->calcTransitions(
-			$params['from'],
-			$params['to']
-		);
+						if ( $dataValue === false ) {
+							unset( $params[$label] );
+						} else {
+							$params[$label] = $this->parsedate( $dataValue, $label == 'end' );
 
-		$title = $subject->getTitle();
-
-		$params['url'] = $title->getFullURL();
-		$params['timestamp'] = WikiPage::factory( $title )->getTimestamp();
-		$params['sequence'] = $title->getLatestRevID();
-
-		return $params;
-	}
-
-	private function filterField( $field, &$params ) {
-
-		// later we may add more things like a generic
-		// mechanism to add whatever you want :)
-		// could include funny things like geo, description etc. though
-		$printRequest = $field->getPrintRequest();
-		$label = strtolower( $printRequest->getLabel() );
-
-		switch ( $label ) {
-			case 'start':
-			case 'end':
-				if ( $printRequest->getTypeID() == '_dat' ) {
-					$dataValue = $field->getNextDataValue();
-
-					if ( $dataValue === false ) {
-						unset( $params[$label] );
-					} else {
-						$params[$label] = $this->dateParser->parseDate(
-							$dataValue,
-							$label == 'end'
-						);
-
-						$timestamp = strtotime( $params[$label] );
-
-						if ( $params['from'] === null || $timestamp < $params['from'] ) {
-							$params['from'] = $timestamp;
-						}
-
-						if ( $params['to'] === null || $timestamp > $params['to'] ) {
-							$params['to'] = $timestamp;
+							$timestamp = strtotime( $params[$label] );
+							if ( $from === null || $timestamp < $from ) {
+								$from = $timestamp;
+							}
+							if ( $to === null || $timestamp > $to ) {
+								$to = $timestamp;
+							}
 						}
 					}
-				}
-				break;
-			case 'location':
-			case 'description':
-			case 'summary':
-				$value = $field->getNextDataValue();
-				if ( $value !== false ) {
-					$params[$label] = $value->getShortWikiText();
-				}
-				break;
+					break;
+				case 'location':
+				case 'description':
+				case 'summary':
+					$value = $field->getNextDataValue();
+					if ( $value !== false ) {
+						$params[$label] = $value->getShortWikiText();
+					}
+					break;
+			}
 		}
+
+		$this->icalTimezoneFormatter->calcTransitions( $from, $to );
+
+		$title = $subject->getTitle();
+		$timestamp = WikiPage::factory( $title )->getTimestamp();
+		$url = $title->getFullURL();
+
+		$result .= "BEGIN:VEVENT\r\n";
+		$result .= "SUMMARY:" . $this->escape( $params['summary'] ) . "\r\n";
+		$result .= "URL:$url\r\n";
+		$result .= "UID:$url\r\n";
+
+		if ( array_key_exists( 'start', $params ) ) {
+			$result .= "DTSTART:" . $params['start'] . "\r\n";
+		}
+
+		if ( array_key_exists( 'end', $params ) ) {
+			$result .= "DTEND:" . $params['end'] . "\r\n";
+		}
+
+		if ( array_key_exists( 'location', $params ) ) {
+			$result .= "LOCATION:" . $this->escape( $params['location'] ) . "\r\n";
+		}
+
+		if ( array_key_exists( 'description', $params ) ) {
+			$result .= "DESCRIPTION:" . $this->escape( $params['description'] ) . "\r\n";
+		}
+
+		$t = strtotime( str_replace( 'T', ' ', $timestamp ) );
+		$result .= "DTSTAMP:" . date( "Ymd", $t ) . "T" . date( "His", $t ) . "\r\n";
+		$result .= "SEQUENCE:" . $title->getLatestRevID() . "\r\n";
+		$result .= "END:VEVENT\r\n";
+
+		return $result;
+	}
+
+	/**
+	 * Extract a date string formatted for iCalendar from a SMWTimeValue object.
+	 */
+	private function parsedate( TimeValue $dv, $isend = false ) {
+		$year = $dv->getYear();
+
+		// ISO range is limited to four digits
+		if ( ( $year > 9999 ) || ( $year < -9998 ) ) {
+			return '';
+		}
+
+		$year = number_format( $year, 0, '.', '' );
+		$time = str_replace( ':', '', $dv->getTimeString( false ) );
+
+		// increment by one day, compute date to cover leap years etc.
+		if ( ( $time == false ) && ( $isend ) ) {
+			$dv = DataValueFactoryg::getInstance()->newDataValueByType(
+				'_dat',
+				$dv->getWikiValue() . 'T00:00:00-24:00'
+			);
+		}
+
+		$month = $dv->getMonth();
+
+		if ( strlen( $month ) == 1 ) {
+			$month = '0' . $month;
+		}
+
+		$day = $dv->getDay();
+
+		if ( strlen( $day ) == 1 ) {
+			$day = '0' . $day;
+		}
+
+		$result = $year . $month . $day;
+
+		if ( $time != false ) {
+			$result .= "T$time";
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Implements esaping of special characters for iCalendar properties of type
+	 * TEXT. This is defined in RFC2445 Section 4.3.11.
+	 */
+	private function escape( $text ) {
+		// Note that \\ is a PHP escaped single \ here
+		return str_replace( [ "\\", "\n", ";", "," ], [ "\\\\", "\\n", "\\;", "\\," ], $text );
 	}
 
 }

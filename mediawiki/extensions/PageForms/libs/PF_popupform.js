@@ -21,6 +21,7 @@ jQuery( function() {
 		return ext.popupform.handlePopupFormLink( this.getAttribute( 'action' ), this );
 	});
 
+
 	// register forminput
 	jQuery( 'form.popupforminput' ).submit(function(evt){
 		return ext.popupform.handlePopupFormInput( this.getAttribute( 'action' ), this );
@@ -51,7 +52,7 @@ window.ext.popupform = ( function () {
 	var brokenBrowser, brokenChrome;
 
 	var padding = 20;
-	var reload;
+
 	function fadeOut(elem, callback ) {
 		// no fading for broken browsers
 		if ( brokenBrowser ){
@@ -114,12 +115,6 @@ window.ext.popupform = ( function () {
 		// get dimension values
 		var docW = content.width();
 		var docH = content.height();
-		// On Firefox, this doesn't work for some reason, so use
-		// this roundabout method to set the dimensions.
-		if ( docW === 0 || docH === 0 ) {
-			docW = availW * 0.95;
-			docH = availH * 0.95;
-		}
 
 		// set old dimensions for layout of content
 		iframe
@@ -347,7 +342,7 @@ window.ext.popupform = ( function () {
 			elem.fadeTo(time, target, callback);
 		}
 	}
-
+	
 	function showForm() {
 		instance++;
 
@@ -355,7 +350,7 @@ window.ext.popupform = ( function () {
 		( navigator.userAgent.indexOf("Chrome") >= 0 &&
 			navigator.platform.indexOf("Linux x86_64") >= 0 );
 
-		brokenBrowser = jQuery.browser.msie || brokenChrome;
+		brokenBrowser= jQuery.browser.msie || brokenChrome;
 
 		var maxZIndex = 0;
 
@@ -364,12 +359,13 @@ window.ext.popupform = ( function () {
 			maxZIndex = curr > maxZIndex ? curr : maxZIndex;
 		});
 
+
 		wrapper = jQuery( "<div class='popupform-wrapper' >" );
 		background = jQuery( "<div class='popupform-background' >" );
 
-		var waitIndicatorWrapper = jQuery( "<div class='popupform-loading'>" );
+		var waitIndicatorWrapper = jQuery(  "<div class='popupform-loading'>" );
 
-		waitIndicator = jQuery( "<div class='popupform-loadingbg'></div><div class='popupform-loadingfg'></div>" );
+		waitIndicator = jQuery(  "<div class='popupform-loadingbg'></div><div class='popupform-loadingfg'></div>" );
 
 		var anchor = jQuery( "<div class='popupform-anchor' >" );
 
@@ -420,21 +416,14 @@ window.ext.popupform = ( function () {
 		closeBtn.click( handleCloseFrame );
 	}
 
-	function purgePage() {
-		var path = location.pathname;
-		// get name of the current page from the url
-		var pageName = path.split("/").pop();
-		return ( new mw.Api() ).post( { action: 'purge', titles: pageName } );
-	}
-
 	function handleSubmitData( event, returnedData, textStatus, XMLHttpRequest ){
 		fadeOut( container, function() {
 			fadeIn( waitIndicator );
 		});
 
 		var form = jQuery( event.target );
-		var formdata = form.serialize() + "&wpSave=" + encodeURIComponent(form.find("#wpSave").attr("value"));
-
+		var formdata = form.serialize() + "&wpSave=" + escape(form.find("#wpSave").attr("value"));
+		
 		function handleInnerSubmit() {
 			// find form in fake edit page
 			var innerform = jQuery("<div>" + returnedData + "</div>").find("form");
@@ -455,11 +444,7 @@ window.ext.popupform = ( function () {
 				doc.close();
 
 				handleCloseFrame();
-				if ( reload ) {
-					purgePage().then( function( data ) {
-						location.reload();
-					} );
-				}
+
 				return false;
 			}
 
@@ -524,7 +509,8 @@ window.ext.popupform = ( function () {
 		var strValue = "";
 		if(document.defaultView && document.defaultView.getComputedStyle){
 			strValue = document.defaultView.getComputedStyle(oElm, "").getPropertyValue(strCssRule);
-		} else if(oElm.currentStyle){
+		}
+		else if(oElm.currentStyle){
 			strCssRule = strCssRule.replace(/\-(\w)/g, function (strMatch, p1){
 				return p1.toUpperCase();
 			});
@@ -552,12 +538,12 @@ window.ext.popupform = ( function () {
 		// GuMaxDD has #content but keeps headlines in #gumax-content-body
 		content = iframecontents.find("#gumax-content-body");
 
-		// Normal skins use #content (e.g. Vector, Monobook)
+		// normal skins use #content (e.g. Vector, Monobook)
 		if ( content.length === 0 ) {
 			content = iframecontents.find("#content");
 		}
 
-		// Some skins use #mw_content (e.g. Modern)
+		// some skins use #mw_content (e.g. Modern)
 		if ( content.length === 0 ) {
 			content = iframecontents.find("#mw_content");
 		}
@@ -565,12 +551,12 @@ window.ext.popupform = ( function () {
 		var iframebody = content.closest("body");
 		var iframedoc = iframebody.parent();
 
-		// This is not a normal MW page (or it uses an unknown skin)
+		// this is not a normal MW page (or it uses an unknown skin)
 		if ( content.length === 0 ) {
 			content = iframebody;
 		}
 
-		// The huge left margin looks ugly in Vector - reduce it.
+		// the huge left margin looks ugly in Vector, reduce it
 		// (How does this look for other skins?)
 		var siblings = content
 		.css( {
@@ -594,7 +580,7 @@ window.ext.popupform = ( function () {
 			height: "auto",
 			minWidth: "0px",
 			minHeight: "0px",
-			"float": "none", // Cavendish skin uses floating -> unfloat content
+			"float": "none",  // Cavendish skin uses floating -> unfloat content
 //			position: "relative",
 //			top: "0",
 //			left: "0",
@@ -615,9 +601,9 @@ window.ext.popupform = ( function () {
 				// TODO: Does this really help?
 				if ( getStyle(this, "display") !== "none" && ! (
 						( this.offsetLeft + elem.outerWidth(true) < 0 ) ||		// left of document
-						( this.offsetTop + elem.outerHeight(true) < 0 ) || // above document
+						( this.offsetTop + elem.outerHeight(true) < 0 )  || // above document
 						( this.offsetLeft > 100000 ) ||		// right of document
-						( this.offsetTop > 100000 ) // below document
+						( this.offsetTop > 100000 )  // below document
 						)
 					) {
 
@@ -687,7 +673,7 @@ window.ext.popupform = ( function () {
 			if ( innerJ ) {
 				innerwdw.jQuery(form[0])
 				.bind( "submit", function( event ) {
-						submitok = ( event.result === undefined ) ? true : event.result;
+						submitok = event.result;
 						innersubmitprocessed = true;
 						return false;
 				});
@@ -744,7 +730,7 @@ window.ext.popupform = ( function () {
 		.not('a[href^="#"]')           // local links
 		.not('a.pfFancyBox')           // link to file upload
 		.click(function(event){
-			if ( event.result !== false ) { // if not already caught by somebody else
+			if ( event.result !== false ) {  // if not already caught by somebody else
 				closeFrameAndFollowLink( event.target.getAttribute('href') );
 			}
 			return false;
@@ -762,9 +748,8 @@ window.ext.popupform = ( function () {
 
 	function handlePopupFormInput( ptarget, elem ) {
 		showForm();
-		reload = $(elem).hasClass('reload');
 
-		iframe.on( 'load', function(){
+		iframe.one( 'load', function(){
 			// attach event handler to iframe
 			iframe.bind( 'load', handleLoadFrame );
 			return false;
@@ -776,7 +761,7 @@ window.ext.popupform = ( function () {
 
 	function handlePopupFormLink( ptarget, elem ) {
 		showForm();
-		reload = $(elem).hasClass('reload');
+
 		// store initial readystate
 		var readystate = iframe.contents()[0].readyState;
 
@@ -834,6 +819,7 @@ window.ext.popupform = ( function () {
 			document.getElementsByTagName('body')[0].appendChild(form);
 			form.submit();
 			document.getElementsByTagName('body')[0].removeChild(form);
+
 			return false;
 		}
 	}

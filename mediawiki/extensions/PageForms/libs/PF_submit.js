@@ -1,8 +1,8 @@
 /**
- * Javascript handler for the save-and-continue button
- *
+* Javascript handler for the save-and-continue button
+*
  * @author Stephan Gambke
- */
+*/
 
 /*global validateAll */
 
@@ -15,7 +15,7 @@
 
 	function setChanged( event ) {
 		sacButtons
-			.prop( 'disabled', false )
+			.removeAttr( 'disabled' )
 			.addClass( 'pf-save_and_continue-changed' );
 
 		return true;
@@ -23,10 +23,6 @@
 
 	/**
 	 * Called when the server has sent the preview
-	 *
-	 * @param result
-	 * @param textStatus
-	 * @param jqXHR
 	 */
 	var resultReceivedHandler = function handleResultReceived( result, textStatus, jqXHR ) {
 
@@ -178,68 +174,24 @@
 		return false;
 	}
 
-	mw.pageFormsActualizeVisualEditorFields = function( callback ) {
-		var visualEditors = $.fn.getVEInstances();
-		if( visualEditors.length > 0 ) {
-			var savingQueue = [];
-			$(visualEditors).each( function( i, ve ) {
-				savingQueue.push( ve.target.updateContent() );
-			});
-			$.when.apply( $, savingQueue ).then( function () {
-				callback();
-			});
-		}
-	};
-
 	if ( mw.config.get( 'wgAction' ) === 'formedit' || mw.config.get( 'wgCanonicalSpecialPageName' ) === 'FormEdit' ) {
-		$(function() { // Wait until DOM is loaded.
-			form = $( '#pfForm' );
+		form = $( '#pfForm' );
 
-			sacButtons = $( '.pf-save_and_continue', form );
-			sacButtons.click( handleSaveAndContinue );
+		sacButtons = $( '.pf-save_and_continue', form );
+		sacButtons.click( handleSaveAndContinue );
 
-			$( form )
-			.on( 'keyup', 'input,select,textarea', function ( event ) {
-				if ( event.which < 32 ){
-					return true;
-				}
+		$( form )
+		.on( 'keyup', 'input,select,textarea', function ( event ) {
+			if ( event.which < 32 ){
+				return true;
+			}
 
-				return setChanged( event );
-			} )
-			.on( 'change', 'input,select,textarea', setChanged )
-			.on( 'click', '.multipleTemplateAdder,.removeButton,.rearrangerImage', setChanged )
-			.on( 'mousedown', '.rearrangerImage',setChanged );
+			return setChanged( event );
+		} )
+		.on( 'change', 'input,select,textarea', setChanged )
+		.on( 'click', '.multipleTemplateAdder,.removeButton,.rearrangerImage', setChanged )
+		.on( 'mousedown', '.rearrangerImage',setChanged );
 
-			// Run only when VEForAll extension is present
-			$( document ).on( 'VEForAllLoaded', function() {
-				// Special submit form & other actions handling when VEForAll editor is present
-				if ( $('.visualeditor').length > 0 ) {
-					// Interrupt "Save page" and "Show changes" actions
-					var $formButtons = $( '#wpSave, #wpDiff' );
-					var canSubmit = false;
-
-					if ( $formButtons.length > 0 ) {
-						$formButtons.each( function ( i, button ) {
-							$( button ).on( 'click', function ( event ) {
-								if ( !canSubmit ) {
-									event.preventDefault();
-									mw.pageFormsActualizeVisualEditorFields( function () {
-										canSubmit = true;
-										$( button ).click();
-									} );
-								}
-							} );
-						} );
-					}
-					// Interrupt "Save and continue" action
-					sacButtons.off('click', handleSaveAndContinue).click( function( event ) {
-						mw.pageFormsActualizeVisualEditorFields( function() {
-							handleSaveAndContinue( event );
-						});
-					});
-				}
-			});
-		});
 	}
 
 }( jQuery, mediaWiki ) );

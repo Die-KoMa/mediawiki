@@ -18,20 +18,11 @@ use SMW\Tests\TestEnvironment;
  */
 class NamespaceDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $conditionBuilder;
+	private $querySegmentValidator;
 	private $descriptionFactory;
 
 	protected function setUp() {
 		parent::setUp();
-
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMock();
 
 		$this->descriptionFactory = new DescriptionFactory();
 
@@ -41,10 +32,13 @@ class NamespaceDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
 
 		$this->assertInstanceOf(
-			NamespaceDescriptionInterpreter::class,
-			new NamespaceDescriptionInterpreter( $this->store, $this->conditionBuilder )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\NamespaceDescriptionInterpreter',
+			new NamespaceDescriptionInterpreter( $querySegmentListBuilder )
 		);
 	}
 
@@ -54,13 +48,15 @@ class NamespaceDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->store->expects( $this->any() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->any() )
 			->method( 'getConnection' )
 			->will( $this->returnValue( $connection ) );
 
-		$queryEngineFactory = new QueryEngineFactory(
-			$this->store
-		);
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$description = $this->descriptionFactory->newNamespaceDescription(
 			NS_HELP
@@ -71,8 +67,7 @@ class NamespaceDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 		$expected->where = "t0.smw_namespace=";
 
 		$instance = new NamespaceDescriptionInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder()
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(

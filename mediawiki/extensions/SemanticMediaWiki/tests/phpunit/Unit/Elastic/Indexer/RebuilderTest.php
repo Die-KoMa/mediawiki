@@ -105,24 +105,6 @@ class RebuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->deleteAndSetupIndices();
 	}
 
-	public function testHasIndices() {
-
-		$this->connection->expects( $this->once() )
-			->method( 'hasIndex' )
-			->will( $this->returnValue( false ) );
-
-		$instance = new Rebuilder(
-			$this->connection,
-			$this->indexer,
-			$this->propertyTableRowMapper,
-			$this->rollover
-		);
-
-		$this->assertFalse(
-			$instance->hasIndices()
-		);
-	}
-
 	public function testCreateIndices() {
 
 		$indices = $this->getMockBuilder( '\stdClass' )

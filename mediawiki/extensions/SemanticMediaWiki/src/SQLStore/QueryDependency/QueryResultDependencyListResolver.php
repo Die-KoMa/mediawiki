@@ -80,10 +80,10 @@ class QueryResultDependencyListResolver {
 			return [];
 		}
 
-		$itemJournal = $queryResult->getItemJournal();
+		$resolverJournal = $queryResult->getResolverJournal();
 
-		$dependencyList = $itemJournal->getEntityList();
-		$itemJournal->prune();
+		$dependencyList = $resolverJournal->getEntityList();
+		$resolverJournal->prune();
 
 		return $dependencyList;
 	}

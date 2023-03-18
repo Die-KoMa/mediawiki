@@ -9,20 +9,12 @@
  * Represents a section (header and contents) in a wiki page.
  */
 class PFWikiPageSection {
-	private $mHeader, $mHeaderLevel, $mText, $mHideIfEmpty;
+	private $mHeader, $mHeaderLevel, $mText;
 
-	function __construct( $sectionName, $headerLevel, $sectionText, $sectionOptions ) {
-		$this->mHeader      = $sectionName;
+	function __construct( $sectionName, $headerLevel, $sectionText ) {
+		$this->mHeader = $sectionName;
 		$this->mHeaderLevel = $headerLevel;
-		$this->mText        = $sectionText;
-		$this->mHideIfEmpty = $sectionOptions['hideIfEmpty'];
-	}
-
-	/**
-	 * @return bool
-	 */
-	function isHideIfEmpty() {
-		return $this->mHideIfEmpty;
+		$this->mText = $sectionText;
 	}
 
 	function getHeader() {

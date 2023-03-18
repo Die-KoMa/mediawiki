@@ -2,9 +2,9 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use Onoi\EventDispatcher\EventDispatcherAwareTrait;
 use SMW\ApplicationFactory;
-use SMW\NamespaceExaminer;
+use SMW\EventHandler;
+use SMW\Factbox\FactboxCache;
 
 /**
  * TitleMoveComplete occurs whenever a request to move an article
@@ -13,7 +13,7 @@ use SMW\NamespaceExaminer;
  * This method will be called whenever an article is moved so that
  * semantic properties are moved accordingly.
  *
- * @see https://www.mediawiki.org/wiki/Manual:Hooks/TitleMoveComplete
+ * @see http://www.mediawiki.org/wiki/Manual:Hooks/TitleMoveComplete
  *
  * @license GNU GPL v2+
  * @since 1.9
@@ -22,52 +22,97 @@ use SMW\NamespaceExaminer;
  */
 class TitleMoveComplete {
 
-	use EventDispatcherAwareTrait;
+	/**
+	 * @var Title
+	 */
+	protected $oldTitle = null;
 
 	/**
-	 * @var NamespaceExaminer
+	 * @var Title
 	 */
-	private $namespaceExaminer;
+	protected $newTitle = null;
+
+	/**
+	 * @var User
+	 */
+	protected $user = null;
+
+	/**
+	 * @var integer
+	 */
+	protected $oldId;
+
+	/**
+	 * @var integer
+	 */
+	protected $newId;
 
 	/**
 	 * @since  1.9
 	 *
-	 * @param NamespaceExaminer $namespaceExaminer
+	 * @param Title $oldTitle old title
+	 * @param Title $newTitle: new title
+	 * @param Use $user user who did the move
+	 * @param $oldId database ID of the page that's been moved
+	 * @param $newId database ID of the created redirect
 	 */
-	public function __construct( NamespaceExaminer $namespaceExaminer ) {
-		$this->namespaceExaminer = $namespaceExaminer;
+	public function __construct( &$oldTitle, &$newTitle, &$user, $oldId, $newId ) {
+		$this->oldTitle = $oldTitle;
+		$this->newTitle = $newTitle;
+		$this->user = $user;
+		$this->oldId = $oldId;
+		$this->newId = $newId;
 	}
 
 	/**
 	 * @since 1.9
 	 *
-	 * @param $oldTitle
-	 * @param $newTitle
-	 * @param $user
-	 * @param $oldId
-	 * @param $newId
-	 *
 	 * @return true
 	 */
-	public function process( $oldTitle, $newTitle, $user, $oldId, $newId ) {
+	public function process() {
 
 		$applicationFactory = ApplicationFactory::getInstance();
 
 		// Delete all data for a non-enabled target NS
-		if ( !$this->namespaceExaminer->isSemanticEnabled( $newTitle->getNamespace() ) || $newId == 0 ) {
+		if ( !$applicationFactory->getNamespaceExaminer()->isSemanticEnabled( $this->newTitle->getNamespace() ) || $this->newId == 0 ) {
+
 			$applicationFactory->getStore()->deleteSubject(
-				$oldTitle
+				$this->oldTitle
 			);
+
+		} else {
+
+		// Using a different approach since the hook is not triggered
+		// by #REDIRECT which can cause inconsistencies
+		// @see 2.3 / StoreUpdater
+
+		//	$applicationFactory->getStore()->changeTitle(
+		//		$this->oldTitle,
+		//		$this->newTitle,
+		//		$this->oldId,
+		//		$this->newId
+		//	);
 		}
 
-		$context = [
-			'context' => 'TitleMoveComplete'
-		];
+		$eventHandler = EventHandler::getInstance();
 
-		foreach ( [ 'InvalidateResultCache', 'InvalidateEntityCache' ] as $event ) {
-			$this->eventDispatcher->dispatch( $event, $context + [ 'title' => $oldTitle ] );
-			$this->eventDispatcher->dispatch( $event, $context + [ 'title' => $newTitle ] );
-		}
+		$dispatchContext = $eventHandler->newDispatchContext();
+		$dispatchContext->set( 'title', $this->oldTitle );
+		$dispatchContext->set( 'context', 'ArticleMove' );
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.prefetcher.reset',
+			$dispatchContext
+		);
+
+		$dispatchContext = $eventHandler->newDispatchContext();
+		$dispatchContext->set( 'title', $this->newTitle );
+		$dispatchContext->set( 'context', 'ArticleMove' );
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.prefetcher.reset',
+			$dispatchContext
+		);
 
 		return true;
 	}

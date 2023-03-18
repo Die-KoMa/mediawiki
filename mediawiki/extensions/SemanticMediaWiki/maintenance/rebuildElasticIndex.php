@@ -5,9 +5,7 @@ namespace SMW\Maintenance;
 use SMW\ApplicationFactory;
 use SMW\SQLStore\SQLStore;
 use SMW\Elastic\ElasticFactory;
-use SMW\Elastic\ElasticStore;
 use SMW\Setup;
-use SMW\SetupFile;
 
 $basePath = getenv( 'MW_INSTALL_PATH' ) !== false ? getenv('MW_INSTALL_PATH' ) : __DIR__ . '/../../..';
 
@@ -37,11 +35,6 @@ class RebuildElasticIndex extends \Maintenance {
 	private $jobQueue;
 
 	/**
-	 * @var AutoRecovery
-	 */
-	private $autoRecovery;
-
-	/**
 	 * @see Maintenance::__construct
 	 *
 	 * @since 3.0
@@ -56,12 +49,9 @@ class RebuildElasticIndex extends \Maintenance {
 		$this->addOption( 'delete-all', 'Delete listed indices without rebuilding the data', false, false );
 		$this->addOption( 'skip-fileindex', 'Skipping any file ingest actions', false, false );
 		$this->addOption( 'run-fileindex', 'Only run file ingest actions', false, false );
-		$this->addOption( 'auto-recovery', 'Allows to restart from a canceled (or aborted) index run', false, false );
-		$this->addOption( 'only-update', 'Run an update without switching indices and a rollover (short cut for -s 1)', false, false );
 
 		$this->addOption( 'debug', 'Sets global variables to support debug ouput while running the script', false );
 		$this->addOption( 'report-runtime', 'Report execution time and memory usage', false );
-		$this->addOption( 'with-maintenance-log', 'Add log entry to `Special:Log` about the maintenance run.', false );
 
 		parent::__construct();
 	}
@@ -112,12 +102,6 @@ class RebuildElasticIndex extends \Maintenance {
 			$maintenanceHelper->setGlobalToValue( 'wgDebugLogGroups', [] );
 		}
 
-		$this->autoRecovery = $maintenanceFactory->newAutoRecovery( 'rebuildElasticIndex.php' );
-
-		$this->autoRecovery->enable(
-			$this->hasOption( 'auto-recovery' )
-		);
-
 		$this->jobQueue = $applicationFactory->getJobQueue();
 		$this->store = $applicationFactory->getStore( 'SMW\SQLStore\SQLStore' );
 		$elasticFactory = $applicationFactory->create( 'ElasticFactory' );
@@ -134,10 +118,6 @@ class RebuildElasticIndex extends \Maintenance {
 			return $this->reportMessage(
 				"\n" . 'Elasticsearch endpoint(s) are not available!' . "\n"
 			);
-		}
-
-		if ( $this->hasOption( 'only-update' ) ) {
-			$this->mOptions['s'] = 1;
 		}
 
 		$this->reportMessage(
@@ -166,28 +146,7 @@ class RebuildElasticIndex extends \Maintenance {
 			$this->reportMessage( "\n" . $maintenanceHelper->getFormattedRuntimeValues() . "\n" );
 		}
 
-		if ( $this->hasOption( 'with-maintenance-log' ) ) {
-			$maintenanceLogger = $maintenanceFactory->newMaintenanceLogger( 'RebuildElasticIndexLogger' );
-			$runtimeValues = $maintenanceHelper->getRuntimeValues();
-
-			$log = [
-				'Memory used' => $runtimeValues['memory-used'],
-				'Time used' => $runtimeValues['humanreadable-time']
-			];
-
-			$maintenanceLogger->logFromArray( $log );
-		}
-
 		$maintenanceHelper->reset();
-		$this->autoRecovery->set( 'ar_id', false );
-
-		$setupFile = new SetupFile();
-
-		$setupFile->set(
-			[
-				ElasticStore::REBUILD_INDEX_RUN_COMPLETE => true
-			]
-		);
 
 		return true;
 	}
@@ -254,10 +213,6 @@ class RebuildElasticIndex extends \Maintenance {
 
 		$showAbort = !$this->hasOption( 'quick' ) && !$this->hasOption( 's' ) && !$this->hasOption( 'page' ) && !$this->hasOption( 'run-fileindex' );
 
-		if ( $this->hasOption( 'auto-recovery' ) && $this->autoRecovery->has( 'ar_id' ) ) {
-			$showAbort = false;
-		}
-
 		if ( !$showAbort ) {
 			return;
 		}
@@ -283,31 +238,12 @@ class RebuildElasticIndex extends \Maintenance {
 
 	private function rebuild() {
 
-		$isSelective = false;
-
-		if ( $this->autoRecovery->has( 'ar_id' ) ) {
-			$this->reportMessage(
-				"\nThe auto recovery mode is enabled and has detected an unfinished index\n" .
-				"run therefore indexing starts with: " . $this->autoRecovery->get( 'ar_id' ) . "\n"
-			);
-		} elseif ( $this->hasOption( 's' ) || $this->hasOption( 'page' ) ) {
-			$isSelective = true;
-		}
-
 		$this->reportMessage( "\nRebuilding indices ..." );
+		$isSelective = $this->hasOption( 's' ) || $this->hasOption( 'page' );
 
-		if (
-			!$this->hasOption( 's' ) &&
-			!$this->hasOption( 'page' ) &&
-			!$this->hasOption( 'run-fileindex' ) &&
-			!$this->hasOption( 'auto-recovery' ) ) {
+		if ( !$this->hasOption( 's' ) && !$this->hasOption( 'page' ) && !$this->hasOption( 'run-fileindex' ) ) {
 			$this->reportMessage( "\n" . '   ... creating required indices and aliases ...' );
 			$this->rebuilder->createIndices();
-		} else {
-			if ( !$this->rebuilder->hasIndices() ) {
-				$this->reportMessage( "\n" . '   ... creating required indices and aliases ...' );
-				$this->rebuilder->createIndices();
-			}
 		}
 
 		$this->rebuilder->prepare();
@@ -353,14 +289,12 @@ class RebuildElasticIndex extends \Maintenance {
 		$key = $isSelective ? '(count)' : 'no.';
 
 		$this->reportMessage(
-			"\r". sprintf( "%-50s%s", "   ... updating document", sprintf( "%4.0f%% (%s/%s)", ( $i / $last ) * 100, $i, $last ) )
+			"\r". sprintf( "%-50s%s", "   ... updating document $key", sprintf( "%4.0f%% (%s/%s)", ( $i / $last ) * 100, $i, $last ) )
 		);
 
 		if ( $row->smw_iw === SMW_SQL3_SMWDELETEIW || $row->smw_iw === SMW_SQL3_SMWREDIIW ) {
 			return $this->rebuilder->delete( $row->smw_id );
 		}
-
-		$this->autoRecovery->set( 'ar_id', (int)$row->smw_id );
 
 		$dataItem = $this->store->getObjectIds()->getDataItemById(
 			$row->smw_id
@@ -370,12 +304,9 @@ class RebuildElasticIndex extends \Maintenance {
 			return;
 		}
 
-		$semanticData = $this->store->getSemanticData( $dataItem );
-		$semanticData->setExtensionData( 'revision_id', $row->smw_rev );
-
 		$this->rebuilder->rebuild(
 			$row->smw_id,
-			$semanticData
+			$this->store->getSemanticData( $dataItem )
 		);
 	}
 
@@ -386,9 +317,7 @@ class RebuildElasticIndex extends \Maintenance {
 		$conditions = [];
 		$conditions[] = "smw_iw!=" . $connection->addQuotes( SMW_SQL3_SMWIW_OUTDATED );
 
-		if ( $this->hasOption( 'auto-recovery' ) && $this->autoRecovery->has( 'ar_id' ) ) {
-			$conditions[] = 'smw_id >= ' . $connection->addQuotes( $this->autoRecovery->get( 'ar_id' ) );
-		} elseif ( $this->hasOption( 's' ) ) {
+		if ( $this->hasOption( 's' ) ) {
 			$conditions[] = 'smw_id >= ' . $connection->addQuotes( $this->getOption( 's' ) );
 
 			if ( $this->hasOption( 'e' ) ) {

@@ -138,7 +138,7 @@ class PropertyTableDefinitionBuilder {
 	 *
 	 * @return string
 	 */
-	public static function makeTableName( $tableName ) {
+	public function createTableNameFrom( $tableName ) {
 		return self::PROPERTY_TABLE_PREFIX . strtolower( $tableName );
 	}
 
@@ -196,7 +196,7 @@ class PropertyTableDefinitionBuilder {
 	private function addRedirectTableDefinition() {
 		// Redirect table uses another subject scheme for historic reasons
 		// TODO This should be changed if possible
-		$redirectTableName = $this->makeTableName( '_REDI' );
+		$redirectTableName = $this->createTableNameFrom( '_REDI' );
 
 		if ( isset( $this->propertyTables[$redirectTableName]) ) {
 			$this->propertyTables[$redirectTableName]->setUsesIdSubject( false );
@@ -212,7 +212,7 @@ class PropertyTableDefinitionBuilder {
 	private function addTableDefinitionForUserDefinedFixedProperties( array $fixedProperties ) {
 
 		$this->propertyTypeFinder->setTypeTableName(
-			$this->makeTableName( '_TYPE' )
+			$this->createTableNameFrom( '_TYPE' )
 		);
 
 		foreach( $fixedProperties as $propertyKey ) {

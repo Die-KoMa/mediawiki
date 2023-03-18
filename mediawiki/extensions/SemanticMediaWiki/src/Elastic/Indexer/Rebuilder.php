@@ -112,8 +112,7 @@ class Rebuilder {
 			SQLStore::ID_TABLE,
 			[
 				'smw_id',
-				'smw_iw',
-				'smw_rev'
+				'smw_iw'
 			],
 			$conditions,
 			__METHOD__,
@@ -141,12 +140,12 @@ class Rebuilder {
 			return false;
 		}
 
-		$this->rolloverByTypeAndVersion(
+		$this->rollover_version(
 			ElasticClient::TYPE_DATA,
 			$this->versions[ElasticClient::TYPE_DATA]
 		);
 
-		$this->rolloverByTypeAndVersion(
+		$this->rollover_version(
 			ElasticClient::TYPE_LOOKUP,
 			$this->versions[ElasticClient::TYPE_LOOKUP]
 		);
@@ -156,10 +155,8 @@ class Rebuilder {
 	 * @since 3.0
 	 */
 	public function prepare() {
-		$this->client->setMaintenanceLock();
-
-		$this->prepareIndexByType( ElasticClient::TYPE_DATA );
-		$this->prepareIndexByType( ElasticClient::TYPE_LOOKUP );
+		$this->prepare_index( ElasticClient::TYPE_DATA );
+		$this->prepare_index( ElasticClient::TYPE_LOOKUP );
 	}
 
 	/**
@@ -175,29 +172,11 @@ class Rebuilder {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @return boolean
-	 */
-	public function hasIndices() {
-
-		if ( !$this->client->hasIndex( ElasticClient::TYPE_DATA ) ) {
-			return false;
-		}
-
-		if ( !$this->client->hasIndex( ElasticClient::TYPE_LOOKUP ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
 	 * @since 3.0
 	 */
 	public function createIndices() {
-		$this->createIndexByType( ElasticClient::TYPE_DATA );
-		$this->createIndexByType( ElasticClient::TYPE_LOOKUP );
+		$this->create_index( ElasticClient::TYPE_DATA );
+		$this->create_index( ElasticClient::TYPE_LOOKUP );
 	}
 
 	/**
@@ -211,8 +190,8 @@ class Rebuilder {
 
 		$this->messageReporter->reportMessage( "\n" . '   ... updating settings and mappings ...' );
 
-		$this->setDefaultByType( ElasticClient::TYPE_DATA );
-		$this->setDefaultByType( ElasticClient::TYPE_LOOKUP );
+		$this->set_default( ElasticClient::TYPE_DATA );
+		$this->set_default( ElasticClient::TYPE_LOOKUP );
 
 		return true;
 	}
@@ -276,15 +255,9 @@ class Rebuilder {
 		$this->indexer->setVersions( $this->versions );
 		$this->indexer->isRebuild();
 
-		$changeDiff = $changeOp->newChangeDiff();
-
-		$changeDiff->setAssociatedRev(
-			$semanticData->getExtensionData( 'revision_id', 0 )
-		);
-
 		$this->indexer->index(
-			$changeDiff,
-			$this->fetchRawText( $dataItem )
+			$changeOp->newChangeDiff(),
+			$this->raw_text( $dataItem )
 		);
 
 		if ( $this->fileIndexer && $dataItem->getNamespace() === NS_FILE ) {
@@ -304,13 +277,13 @@ class Rebuilder {
 
 		$this->messageReporter->reportMessage( "\n" . '   ... refreshing indices ...' );
 
-		$this->refreshIndexByType( ElasticClient::TYPE_DATA );
-		$this->refreshIndexByType( ElasticClient::TYPE_LOOKUP );
+		$this->refresh_index( ElasticClient::TYPE_DATA );
+		$this->refresh_index( ElasticClient::TYPE_LOOKUP );
 
 		return true;
 	}
 
-	private function fetchRawText( $dataItem ) {
+	private function raw_text( $dataItem ) {
 
 		if ( !$this->client->getConfig()->dotGet( 'indexer.raw.text', false ) || $dataItem->getSubobjectName() !== ''  ) {
 			return '';
@@ -323,7 +296,7 @@ class Rebuilder {
 		return '';
 	}
 
-	private function prepareIndexByType( $type ) {
+	private function prepare_index( $type ) {
 
 		$index = $this->client->getIndexName( $type );
 
@@ -345,11 +318,11 @@ class Rebuilder {
 		$this->client->putSettings( $params );
 	}
 
-	private function refreshIndexByType( $type ) {
+	private function refresh_index( $type ) {
 		$this->client->refresh( [ 'index' => $this->client->getIndexName( $type ) ] );
 	}
 
-	private function setDefaultByType( $type ) {
+	private function set_default( $type ) {
 
 		$indices = $this->client->indices();
 
@@ -357,13 +330,13 @@ class Rebuilder {
 			$type
 		);
 
-		$this->messageReporter->reportMessage( "\n   ... *$type* index ... " );
+		$this->messageReporter->reportMessage( "\n   ... '$type' index ... " );
 
 		if ( $this->client->hasLock( $type ) ) {
-			$this->rolloverByTypeAndVersion( $type, $this->client->getLock( $type ) );
+			$this->rollover_version( $type, $this->client->getLock( $type ) );
 		}
 
-		$this->messageReporter->reportMessage( "\n       ... closing" );
+		$this->messageReporter->reportMessage( "\n      ... closing" );
 
 		// Certain changes ( ... to define new analyzers ...) requires to close
 		// and reopen an index
@@ -378,13 +351,6 @@ class Rebuilder {
 		// Cannot be altered by a simple settings update and requires a complete
 		// rebuild
 		unset( $indexDef['settings']['number_of_shards'] );
-
-		// #4341
-		// ES 5.6 may cause a "Can't update [index.number_of_replicas] on closed
-		// indices" see elastic/elasticsearch#22993 and should be fixed with ES 6.4.
-		if ( version_compare( $this->client->getVersion(), '6.4.0', '<' ) ) {
-			unset( $indexDef['settings']['number_of_replicas'] );
-		}
 
 		$params = [
 			'index' => $index,
@@ -410,7 +376,7 @@ class Rebuilder {
 		$this->client->releaseLock( $type );
 	}
 
-	private function createIndexByType( $type ) {
+	private function create_index( $type ) {
 
 		// If for some reason a recent rebuild didn't finish, use
 		// the locked version as master
@@ -440,7 +406,7 @@ class Rebuilder {
 		$this->client->setLock( $type, $version );
 	}
 
-	private function rolloverByTypeAndVersion( $type, $version ) {
+	private function rollover_version( $type, $version ) {
 
 		$old = $this->rollover->rollover(
 			$type,
@@ -448,7 +414,7 @@ class Rebuilder {
 		);
 
 		$this->messageReporter->reportMessage(
-			"\n" . sprintf( "      ... switching (rollover) from %s to %s ...", $old, $version )
+			"\n" . sprintf( "      ... switching index version from %s to %s (rollover) ...", $old, $version )
 		);
 	}
 

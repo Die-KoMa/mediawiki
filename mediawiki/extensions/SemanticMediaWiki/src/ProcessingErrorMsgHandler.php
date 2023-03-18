@@ -159,25 +159,20 @@ class ProcessingErrorMsgHandler {
 			$property = new DIProperty( $property->getKey() );
 		}
 
-		if ( $error instanceof ProcessingError ) {
-			$type = $error->getType();
-			$error = $error->encode();
-		} else {
-			$error = Message::encode( $error );
-			$type = '';
-		}
-
+		$error = Message::encode( $error );
 		$hash = $error;
 
 		if ( $property !== null ) {
 			$hash .= $property->getKey();
 		}
 
-		$containerSemanticData = $this->newContainerSemanticData(
-			$hash
-		);
+		$containerSemanticData = $this->newContainerSemanticData( $hash );
 
-		$this->publishError( $containerSemanticData, $property, $error, $type );
+		$this->addToContainerSemanticData(
+			$containerSemanticData,
+			$property,
+			$error
+		);
 
 		return new DIContainer( $containerSemanticData );
 	}
@@ -196,38 +191,25 @@ class ProcessingErrorMsgHandler {
 		}
 
 		$property = $dataValue->getProperty();
-		$contextPage = $dataValue->getContextPage();
 
-		if ( $property === null || ( $contextPage !== null && $contextPage->getSubobjectName() !== '' ) ) {
-			$hash = $dataValue->getDataItem()->getHash();
-		} else {
+		if ( $property !== null ) {
 			$hash = $property->getKey();
+		} else {
+			$hash = $dataValue->getDataItem()->getHash();
 		}
 
-		$errorsByType = $this->flip( $dataValue->getErrorsByType() );
+		$containerSemanticData = $this->newContainerSemanticData( $hash );
 
-		$containerSemanticData = $this->newContainerSemanticData(
-			$hash
-		);
-
-		foreach ( $dataValue->getErrors() as $hash => $error ) {
-			$type = '';
-
-			if ( isset( $errorsByType[$hash] ) ) {
-				$type = $errorsByType[$hash];
-			}
-
-			$this->publishError( $containerSemanticData, $property, Message::encode( $error ), $type );
+		foreach ( $dataValue->getErrors() as $error ) {
+			$this->addToContainerSemanticData( $containerSemanticData, $property, Message::encode( $error ) );
 		}
 
 		return new DIContainer( $containerSemanticData );
 	}
 
-	private function publishError( $containerSemanticData, $property, $error, $type ) {
+	private function addToContainerSemanticData( $containerSemanticData, $property, $error ) {
 
-		// `_INST` is not a real (visible) property to create a reference from
-		// and link to
-		if ( $property !== null && $property->getKey() !== '_INST' ) {
+		if ( $property !== null ) {
 			$containerSemanticData->addPropertyObjectValue(
 				new DIProperty( '_ERRP' ),
 				new DIWikiPage( $property->getKey(), SMW_NS_PROPERTY )
@@ -238,13 +220,6 @@ class ProcessingErrorMsgHandler {
 			new DIProperty( '_ERRT' ),
 			new DIBlob( $error )
 		);
-
-		if ( $type !== '' ) {
-			$containerSemanticData->addPropertyObjectValue(
-				new DIProperty( '_ERR_TYPE' ),
-				new DIBlob( $type )
-			);
-		}
 	}
 
 	private function newContainerSemanticData( $hash ) {
@@ -266,26 +241,6 @@ class ProcessingErrorMsgHandler {
 		}
 
 		return $containerSemanticData;
-	}
-
-	/**
-	 * Flip [ '_type_1' => [ 'a', 'b'], '_type_2' => 'c', 'd' ] ]
-	 * to  [ 'a' => '_type_1', 'b' => '_type_1', 'c' => '_type_2', 'd' => '_type_2' ]
-	 */
-	private function flip( $array ) {
-		$flipped = [];
-
-		foreach ( $array as $key => $value ) {
-			if ( is_array( $value ) ) {
-				foreach ( $value as $v ) {
-					$flipped[$v] = $key;
-				}
-			} else {
-				$flipped[$value] = $key;
-			}
-		}
-
-		return $flipped;
 	}
 
 }

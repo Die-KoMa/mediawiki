@@ -1,7 +1,7 @@
 {
-	"name": "PageForms",
-	"namemsg": "pageforms-name",
-	"version": "4.9.5",
+	"@Note": "When updating this file please also update PageForms.php with the same changes.",
+	"name": "Page Forms",
+	"version": "4.0.2",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -9,7 +9,7 @@
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:Page_Forms",
 	"descriptionmsg": "pageforms-desc",
-	"license-name": "GPL-2.0-or-later",
+	"license-name": "GPL-2.0+",
 	"type": "specialpage",
 	"namespaces": [
 		{
@@ -29,8 +29,8 @@
 	"ExtensionFunctions": [
 		"PFHooks::initialize"
 	],
-	"requires": {
-		"MediaWiki": ">= 1.29.0"
+	"require": {
+		"MediaWiki": ">= 1.27.0"
 	},
 	"GroupPermissions": {
 		"*": {
@@ -40,15 +40,13 @@
 			"editrestrictedfields": true
 		},
 		"user": {
-			"createclass": true,
-			"multipageedit": true
+			"createclass": true
 		}
 	},
 	"AvailableRights": [
 		"viewedittab",
 		"editrestrictedfields",
-		"createclass",
-		"multipageedit"
+		"createclass"
 	],
 	"Actions": {
 		"formedit": "PFFormEditAction",
@@ -58,7 +56,6 @@
 		"Forms": "PFForms",
 		"CreateForm": "PFCreateForm",
 		"Templates": "PFTemplates",
-		"MultiPageEdit": "PFMultiPageEdit",
 		"CreateTemplate": "PFCreateTemplate",
 		"CreateClass": "PFCreateClass",
 		"CreateCategory": "PFCreateCategory",
@@ -68,7 +65,7 @@
 		"UploadWindow": "PFUploadWindow"
 	},
 	"JobClasses": {
-		"pageFormsCreatePage": "PFCreatePageJob"
+		"createPage": "PFCreatePageJob"
 	},
 	"APIModules": {
 		"pfautocomplete": "PFAutocompleteAPI",
@@ -88,7 +85,6 @@
 		"PFForms": "specials/PF_Forms.php",
 		"PFCreateForm": "specials/PF_CreateForm.php",
 		"PFTemplates": "specials/PF_Templates.php",
-		"PFMultiPageEdit": "specials/PF_MultiPageEdit.php",
 		"PFCreateTemplate": "specials/PF_CreateTemplate.php",
 		"PFCreateClass": "specials/PF_CreateClass.php",
 		"PFCreateCategory": "specials/PF_CreateCategory.php",
@@ -99,6 +95,8 @@
 		"PFUploadSourceField": "specials/PF_UploadSourceField.php",
 		"PFUploadWindow": "specials/PF_UploadWindow.php",
 		"PFTemplateField": "includes/PF_TemplateField.php",
+		"TemplatesPage": "specials/PF_Templates.php",
+		"FormsPage": "specials/PF_Forms.php",
 		"PFForm": "includes/PF_Form.php",
 		"PFTemplate": "includes/PF_Template.php",
 		"PFTemplateInForm": "includes/PF_TemplateInForm.php",
@@ -131,8 +129,6 @@
 		"PFComboBoxInput": "includes/forminputs/PF_ComboBoxInput.php",
 		"PFDateInput": "includes/forminputs/PF_DateInput.php",
 		"PFDatePickerInput": "includes/forminputs/PF_DatePickerInput.php",
-		"PFTimePickerInput": "includes/forminputs/PF_TimePickerInput.php",
-		"PFDateTimePicker": "includes/forminputs/PF_DateTimePicker.php",
 		"PFDateTimeInput": "includes/forminputs/PF_DateTimeInput.php",
 		"PFYearInput": "includes/forminputs/PF_YearInput.php",
 		"PFTreeInput": "includes/forminputs/PF_TreeInput.php",
@@ -140,9 +136,7 @@
 		"PFTokensInput": "includes/forminputs/PF_TokensInput.php",
 		"PFGoogleMapsInput": "includes/forminputs/PF_GoogleMapsInput.php",
 		"PFOpenLayersInput": "includes/forminputs/PF_OpenLayersInput.php",
-		"PFLeafletInput": "includes/forminputs/PF_LeafletInput.php",
 		"PFRegExpInput": "includes/forminputs/PF_RegExpInput.php",
-		"PFRatingInput": "includes/forminputs/PF_RatingInput.php",
 		"PFWikiPage": "includes/wikipage/PF_WikiPage.php",
 		"PFWikiPageTemplate": "includes/wikipage/PF_WikiPageTemplate.php",
 		"PFWikiPageTemplateParam": "includes/wikipage/PF_WikiPageTemplateParam.php",
@@ -161,14 +155,15 @@
 				"skins/PF_jquery_ui_overrides.css"
 			],
 			"dependencies": [
-				"ext.pageforms.jqui.autocomplete",
-				"ext.pageforms.sortable",
+				"jquery.ui.core",
+				"jquery.ui.autocomplete",
+				"jquery.ui.button",
+				"jquery.ui.sortable",
+				"jquery.ui.widget",
+				"ext.pageforms.fancybox",
 				"ext.pageforms.autogrow",
 				"mediawiki.util",
-				"mediawiki.api",
-				"ext.pageforms.select2",
-				"ext.pageforms.wikieditor",
-				"ext.pageforms.editwarning"
+				"ext.pageforms.select2"
 			],
 			"messages": [
 				"pf_formerrors_header",
@@ -179,9 +174,7 @@
 				"pf_bad_url_error",
 				"pf_bad_email_error",
 				"pf_bad_number_error",
-				"pf_bad_integer_error",
 				"pf_bad_date_error",
-				"pf_modified_input_error",
 				"pf_pipe_error"
 			]
 		},
@@ -190,42 +183,22 @@
 				"libs/jquery.browser.js"
 			]
 		},
-		"ext.pageforms.fancybox.jquery1": {
-			"scripts": "libs/FancyBox/jquery.fancybox.1.3.4.js",
-			"styles": "skins/FancyBox/jquery.fancybox.1.3.4.css",
+		"ext.pageforms.fancybox": {
+			"scripts": "libs/jquery.fancybox.js",
+			"styles": "skins/jquery.fancybox.css",
 			"dependencies": [
 				"ext.pageforms.browser"
 			]
 		},
-		"ext.pageforms.fancybox.jquery3": {
-			"scripts": "libs/FancyBox/jquery.fancybox.3.2.10.js",
-			"styles": "skins/FancyBox/jquery.fancybox.3.2.10.css",
+		"ext.pageforms.dynatree": {
 			"dependencies": [
-				"ext.pageforms.browser"
-			]
-		},
-		"ext.pageforms.fancytree.dep": {
-			"scripts": [
-				"libs/jquery.fancytree.ui-deps.js"
+				"jquery.ui.widget"
 			],
-			"styles": "skins/skin-win8/ui.fancytree.css"
-
-		},
-		"ext.pageforms.fancytree": {
 			"scripts": [
-				"libs/jquery.fancytree.js",
-				"libs/PF_tree.js"
+				"libs/jquery.dynatree.js",
+				"libs/PF_dynatree.js"
 			],
-			"styles": "skins/skin-win8/ui.fancytree.css",
-			"dependencies": [
-				"ext.pageforms.fancytree.dep",
-				"ext.pageforms.jqui.fancytree.deps"
-			]
-		},
-		"ext.pageforms.sortable": {
-			"scripts": [
-				"libs/Sortable.js"
-			]
+			"styles": "skins/ui.dynatree.css"
 		},
 		"ext.pageforms.autogrow": {
 			"scripts": [
@@ -289,41 +262,15 @@
 				"libs/PF_datepicker.js"
 			],
 			"dependencies": [
-				"ext.pageforms.jqui.datepicker",
+				"jquery.ui.datepicker",
 				"ext.pageforms.main"
-			]
-		},
-		"ext.pageforms.timepicker": {
-			"scripts": "libs/PF_timepicker.js",
-			"styles": "skins/PF_Timepicker.css"
-		},
-		"ext.pageforms.datetimepicker": {
-			"scripts": "libs/PF_datetimepicker.js",
-			"dependencies": [
-				"ext.pageforms.datepicker",
-				"ext.pageforms.timepicker"
-			]
+			],
+			"position": "bottom"
 		},
 		"ext.pageforms.regexp": {
 			"scripts": "libs/PF_regexp.js",
 			"dependencies": [
 				"ext.pageforms.main"
-			]
-		},
-		"ext.pageforms.rating": {
-			"scripts": [
-				"libs/jquery.rateyo.js",
-				"libs/PF_rating.js"
-			],
-			"styles": "skins/jquery.rateyo.css"
-		},
-		"ext.pageforms.simpleupload": {
-			"scripts": [
-				"libs/PF_simpleupload.js"
-			],
-			"messages": [
-				"pf_forminputs_change_file",
-				"pf-simpleupload"
 			]
 		},
 		"ext.pageforms.select2": {
@@ -340,7 +287,6 @@
 			],
 			"dependencies": [
 				"ext.pageforms",
-				"ext.pageforms.jqui.sortable",
 				"mediawiki.jqueryMsg"
 			],
 			"messages": [
@@ -350,52 +296,6 @@
 				"pf-select2-selection-too-big"
 			]
 		},
-		"ext.pageforms.fullcalendar.jquery1": {
-			"scripts": [
-				"libs/FullCalendar-2.9.1/fullcalendar.js",
-				"libs/PF_FullCalendar.js"
-			],
-			"styles": [
-				"skins/FullCalendar-2.9.1/fullcalendar.css",
-				"skins/PF_FullCalendar.css"
-			],
-			"dependencies": [
-				"ext.pageforms.select2",
-				"ext.pageforms.jqui.sortable",
-				"ext.pageforms.fancytree",
-				"ext.pageforms",
-				"moment",
-				"mediawiki.jqueryMsg"
-			],
-			"messages": [
-				"pf-calendar-createevent",
-				"pf-calendar-deleteevent",
-				"pf-calendar-updateevent"
-			]
-		},
-		"ext.pageforms.fullcalendar.jquery3": {
-			"scripts": [
-				"libs/FullCalendar-3.9.0/fullcalendar.js",
-				"libs/PF_FullCalendar.js"
-			],
-			"styles": [
-				"skins/FullCalendar-3.9.0/fullcalendar.css",
-				"skins/PF_FullCalendar.css"
-			],
-			"dependencies": [
-				"ext.pageforms.select2",
-				"ext.pageforms.jqui.sortable",
-				"ext.pageforms.fancytree",
-				"ext.pageforms",
-				"moment",
-				"mediawiki.jqueryMsg"
-			],
-			"messages": [
-				"pf-calendar-createevent",
-				"pf-calendar-deleteevent",
-				"pf-calendar-updateevent"
-			]
-		},
 		"ext.pageforms.jsgrid": {
 			"scripts": [
 				"libs/jsgrid.js",
@@ -403,16 +303,12 @@
 			],
 			"styles": [
 				"skins/jsgrid/jsgrid.css",
-				"skins/jsgrid/theme.css",
-				"skins/PF_jsGrid.css"
+				"skins/jsgrid/theme.css"
 			],
 			"dependencies": [
-				"ext.pageforms.select2",
-				"ext.pageforms.jqui.sortable",
-				"mediawiki.language.months"
+				"jquery.ui.sortable"
 			],
 			"messages": [
-				"pf-resultstoshow",
 				"htmlform-yes",
 				"htmlform-no"
 			]
@@ -422,20 +318,9 @@
 				"skins/balloon.css"
 			]
 		},
-		"ext.pageforms.wikieditor": {
-			"scripts": "libs/PF_wikieditor.js",
-			"styles": "skins/PF_wikieditor.css"
-		},
 		"ext.pageforms": {
 			"scripts": [
 				"libs/ext.pf.js"
-			]
-		},
-		"ext.pageforms.editwarning": {
-			"scripts": "libs/PF_editWarning.js",
-			"dependencies": [
-				"mediawiki.confirmCloseWindow",
-				"jquery.textSelection"
 			]
 		},
 		"ext.pageforms.PF_CreateProperty": {
@@ -453,16 +338,12 @@
 				"libs/PF_CreateTemplate.js"
 			],
 			"messages": [
-				"pf_blank_error",
-				"pf_createtemplate_hierarchystructureplaceholder"
+				"pf_blank_error"
 			]
 		},
 		"ext.pageforms.PF_CreateClass": {
 			"scripts": [
 				"libs/PF_CreateClass.js"
-			],
-			"messages": [
-				"pf_createtemplate_hierarchystructureplaceholder"
 			]
 		},
 		"ext.pageforms.PF_CreateForm": {
@@ -479,29 +360,43 @@
 		"remoteExtPath": "PageForms"
 	},
 	"Hooks": {
-		"SkinTemplateNavigation": [
+		"LinkEnd": [
+			"PFFormLinker::setBrokenLink"
+		],
+		"SkinTemplateTabs": [
 			"PFFormEditAction::displayTab",
 			"PFHelperFormAction::displayTab"
 		],
-		"ArticlePurge": "PFFormUtils::purgeCache",
-		"PageContentSave": "PFFormUtils::purgeCache",
-		"ParserFirstCallInit": "PFHooks::registerFunctions",
-		"MakeGlobalVariablesScript": "PFHooks::setGlobalJSVariables",
-		"PageSchemasRegisterHandlers": "PFPageSchemas::registerClass",
-		"EditPage::importFormData": "PFHooks::showFormPreview",
-		"HtmlPageLinkRendererEnd": "PFFormLinker::setBrokenLink",
-		"CargoTablesActionLinks": "PFHooks::addToCargoTablesLinks",
-		"CargoTablesSetAllowedActions": "PFHooks::addToCargoTablesColumns",
-		"CargoTablesSetActionLinks": "PFHooks::addToCargoTablesRow",
-		"TinyMCEDisable": "PFHooks::disableTinyMCE",
-		"CanonicalNamespaces": "PFHooks::registerNamespaces",
-		"ResourceLoaderRegisterModules": "PFHooks::registerModules"
+		"SkinTemplateNavigation": [
+			"PFFormEditAction::displayTab2",
+			"PFHelperFormAction::displayTab2"
+		],
+		"ArticlePurge": [
+			"PFFormUtils::purgeCache"
+		],
+		"ParserFirstCallInit": [
+			"PFHooks::registerFunctions"
+		],
+		"MakeGlobalVariablesScript": [
+			"PFHooks::setGlobalJSVariables"
+		],
+		"PageSchemasRegisterHandlers": [
+			"PFPageSchemas::registerClass"
+		],
+		"EditPage::importFormData": [
+			"PFHooks::showFormPreview"
+		],
+		"CanonicalNamespaces": [
+			"PFHooks::registerNamespaces"
+		],
+		"UnitTestsList": [
+			"PFHooks::onUnitTestsList"
+		],
+		"ResourceLoaderRegisterModules": [
+			"PFHooks::registerModules"
+		]
 	},
 	"config": {
-		"PageFormsVisualEditorMaxHeight": 400,
-		"PageFormsUseDisplayTitle": true,
-		"PageFormsShowExpandAllLink": false,
-		"PageFormsSimpleUpload": false,
 		"PageFormsMaxAutocompleteValues": 1000,
 		"PageFormsMaxLocalAutocompleteValues": 100,
 		"PageFormsAutocompleteOnAllChars": false,
@@ -513,39 +408,34 @@
 		"PageForms24HourTime": false,
 		"PageFormsCacheFormDefinitions": false,
 		"PageFormsFormCacheType": null,
-		"PageFormsDisableOutsideServices": false,
 		"PageFormsLinkAllRedLinksToForms": false,
+		"PageFormsRedLinksCheckOnlyLocalProps": false,
 		"PageFormsShowTabsForAllHelperForms": true,
 		"PageFormsRunQueryFormAtTop": false,
 		"PageFormsGoogleMapsKey": null,
 		"PageFormsShowOnSelect": [],
 		"PageFormsAutocompleteValues": [],
-		"PageFormsCalendarParams": [],
-		"PageFormsCalendarValues": [],
 		"PageFormsGridValues": [],
 		"PageFormsGridParams": [],
-		"PageFormsContLangYes": null,
-		"PageFormsContLangNo": null,
-		"PageFormsContLangMonths": [],
-		"PageFormsHeightForMinimizingInstances": 800,
 		"PageFormsFieldProperties": [],
 		"PageFormsCargoFields": [],
 		"PageFormsDependentFields": [],
 		"PageFormsCheckboxesSelectAllMinimum": 10,
-		"PageFormsMapsWithFeeders": [],
 		"PageFormsDatePickerSettings": {
 			"@note": "See PF_DefaultInputSettings.php for allowed values",
 			"FirstDate": null,
 			"LastDate": null,
 			"DateFormat": "SHORT",
 			"WeekStart": null,
+			"ShowWeekNumbers": false,
+			"DisableInputField": false,
+			"ShowResetButton": false,
 			"DisabledDaysOfWeek": null,
 			"HighlightedDaysOfWeek": null,
 			"DisabledDates": null,
 			"HighlightedDates": null,
-			"_merge_strategy": "array_plus"
-		},
-		"PageFormsAutoeditNamespaces": [ 0 ]
+			"merge_strategy": "array_plus"
+		}
 	},
 	"manifest_version": 1
 }

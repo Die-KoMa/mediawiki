@@ -74,11 +74,6 @@ class CallableUpdate implements DeferrableUpdate {
 	private $stage;
 
 	/**
-	 * @var boolean
-	 */
-	private $catchExceptionAndRethrow = false;
-
-	/**
 	 * @since 2.4
 	 *
 	 * @param callable $callback|null
@@ -148,19 +143,6 @@ class CallableUpdate implements DeferrableUpdate {
 	 */
 	public function isDeferrableUpdate( $isDeferrableUpdate ) {
 		$this->isDeferrableUpdate = (bool)$isDeferrableUpdate;
-	}
-
-	/**
-	 * @note MW 1.34+ showed a behaviour where exceptions during a deferred update
-	 * weren't logged and reported hereby allowing errors to go unnoticed forcing
-	 * a possible rollback without a chance to investigate missing data updates.
-	 *
-	 * @since 3.1
-	 *
-	 * @param boolean $catchExceptionAndRethrow
-	 */
-	public function catchExceptionAndRethrow( $catchExceptionAndRethrow ) {
-		$this->catchExceptionAndRethrow = (bool)$catchExceptionAndRethrow;
 	}
 
 	/**
@@ -240,16 +222,20 @@ class CallableUpdate implements DeferrableUpdate {
 	 * @since 2.4
 	 */
 	public function doUpdate() {
-
-		if ( $this->catchExceptionAndRethrow ) {
-			$this->attemptUpdate();
-		} else {
-			$this->runUpdate();
-		}
+		call_user_func( $this->callback );
+		unset( self::$queueList[$this->fingerprint] );
 
 		$this->logger->info(
-			[ 'DeferrableUpdate', 'Update completed: {origin} (fingerprint:{fingerprint})' ],
-			[ 'method' => __METHOD__, 'role' => 'developer', 'origin' => $this->getOrigin(), 'fingerprint' => $this->fingerprint ]
+			[
+				'DeferrableUpdate',
+				'Update completed: {origin} (fingerprint:{fingerprint})'
+			],
+			[
+			'method' => __METHOD__,
+			'role' => 'developer',
+			'origin' => $this->getOrigin(),
+			'fingerprint' => $this->fingerprint
+		]
 		);
 	}
 
@@ -260,8 +246,16 @@ class CallableUpdate implements DeferrableUpdate {
 
 		if ( $this->fingerprint !== null && isset( self::$queueList[$this->fingerprint] ) ) {
 			$this->logger->info(
-				[ 'DeferrableUpdate', 'Push: {origin} (fingerprint: {fingerprint} is already listed, skip)' ],
-				[ 'method' => __METHOD__, 'role' => 'developer', 'origin' => $this->getOrigin(), 'fingerprint' => $this->fingerprint ]
+				[
+					'DeferrableUpdate',
+					'Push: {origin} (fingerprint: {fingerprint} is already listed, skip)'
+				],
+				[
+					'method' => __METHOD__,
+					'role' => 'developer',
+					'origin' => $this->getOrigin(),
+					'fingerprint' => $this->fingerprint
+				]
 			);
 			return;
 		}
@@ -271,27 +265,43 @@ class CallableUpdate implements DeferrableUpdate {
 		if ( $this->isPending && $this->isDeferrableUpdate ) {
 
 			$this->logger->info(
-				[ 'DeferrableUpdate', 'Push: {origin} (as pending DeferredCallableUpdate)' ],
-				[ 'method' => __METHOD__, 'role' => 'developer', 'origin' => $this->getOrigin(), 'fingerprint' => $this->fingerprint ]
+				[
+					'DeferrableUpdate',
+					'Push: {origin} (as pending DeferredCallableUpdate)'
+				],
+				[
+					'method' => __METHOD__,
+					'role' => 'developer',
+					'origin' => $this->getOrigin(),
+					'fingerprint' => $this->fingerprint
+				]
 			);
 
 			return self::$pendingUpdates[] = $this;
 		}
 
 		if ( !$this->isCommandLineMode && $this->isDeferrableUpdate ) {
-			return $this->registerUpdate( $this );
+			return $this->addUpdate( $this );
 		}
 
 		$this->doUpdate();
 	}
 
-	protected function registerUpdate( $update ) {
+	protected function addUpdate( $update ) {
 
 		$this->logger->info(
-			[ 'DeferrableUpdate', 'Added: {ctx}' ],
-			[ 'method' => __METHOD__, 'role' => 'developer', 'ctx' => $this->loggableContext() ]
+			[
+				'DeferrableUpdate',
+				'Added: {ctx}'
+			],
+			[
+				'method' => __METHOD__,
+				'role' => 'developer',
+				'ctx' => json_encode(
+					$this->getLoggableContext(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+				)
+			]
 		);
-
 		$stage = null;
 
 		if ( $update->getStage() === self::STAGE_POSTSEND && defined( 'DeferredUpdates::POSTSEND' ) ) {
@@ -305,49 +315,25 @@ class CallableUpdate implements DeferrableUpdate {
 		DeferredUpdates::addUpdate( $update, $stage );
 	}
 
-	protected function loggableContext() {
-		return [ 'origin' => $this->origin, 'fingerprint' => $this->fingerprint, 'stage' => $this->stage ];
+	protected function getLoggableContext() {
+		return [
+			'origin' => $this->origin,
+			'fingerprint' => $this->fingerprint,
+			'stage' => $this->stage
+		];
 	}
 
 	protected function emptyCallback() {
 		$this->logger->info(
-			[ 'DeferrableUpdate', 'Empty callback!' ],
-			[ 'role' => 'developer', 'method' => __METHOD__ ]
+			[
+				'DeferrableUpdate',
+				'Empty callback!'
+			],
+			[
+				'role' => 'developer',
+				'method' => __METHOD__
+			]
 		);
-	}
-
-	private function attemptUpdate() {
-
-		$e = null;
-
-		try {
-			$this->runUpdate();
-		} catch ( \Exception $e ) {
-		} catch ( \Throwable $e ) {
-		}
-
-		if ( $e === null ) {
-			return;
-		}
-
-		$error = [
-			'type' => $this->getOrigin(),
-			'message' => $e->getMessage(),
-			'trace' => $e->getTraceAsString()
-		];
-
-		// Log and re-throw
-		$this->logger->error(
-			[ "Deferred update {type} failed: {message}\n{trace}" ],
-			[ 'role' => 'production' ] + $error
-		);
-
-		throw $e;
-	}
-
-	private function runUpdate() {
-		( $this->callback )();
-		unset( self::$queueList[$this->fingerprint] );
 	}
 
 }

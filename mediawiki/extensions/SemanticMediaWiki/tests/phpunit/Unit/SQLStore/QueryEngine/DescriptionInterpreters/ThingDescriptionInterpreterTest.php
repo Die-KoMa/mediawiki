@@ -17,28 +17,10 @@ use SMW\Tests\TestEnvironment;
  */
 class ThingDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $conditionBuilder;
 	private $querySegmentValidator;
 
 	protected function setUp() {
 		parent::setUp();
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->any() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMock();
 
 		$testEnvironment = new TestEnvironment();
 		$this->querySegmentValidator = $testEnvironment->getUtilityFactory()->newValidatorFactory()->newQuerySegmentValidator();
@@ -46,28 +28,34 @@ class ThingDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
 		$this->assertInstanceOf(
-			ThingDescriptionInterpreter::class,
-			new ThingDescriptionInterpreter( $this->conditionBuilder )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\ThingDescriptionInterpreter',
+			new ThingDescriptionInterpreter( $querySegmentListBuilder )
 		);
 	}
 
 	public function testInterpretDescription() {
 
-		$description = $this->getMockBuilder( '\SMW\Query\Language\ThingDescription' )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
 			->disableOriginalConstructor()
 			->getMock();
+
+		$description = $this->getMockBuilder( '\SMW\Query\Language\ThingDescription' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
 
 		$expected = new \stdClass;
 		$expected->type = 0;
 		$expected->queryNumber = 0;
 
-		$queryEngineFactory = new QueryEngineFactory(
-			$this->store
-		);
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new ThingDescriptionInterpreter(
-			$queryEngineFactory->newConditionBuilder()
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(

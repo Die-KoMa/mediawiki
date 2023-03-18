@@ -173,10 +173,6 @@ class Message {
 			return false;
 		}
 
-		if ( !is_array( $message ) && is_numeric( $message ) ) {
-			return $message;
-		}
-
 		// If the first element is numeric then its signals the expected message
 		// formatter type
 		if ( isset( $message[0] ) && is_numeric( $message[0] ) ) {
@@ -188,7 +184,7 @@ class Message {
 			return $message[0];
 		}
 
-		return self::get( $message, ( $type === null ? $asType : $type ), $language );
+		return self::get( $message, ( $type !== null ? $type: $asType ), $language );
 	}
 
 	/**

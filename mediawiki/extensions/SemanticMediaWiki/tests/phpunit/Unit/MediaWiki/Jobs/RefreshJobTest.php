@@ -68,11 +68,11 @@ class RefreshJobTest extends \PHPUnit_Framework_TestCase {
 
 		$expectedToRun = $expected['spos'] === null ? $this->once() : $this->once();
 
-		$rebuilder = $this->getMockBuilder( '\SMW\SQLStore\Rebuilder\Rebuilder' )
+		$entityRebuildDispatcher = $this->getMockBuilder( '\SMW\SQLStore\EntityRebuildDispatcher' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'rebuild' )
 			->will( $this->returnValue( $parameters['spos'] ) );
 
@@ -82,7 +82,7 @@ class RefreshJobTest extends \PHPUnit_Framework_TestCase {
 
 		$store->expects( $expectedToRun )
 			->method( 'refreshData' )
-			->will( $this->returnValue( $rebuilder ) );
+			->will( $this->returnValue( $entityRebuildDispatcher ) );
 
 		$this->applicationFactory->registerObject( 'Store', $store );
 

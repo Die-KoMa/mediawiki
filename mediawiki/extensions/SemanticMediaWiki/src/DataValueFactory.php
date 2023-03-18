@@ -8,7 +8,6 @@ use SMWDataItem as DataItem;
 use SMWDataValue as DataValue;
 use SMWDIError;
 use SMWErrorValue as ErrorValue;
-use RuntimeException;
 
 /**
  * Factory class for creating SMWDataValue objects for supplied types or
@@ -29,14 +28,14 @@ use RuntimeException;
 class DataValueFactory {
 
 	/**
-	 * @var DataValueFactory
+	 * @var DataTypeRegistry
 	 */
-	private static $instance;
+	private static $instance = null;
 
 	/**
 	 * @var DataTypeRegistry
 	 */
-	private $dataTypeRegistry;
+	private $dataTypeRegistry = null;
 
 	/**
 	 * @var DataValueServiceFactory
@@ -44,19 +43,9 @@ class DataValueFactory {
 	private $dataValueServiceFactory;
 
 	/**
-	 * @var integer
-	 */
-	private $featureSet = 0;
-
-	/**
 	 * @var array
 	 */
 	private $defaultOutputFormatters;
-
-	/**
-	 * @var []
-	 */
-	private $callables = [];
 
 	/**
 	 * @since 1.9
@@ -81,51 +70,23 @@ class DataValueFactory {
 		}
 
 		$applicationFactory = ApplicationFactory::getInstance();
-		$settings = $applicationFactory->getSettings();
-
 		$dataValueServiceFactory = $applicationFactory->create( 'DataValueServiceFactory' );
 		$dataTypeRegistry = DataTypeRegistry::getInstance();
 
-		$instance = new self(
+		$dataValueServiceFactory->importExtraneousFunctions(
+			$dataTypeRegistry->getExtraneousFunctions()
+		);
+
+		self::$instance = new self(
 			$dataTypeRegistry,
 			$dataValueServiceFactory
 		);
 
-		$instance->setFeatureSet(
-			$settings->get( 'smwgDVFeatures' )
+		self::$instance->setDefaultOutputFormatters(
+			$applicationFactory->getSettings()->get( 'smwgDefaultOutputFormatters' )
 		);
 
-		$instance->setDefaultOutputFormatters(
-			$settings->get( 'smwgDefaultOutputFormatters' )
-		);
-
-		return self::$instance = $instance;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string $key
-	 * @param callable $callable
-	 *
-	 * @throws RuntimeException
-	 */
-	public function addCallable( $key, callable $callable ) {
-
-		if ( isset( $this->callables[$key] ) ) {
-			throw new RuntimeException( "`$key` is already in use, please clear the callable first!" );
-		}
-
-		$this->callables[$key] = $callable;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string $key
-	 */
-	public function clearCallable( $key ) {
-		unset( $this->callables[$key] );
+		return self::$instance;
 	}
 
 	/**
@@ -133,17 +94,7 @@ class DataValueFactory {
 	 */
 	public function clear() {
 		$this->dataTypeRegistry->clear();
-		$this->callables = [];
 		self::$instance = null;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param integer $featureSet
-	 */
-	public function setFeatureSet( $featureSet ) {
-		$this->featureSet = $featureSet;
 	}
 
 	/**
@@ -159,7 +110,7 @@ class DataValueFactory {
 
 			$type = str_replace( ' ' , '_', $type );
 
-			if ( $type[0] !== '_' && ( $dType = $this->dataTypeRegistry->findTypeByLabel( $type ) ) !== '' ) {
+			if ( $type{0} !== '_' && ( $dType = $this->dataTypeRegistry->findTypeByLabel( $type ) ) !== '' ) {
 				$type = $dType;
 			}
 
@@ -190,7 +141,7 @@ class DataValueFactory {
 			);
 		}
 
-		$dataValue = $this->dataValueServiceFactory->newDataValueByTypeOrClass(
+		$dataValue = $this->dataValueServiceFactory->newDataValueByType(
 			$typeId,
 			$this->dataTypeRegistry->getDataTypeClassById( $typeId )
 		);
@@ -199,14 +150,17 @@ class DataValueFactory {
 			$this->dataValueServiceFactory
 		);
 
-		$dataValue->setOption( 'smwgDVFeatures', $this->featureSet );
+		$dataValue->copyOptions(
+			$this->dataTypeRegistry->getOptions()
+		);
 
-		foreach ( $this->callables as $key => $callable ) {
-			$dataValue->addCallable( $key, $callable );
-		}
+		foreach ( $this->dataTypeRegistry->getExtensionData( $typeId ) as $key => $value ) {
 
-		foreach ( $this->dataTypeRegistry->getCallablesByTypeId( $typeId ) as $key => $value ) {
-			$dataValue->addCallable( $key, $value );
+			if ( !is_string( $key ) ) {
+				continue;
+			}
+
+			$dataValue->setExtensionData( $key, $value );
 		}
 
 		$localizer = Localizer::getInstance();
@@ -238,7 +192,7 @@ class DataValueFactory {
 			}
 		}
 
-		if ( $contextPage !== null ) {
+		if ( !is_null( $contextPage ) ) {
 			$dataValue->setContextPage( $contextPage );
 		}
 
@@ -255,11 +209,10 @@ class DataValueFactory {
 	 * @param $dataItem DataItem
 	 * @param $property mixed null or SMWDIProperty property object for which this value is made
 	 * @param $caption mixed user-defined caption, or false if none given
-	 * @param DIWikiPage|null $contextPage
 	 *
 	 * @return DataValue
 	 */
-	public function newDataValueByItem( DataItem $dataItem, DIProperty $property = null, $caption = false, $contextPage = null ) {
+	public function newDataValueByItem( DataItem $dataItem, DIProperty $property = null, $caption = false ) {
 
 		if ( $property !== null ) {
 			$typeId = $property->findPropertyTypeID();
@@ -267,14 +220,7 @@ class DataValueFactory {
 			$typeId = $this->dataTypeRegistry->getDefaultDataItemByType( $dataItem->getDiType() );
 		}
 
-		$dataValue = $this->newDataValueByType(
-			$typeId,
-			false,
-			$caption,
-			$property,
-			$contextPage
-		);
-
+		$dataValue = $this->newDataValueByType( $typeId, false, $caption, $property );
 		$dataValue->setDataItem( $dataItem );
 
 		if ( $caption !== false ) {
@@ -400,34 +346,6 @@ class DataValueFactory {
 	 */
 	public function newPropertyValueByLabel( $propertyLabel, $caption = false, DIWikiPage $contextPage = null ) {
 		return $this->newDataValueByType( PropertyValue::TYPE_ID, $propertyLabel, $caption, null, $contextPage );
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param DIProperty $property
-	 * @param string|false $caption
-	 * @param DIWikiPage|null $contextPage
-	 *
-	 * @return DataValue
-	 */
-	public function newPropertyValueByItem( DIProperty $property, $caption = false, DIWikiPage $contextPage = null ) {
-
-		$dataValue = $this->newDataValueByType(
-			PropertyValue::TYPE_ID,
-			false,
-			$caption,
-			null,
-			$contextPage
-		);
-
-		$dataValue->setDataItem( $property );
-
-		if ( $caption !== false ) {
-			$dataValue->setCaption( $caption );
-		}
-
-		return $dataValue;
 	}
 
 	/**

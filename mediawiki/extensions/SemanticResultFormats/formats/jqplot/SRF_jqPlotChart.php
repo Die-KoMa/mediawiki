@@ -59,7 +59,7 @@ class SRFjqPlotChart extends SRFjqPlot {
 
 		// Encode data objects
 		$requireHeadItem = [ $chartID => FormatJson::encode( $dataObject ) ];
-		SMWOutputs::requireHeadItem( $chartID, SRFUtils::makeVariablesScript( $requireHeadItem ) );
+		SMWOutputs::requireHeadItem( $chartID, Skin::makeVariablesScript( $requireHeadItem ) );
 
 		// Processing placeholder
 		$processing = SRFUtils::htmlProcessingElement( $this->isHTML );

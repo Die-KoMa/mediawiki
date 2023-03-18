@@ -62,7 +62,6 @@ class UpdateJob extends Job {
 	 */
 	function __construct( Title $title, $params = [] ) {
 		parent::__construct( 'smw.update', $title, $params );
-		$this->title = $title;
 		$this->removeDuplicates = true;
 
 		$this->isEnabledJobQueue(
@@ -238,14 +237,18 @@ class UpdateJob extends Job {
 		);
 
 		$eventHandler = EventHandler::getInstance();
-		$eventDispatcher = $eventHandler->getEventDispatcher();
 
-		$eventDispatcher->dispatch(
-			'InvalidateEntityCache',
-			[
-				'context' => 'UpdateJob',
-				'title' => $this->getTitle()
-			]
+		$dispatchContext = $eventHandler->newDispatchContext();
+		$dispatchContext->set( 'title', $this->getTitle() );
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'factbox.cache.delete',
+			$dispatchContext
+		);
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.propertyvalues.prefetcher.reset',
+			$dispatchContext
 		);
 
 		// TODO
@@ -270,7 +273,7 @@ class UpdateJob extends Job {
 
 		$parserData->setOption(
 			$parserData::OPT_FORCED_UPDATE,
-			true
+			$this->getParameter( self::FORCED_UPDATE )
 		);
 
 		$parserData->setOption(

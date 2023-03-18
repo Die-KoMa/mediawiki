@@ -6,7 +6,7 @@ use SMW\MediaWiki\Job;
 use SMW\ApplicationFactory;
 use SMW\DIProperty;
 use SMW\DIWikiPage;
-use SMW\SQLStore\Lookup\ChangePropagationEntityLookup;
+use SMW\SQLStore\ChangePropagationEntityFinder;
 use SMWExporter as Exporter;
 use Title;
 
@@ -115,21 +115,14 @@ class ChangePropagationDispatchJob extends Job {
 	public static function hasPendingJobs( DIWikiPage $subject ) {
 
 		$applicationFactory = ApplicationFactory::getInstance();
-		$jobQueue = $applicationFactory->getJobQueue();
 
-		$jobType = 'smw.changePropagationDispatch';
-
-		if ( $jobQueue->hasPendingJob( $jobType ) ) {
-			return true;
-		}
+		$jobType = 'smw.changePropagationUpdate';
 
 		if ( $subject->getNamespace() === NS_CATEGORY ) {
 			$jobType = 'smw.changePropagationClassUpdate';
-		} else {
-			$jobType = 'smw.changePropagationUpdate';
 		}
 
-		if ( $jobQueue->hasPendingJob( $jobType ) ) {
+		if ( $applicationFactory->getJobQueue()->hasPendingJob( $jobType ) ) {
 			return true;
 		}
 
@@ -155,22 +148,14 @@ class ChangePropagationDispatchJob extends Job {
 	public static function getPendingJobsCount( DIWikiPage $subject ) {
 
 		$applicationFactory = ApplicationFactory::getInstance();
-		$jobQueue = $applicationFactory->getJobQueue();
 
-		$jobType = 'smw.changePropagationDispatch';
-		$count = 0;
-
-		if ( $jobQueue->hasPendingJob( $jobType ) ) {
-			$count = $jobQueue->getQueueSize( $jobType );
-		}
+		$jobType = 'smw.changePropagationUpdate';
 
 		if ( $subject->getNamespace() === NS_CATEGORY ) {
 			$jobType = 'smw.changePropagationClassUpdate';
-		} else {
-			$jobType = 'smw.changePropagationUpdate';
 		}
 
-		$count += $jobQueue->getQueueSize( $jobType );
+		$count = $applicationFactory->getJobQueue()->getQueueSize( $jobType );
 
 		// Fallback for when JobQueue::getQueueSize doesn't yet contain the
 		// updated stats
@@ -199,10 +184,6 @@ class ChangePropagationDispatchJob extends Job {
 			return $this->dispatchFromFile( $subject, $this->getParameter( 'dataFile' ) );
 		}
 
-		if ( $this->hasParameter( 'schema_change_propagation' ) ) {
-			return $this->dispatchFromSchema( $subject, $this->getParameter( 'property_key' ) );
-		}
-
 		$this->findAndDispatch();
 
 		return true;
@@ -225,12 +206,12 @@ class ChangePropagationDispatchJob extends Job {
 			'ChangePropagationDispatchJob on ' . $subject->getHash()
 		);
 
-		$changePropagationEntityLookup = new ChangePropagationEntityLookup(
+		$changePropagationEntityFinder = new ChangePropagationEntityFinder(
 			$applicationFactory->getStore(),
 			$iteratorFactory
 		);
 
-		$changePropagationEntityLookup->isTypePropagation(
+		$changePropagationEntityFinder->isTypePropagation(
 			$this->getParameter( 'isTypePropagation' )
 		);
 
@@ -240,7 +221,7 @@ class ChangePropagationDispatchJob extends Job {
 			$entity = $subject;
 		}
 
-		$appendIterator = $changePropagationEntityLookup->findAll(
+		$appendIterator = $changePropagationEntityFinder->findAll(
 			$entity
 		);
 
@@ -360,31 +341,6 @@ class ChangePropagationDispatchJob extends Job {
 		);
 
 		$tempFile->delete( $file );
-
-		return true;
-	}
-
-	private function dispatchFromSchema( $subject, $property_key ) {
-
-		$store = ApplicationFactory::getInstance()->getStore();
-
-		// Find all properties that point to the schema and hereby require
-		// an update (!! using the inverse relationship)
-		$dataItems = $store->getPropertyValues(
-			$subject,
-			new DIProperty( $property_key, true )
-		);
-
-		// Scheduling the actual dispatch for those properties connected to
-		// the schema change
-		foreach ( $dataItems as $dataItem ) {
-
-			$changePropagationDispatchJob = new ChangePropagationDispatchJob(
-				$dataItem->getTitle()
-			);
-
-			$changePropagationDispatchJob->insert();
-		}
 
 		return true;
 	}

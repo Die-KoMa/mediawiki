@@ -70,9 +70,9 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 	private $errors = [];
 
 	/**
-	 * @var ConditionBuilder
+	 * @var QuerySegmentListBuildManager
 	 */
-	private $conditionBuilder;
+	private $querySegmentListBuildManager;
 
 	/**
 	 * @var QuerySegmentListProcessor
@@ -93,13 +93,13 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 	 * @since 2.2
 	 *
 	 * @param SQLStore $store
-	 * @param ConditionBuilder $conditionBuilder
+	 * @param QuerySegmentListBuildManager $querySegmentListBuildManager
 	 * @param QuerySegmentListProcessor $querySegmentListProcessor
 	 * @param EngineOptions $engineOptions
 	 */
-	public function __construct( SQLStore $store, ConditionBuilder $conditionBuilder, QuerySegmentListProcessor $querySegmentListProcessor, EngineOptions $engineOptions ) {
+	public function __construct( SQLStore $store, QuerySegmentListBuildManager $querySegmentListBuildManager, QuerySegmentListProcessor $querySegmentListProcessor, EngineOptions $engineOptions ) {
 		$this->store = $store;
-		$this->conditionBuilder = $conditionBuilder;
+		$this->querySegmentListBuildManager = $querySegmentListBuildManager;
 		$this->querySegmentListProcessor = $querySegmentListProcessor;
 		$this->engineOptions = $engineOptions;
 		$this->queryFactory = new QueryFactory();
@@ -168,13 +168,13 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 		QuerySegment::$qnum = 0;
 		$this->sortKeys = $query->sortkeys;
 
-		$rootid = $this->conditionBuilder->buildCondition(
+		$rootid = $this->querySegmentListBuildManager->getQuerySegmentFrom(
 			$query
 		);
 
-		$this->querySegmentList = $this->conditionBuilder->getQuerySegmentList();
-		$this->sortKeys = $this->conditionBuilder->getSortKeys();
-		$this->errors = $this->conditionBuilder->getErrors();
+		$this->querySegmentList = $this->querySegmentListBuildManager->getQuerySegmentList();
+		$this->sortKeys = $this->querySegmentListBuildManager->getSortKeys();
+		$this->errors = $this->querySegmentListBuildManager->getErrors();
 
 		// Possibly stop if new errors happened:
 		if ( !$this->engineOptions->get( 'smwgIgnoreQueryErrors' ) &&
@@ -185,13 +185,8 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 		}
 
 		// *** Now execute the computed query ***//
-		$this->querySegmentListProcessor->setQueryMode(
-			$this->queryMode
-		);
-
-		$this->querySegmentListProcessor->setQuerySegmentList(
-			$this->querySegmentList
-		);
+		$this->querySegmentListProcessor->setQueryMode( $this->queryMode );
+		$this->querySegmentListProcessor->setQuerySegmentList( $this->querySegmentList );
 
 		// execute query tree, resolve all dependencies
 		$this->querySegmentListProcessor->process(
@@ -433,7 +428,7 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 		);
 
 		while ( ( $count < $query->getLimit() ) && ( $row = $connection->fetchObject( $res ) ) ) {
-			if ( $row->iw === '' || $row->iw[0] != ':' )  {
+			if ( $row->iw === '' || $row->iw{0} != ':' )  {
 
 				// Catch exception for non-existing predefined properties that
 				// still registered within non-updated pages (@see bug 48711)
@@ -445,7 +440,7 @@ class QueryEngine implements QueryEngineInterface, LoggerAwareInterface {
 						'',
 						$row->so
 					] );
-
+					
 					// Register the ID in an event the post-proceesing
 					// fails (namespace no longer valid etc.)
 					$dataItem->setId( $row->id );

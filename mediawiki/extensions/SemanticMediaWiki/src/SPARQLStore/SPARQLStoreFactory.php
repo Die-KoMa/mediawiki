@@ -97,11 +97,8 @@ class SPARQLStoreFactory {
 	 */
 	public function newTurtleTriplesBuilder() {
 
-		$applicationFactory = ApplicationFactory::getInstance();
-
 		$turtleTriplesBuilder = new TurtleTriplesBuilder(
-			$this->newRepositoryRedirectLookup(),
-			$applicationFactory->getInMemoryPoolCache()->getPoolCacheById( TurtleTriplesBuilder::POOLCACHE_ID )
+			$this->newRepositoryRedirectLookup()
 		);
 
 		$turtleTriplesBuilder->setTriplesChunkSize( 80 );
@@ -146,6 +143,8 @@ class SPARQLStoreFactory {
 		$repositoryConnectionProvider->setHttpVersionTo(
 			$settings->get( 'smwgSparqlRepositoryConnectorForcedHttpVersion' )
 		);
+
+		$repositoryConnectionProvider = new RepositoryConnectionProvider();
 
 		$connectionManager = $applicationFactory->getConnectionManager();
 		$connectionManager->registerConnectionProvider(

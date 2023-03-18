@@ -66,7 +66,7 @@ class TableBuilderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testConstructWithInvalidTypeThrowsException() {
+	public function testTryToConstructOnInvalidTypeThrowsException() {
 
 		$connection = $this->getMockBuilder( '\DatabaseBase' )
 			->disableOriginalConstructor()
@@ -78,11 +78,6 @@ class TableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$this->setExpectedException( 'RuntimeException' );
 		TableBuilder::factory( $connection );
-	}
-
-	public function testConstructWithInvalidInstanceThrowsException() {
-		$this->setExpectedException( 'RuntimeException' );
-		TableBuilder::factory( 'foo' );
 	}
 
 }

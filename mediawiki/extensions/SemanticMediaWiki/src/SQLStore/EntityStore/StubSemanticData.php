@@ -110,18 +110,7 @@ class StubSemanticData extends SemanticData {
 		$result->mHasVisibleProps = $semanticData->mHasVisibleProps;
 		$result->mHasVisibleSpecs = $semanticData->mHasVisibleSpecs;
 		$result->stubObject = $semanticData->stubObject;
-		$result->sequenceMap = $semanticData->sequenceMap;
 		return $result;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param integer $sid
-	 * @param [] $sequenceMap
-	 */
-	public function setSequenceMap( $sid, $sequenceMap ) {
-		$this->sequenceMap = is_array( $sequenceMap ) ? $sequenceMap : [];
 	}
 
 	/**
@@ -159,14 +148,32 @@ class StubSemanticData extends SemanticData {
 	 * @return array of DataItem
 	 */
 	public function getPropertyValues( DIProperty $property ) {
-
-		// we never have any data for inverses
-		if ( $property->isInverse() ) {
+		if ( $property->isInverse() ) { // we never have any data for inverses
 			return [];
 		}
 
 		if ( array_key_exists( $property->getKey(), $this->mStubPropVals ) ) {
-			$this->unstubPropertyValues( $property );
+			// Not catching exception here; the
+			$this->unstubProperty( $property->getKey(), $property );
+			$propertyTypeId = $property->findPropertyTypeID();
+			$propertyDiId = DataTypeRegistry::getInstance()->getDataItemId( $propertyTypeId );
+
+			foreach ( $this->mStubPropVals[$property->getKey()] as $dbkeys ) {
+				try {
+					$diHandler = $this->store->getDataItemHandlerForDIType( $propertyDiId );
+					$di = $diHandler->dataItemFromDBKeys( $dbkeys );
+
+					if ( $this->mNoDuplicates ) {
+						$this->mPropVals[$property->getKey()][$di->getHash()] = $di;
+					} else {
+						$this->mPropVals[$property->getKey()][] = $di;
+					}
+				} catch ( DataItemHandlerException $e ) {
+					// ignore data
+				}
+			}
+
+			unset( $this->mStubPropVals[$property->getKey()] );
 		}
 
 		return parent::getPropertyValues( $property );
@@ -191,11 +198,7 @@ class StubSemanticData extends SemanticData {
 		foreach ( $this->getProperties() as $property ) {
 
 			// #619 Do not resolve subobjects for redirects
-			if ( !DataTypeRegistry::getInstance()->isSubDataType( $property->findPropertyTypeID() ) ) {
-				continue;
-			}
-
-			if ( $this->isRedirect() ) {
+			if ( !DataTypeRegistry::getInstance()->isSubDataType( $property->findPropertyTypeID() ) || $this->isRedirect() ) {
 				continue;
 			}
 
@@ -361,33 +364,6 @@ class StubSemanticData extends SemanticData {
 
 	protected function isRedirect() {
 		return $this->store->getObjectIds()->isRedirect( $this->mSubject );
-	}
-
-	private function unstubPropertyValues( DIProperty $property ) {
-
-		// Not catching exception here; the
-		$this->unstubProperty( $property->getKey(), $property );
-		$propertyTypeId = $property->findPropertyTypeID();
-
-		$propertyDiId = DataTypeRegistry::getInstance()->getDataItemId( $propertyTypeId );
-		$diHandler = $this->store->getDataItemHandlerForDIType( $propertyDiId );
-
-		foreach ( $this->mStubPropVals[$property->getKey()] as $dbkeys ) {
-
-			try {
-				$dataItem = $diHandler->dataItemFromDBKeys( $dbkeys );
-			} catch ( DataItemHandlerException $e ) {
-				continue;
-			}
-
-			if ( $this->mNoDuplicates ) {
-				$this->mPropVals[$property->getKey()][md5( $dataItem->getHash() )] = $dataItem;
-			} else {
-				$this->mPropVals[$property->getKey()][] = $dataItem;
-			}
-		}
-
-		unset( $this->mStubPropVals[$property->getKey()] );
 	}
 
 	private function initSubSemanticData( DIProperty $property ) {

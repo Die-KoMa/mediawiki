@@ -5,7 +5,6 @@ namespace SMW\MediaWiki\Hooks;
 use Hooks;
 use User;
 use Xml;
-use SMW\Utils\Logo;
 
 /**
  * Hook: GetPreferences adds user preference
@@ -42,21 +41,18 @@ class GetPreferences extends HookHandler {
 	 */
 	public function process( array &$preferences ) {
 
-		$otherPreferences = [];
-
-		Hooks::run( 'SMW::GetPreferences', [ $this->user, &$otherPreferences ] );
-
-		$html = $this->makeImage( Logo::get( '100x90' ) );
-		$html .= wfMessage( 'smw-prefs-intro-text' )->parseAsBlock();
-
 		// Intro text
-		$preferences['smw-prefs-intro'] = [
-			'type' => 'info',
-			'label' => '&#160;',
-			'default' => $html,
-			'section' => 'smw',
-			'raw' => 1
-		];
+		$preferences['smw-prefs-intro'] =
+			[
+				'type' => 'info',
+				'label' => '&#160;',
+				'default' => Xml::tags( 'tr', [ 'class' => 'plainlinks' ],
+					Xml::tags( 'td', [ 'colspan' => 2 ],
+						wfMessage(  'smw-prefs-intro-text' )->parseAsBlock() ) ),
+				'section' => 'smw',
+				'raw' => 1,
+				'rawrow' => 1,
+			];
 
 		// Preference to allow time correction
 		$preferences['smw-prefs-general-options-time-correction'] = [
@@ -76,7 +72,7 @@ class GetPreferences extends HookHandler {
 			'type' => 'toggle',
 			'label-message' => 'smw-prefs-general-options-disable-search-info',
 			'section' => 'smw/general-options',
-			'disabled' => $this->getOption( 'wgSearchType' ) !== SMW_SPECIAL_SEARCHTYPE
+			'disabled' => $this->getOption( 'wgSearchType' ) !== 'SMWSearch'
 		];
 
 		$preferences['smw-prefs-general-options-jobqueue-watchlist'] = [
@@ -102,13 +98,9 @@ class GetPreferences extends HookHandler {
 			'section' => 'smw/ask-options',
 		];
 
-		$preferences += $otherPreferences;
+		Hooks::run( 'SMW::GetPreferences', [ $this->user, &$preferences ] );
 
 		return true;
-	}
-
-	private function makeImage( $logo ) {
-		return "<img style='float:right;margin-top: 10px;margin-left:20px;' src='{$logo}' height='63' width='70'>";
 	}
 
 }

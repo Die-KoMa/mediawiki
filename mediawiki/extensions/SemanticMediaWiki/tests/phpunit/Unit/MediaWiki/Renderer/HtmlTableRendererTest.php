@@ -57,7 +57,7 @@ class HtmlTableRendererTest extends \PHPUnit_Framework_TestCase {
 		$instance->addHeader( 'lila' );
 
 		$this->stringValidator->assertThatStringContains(
-			'<thead><tr><th>lila</th></tr></thead>',
+			'<thead><th>lila</th></thead>',
 			$instance->getHtml()
 		);
 	}
@@ -111,7 +111,7 @@ class HtmlTableRendererTest extends \PHPUnit_Framework_TestCase {
 			->addRow();
 
 		$this->stringValidator->assertThatStringContains(
-			'<table><tr><th>lula</th></tr><tr class="row-odd"><td>lala</td></tr></table>',
+			'<table><th>lula</th><tr class="row-odd"><td>lala</td></tr></table>',
 			$instance->getHtml()
 		);
 
@@ -123,7 +123,7 @@ class HtmlTableRendererTest extends \PHPUnit_Framework_TestCase {
 			->addRow();
 
 		$this->stringValidator->assertThatStringContains(
-			'<table><thead><tr><th>lula</th></tr></thead><tbody><tr class="row-odd"><td>lala</td></tr></tbody></table>',
+			'<table><thead><th>lula</th></thead><tbody><tr class="row-odd"><td>lala</td></tr></tbody></table>',
 			$instance->getHtml()
 		);
 	}

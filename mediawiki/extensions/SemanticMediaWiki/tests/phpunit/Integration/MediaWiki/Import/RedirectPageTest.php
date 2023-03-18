@@ -141,7 +141,7 @@ class RedirectPageTest extends MwDBaseUnitTestCase {
 		// implementation and for non-sqlite see #212 / bug 62856
 		if ( $inSemanticData->getProperties() === [] ) {
 			$this->markTestSkipped(
-				"Skipping test either because of sqlite or MW-" . MW_VERSION . "/ bug 62856"
+				"Skipping test either because of sqlite or MW-{$GLOBALS['wgVersion']} / bug 62856"
 			);
 		}
 
@@ -201,8 +201,15 @@ class RedirectPageTest extends MwDBaseUnitTestCase {
 	}
 
 	protected function movePageToTargetRedirect( $page, $target ) {
-		$this->pageCreator->setPage( $page );
-		$this->pageCreator->doMoveTo( Title::newFromText( $target ), true );
+
+		$moveToTargetTitle = Title::newFromText( $target );
+
+		return $page->getTitle()->moveTo(
+			$moveToTargetTitle,
+			false,
+			'create redirect',
+			true
+		);
 	}
 
 }

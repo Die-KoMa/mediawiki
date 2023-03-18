@@ -2,15 +2,16 @@
 	"@metadata": {
 		"authors": [
 			"Alma",
-			"Banjo",
+			"Toliño",
 			"Elisardojm",
-			"Iváns",
-			"McDutchie",
+			"Banjo",
 			"Nemo bis",
-			"Toliño"
+			"McDutchie",
+			"Navhy"
 		]
 	},
 	"srf-desc": "Formatos de resultados adicionais para as pescudas de Semantic MediaWiki",
+	"srf-name": "Formatos dos resultados semánticos",
 	"prefs-srf": "Extensiónː Formatos dos resultados semánticos",
 	"srf-prefs-intro-text": "Ten instalada a extensión para dar formato aos resultados semánticos, pero nestes intres non ten opcións de personalización. Para obter axuda aducuibak, visite a páxina de axuda sobre os [https://www.semantic-mediawiki.org/wiki/Help:Result_formats formatos dos rexultados].",
 	"prefs-srf-eventcalendar-options": "Opcións de calendario de eventos",
@@ -172,6 +173,7 @@
 	"srf_paramdesc_hashname": "En caso de que fose aclarado e que a extensión HashTables estea dispoñible, isto creará un hash co nome especificado (sen saída visible)",
 	"srf-printername-graph": "Gráfica",
 	"srf-paramdesc-graph-relation": "Indique se os asuntos ou as propiedades dos nomes son pais ou fillos",
+	"srf-paramdesc-graph-nameprop": "Define a propiedade que se usará como asunto no canto do asunto real, é dicir, o nome da páxina",
 	"srf-paramdesc-graph-nodeshape": "Fixa a forma de cada nodo na gráfica",
 	"srf-paramdesc-graphname": "Define o título do gráfico",
 	"srf-paramdesc-graphsize": "Fixa o tamaño da gráfica en píxeles",
@@ -242,7 +244,7 @@
 	"srf-paramdesc-filtered-filter-position": "A posición dos filtros en relación coas visitas. Valores permitidos: ''top'', ''bottom''. Predeterminado: ''top''.",
 	"srf-paramdesc-filtered-list-type": "O tipo de lista. Valores permitidos: ''list'', ''ul'', ''ol''. Predeterminado: ''list''.",
 	"srf-paramdesc-filtered-list-template": "O modelo empregado para dar formato ás entradas da lista.",
-	"srf-paramdesc-filtered-list-named-args": "Dalle nome ós argumentos pasados ó modelo.",
+	"srf-paramdesc-filtered-list-named-args": "Dea nome aos argumentos que se lle pasan ao modelo.",
 	"srf-paramdesc-filtered-list-introtemplate": "O nome dun modelo a amosar antes dos resultados da pescuda, se houbese algún.",
 	"srf-paramdesc-filtered-list-outrotemplate": "O nome dun modelo a amosar despois dos resultados da pescuda, se houbese algún.",
 	"srf-paramdesc-filtered-calendar-start": "A impresión que contén a data de inicio dun acontecemento",
@@ -264,6 +266,7 @@
 	"srf-filtered-noscript-error": "Os resultados non poden visualizarse porque o Javascript non está activado. Vaia a $1.",
 	"srf-filtered-noscript-link-caption": "resultados en forma de táboa",
 	"srf-filtered-map-provider-missing-error": "Non se indicou o provedor de mapa para a vista \"mapa\".",
+	"srf-filtered-map-geocoordinateparser-missing-error": "Non foi atopado o analizador de xeocoordenadas. Precisa instalar 'data-values/geo'.",
 	"srf-filtered-value-filter-and": "E",
 	"srf-filtered-value-filter-or": "OU",
 	"srf-filtered-value-filter-placeholder": "Seleccionar un valor de filtro",
@@ -323,6 +326,9 @@
 	"srf-ui-mediaplayer-label-repeat-off": "Repetición desactivada",
 	"srf-ui-mediaplayer-label-full-screen": "Pantalla completa",
 	"srf-ui-mediaplayer-label-restore-screen": "Restablecer a pantalla",
-	"srf-spreadsheet-link": "Folla de cálculo",
+	"srf-excel-link": "Excel",
+	"srf-excel-missing-phpexcel": "Non pode exportarse a MS-Excel porque a extensión [https://www.mediawiki.org/wiki/Extension:PHPExcel PHPExcel] non está instalada.",
+	"srf-paramdesc-excel-filename": "O nome do ficheiro descargado correspondente ó ficheiro xerado",
+	"srf-paramdesc-excel-templatefile": "O nome dun ficheiro Excel do espazo de nomes \"Ficheiro\" usado para formatar o ficheiro xerado",
 	"srf-paramdesc-icalendar-timezone": "Unha lista de fusos horarios separados por comas"
 }

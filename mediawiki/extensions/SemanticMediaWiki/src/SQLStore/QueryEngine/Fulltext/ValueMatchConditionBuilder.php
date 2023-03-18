@@ -95,7 +95,7 @@ class ValueMatchConditionBuilder {
 	 *
 	 * @return boolean
 	 */
-	public function canHaveMatchCondition( ValueDescription $description ) {
+	public function canApplyFulltextSearchMatchCondition( ValueDescription $description ) {
 		return false;
 	}
 

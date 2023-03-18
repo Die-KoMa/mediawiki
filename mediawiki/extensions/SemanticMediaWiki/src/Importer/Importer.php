@@ -83,21 +83,18 @@ class Importer implements MessageReporterAware {
 	 */
 	public function doImport() {
 
-		$this->messageReporter->reportMessage( "\nImport tasks ..." );
-
 		if ( $this->isEnabled === false ) {
-			return $this->messageReporter->reportMessage( "\n   ... skipping the import process.\n" );
+			return $this->messageReporter->reportMessage( "\nSkipping the import process.\n" );
 		}
 
 		if ( $this->reqVersion === false ) {
-			return $this->messageReporter->reportMessage( "\n   ... import support not enabled, processing completed.\n" );
+			return $this->messageReporter->reportMessage( "\nImport support not enabled, processing completed.\n" );
 		}
 
 		$import = false;
-		$this->messageReporter->reportMessage( "\n" );
 
 		foreach ( $this->contentIterator as $key => $importContents ) {
-			$this->messageReporter->reportMessage( "\nImporting from $key ...\n" );
+			$this->messageReporter->reportMessage( "\nImport of $key ...\n" );
 
 			foreach ( $importContents as $impContents ) {
 

@@ -4,7 +4,6 @@ namespace SMW\MediaWiki\Specials;
 
 use SMW\ApplicationFactory;
 use SMW\DataValueFactory;
-use SMW\DataModel\SequenceMap;
 use SMW\Encoder;
 use SMW\MediaWiki\Specials\PageProperty\PageBuilder;
 use SMW\Options;
@@ -86,13 +85,7 @@ class SpecialPageProperty extends SpecialPage {
 	 * @see SpecialPage::getGroupName
 	 */
 	protected function getGroupName() {
-
-		if ( version_compare( MW_VERSION, '1.33', '<' ) ) {
-			return 'smw_group';
-		}
-
-		// #3711, MW 1.33+
-		return 'smw_group/search';
+		return 'smw_group';
 	}
 
 	private function load( $options ) {
@@ -145,7 +138,7 @@ class SpecialPageProperty extends SpecialPage {
 			$requestOptions = new RequestOptions();
 			$requestOptions->setLimit( $options->get( 'limit' ) + 1 );
 			$requestOptions->setOffset( $options->get( 'offset' ) );
-			$requestOptions->sort = !SequenceMap::canMap( $propertyValue->getDataItem() );
+			$requestOptions->sort = true;
 
 			// Restrict the request otherwise the entire SemanticData record
 			// is fetched which can in case of a subject with a large

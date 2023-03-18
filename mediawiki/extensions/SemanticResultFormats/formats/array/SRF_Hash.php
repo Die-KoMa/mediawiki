@@ -1,7 +1,5 @@
 <?php
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * Query format for arrays with features for Extensions 'Arrays' and 'HashTables'
  *
@@ -48,9 +46,9 @@ class SRFHash extends SRFArray {
 		}
 		if ( $version !== null && version_compare( $version, '0.999', '>=' ) ) {
 			// Version 1.0+, doesn't use $wgHashTables anymore
+			global $wgParser;
 			/** ToDo: is there a way to get the actual parser which has started the query? */
-			$parser = MediaWikiServices::getInstance()->getParser();
-			ExtHashTables::get( $parser )->createHash( $hashId, $hash );
+			ExtHashTables::get( $wgParser )->createHash( $hashId, $hash );
 		} elseif ( !isset( $wgHashTables ) ) {
 			// Hash extension is not installed in this wiki
 			return false;

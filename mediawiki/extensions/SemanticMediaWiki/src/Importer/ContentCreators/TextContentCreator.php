@@ -3,11 +3,11 @@
 namespace SMW\Importer\ContentCreators;
 
 use ContentHandler;
-use Onoi\MessageReporter\MessageReporterAwareTrait;
+use Onoi\MessageReporter\MessageReporter;
 use SMW\Importer\ContentCreator;
 use SMW\Importer\ImportContents;
 use SMW\MediaWiki\Database;
-use SMW\MediaWiki\TitleFactory;
+use SMW\MediaWiki\PageCreator;
 use Title;
 
 /**
@@ -18,12 +18,15 @@ use Title;
  */
 class TextContentCreator implements ContentCreator {
 
-	use MessageReporterAwareTrait;
+	/**
+	 * @var MessageReporter
+	 */
+	private $messageReporter;
 
 	/**
-	 * @var TitleFactory
+	 * @var PageCreator
 	 */
-	private $titleFactory;
+	private $pageCreator;
 
 	/**
 	 * @var Database
@@ -33,12 +36,23 @@ class TextContentCreator implements ContentCreator {
 	/**
 	 * @since 2.5
 	 *
-	 * @param TitleFactory $titleFactory
+	 * @param PageCreator $pageCreator
 	 * @param Database $connection
 	 */
-	public function __construct( TitleFactory $titleFactory, Database $connection ) {
-		$this->titleFactory = $titleFactory;
+	public function __construct( PageCreator $pageCreator, Database $connection ) {
+		$this->pageCreator = $pageCreator;
 		$this->connection = $connection;
+	}
+
+	/**
+	 * @see MessageReporterAware::setMessageReporter
+	 *
+	 * @since 2.5
+	 *
+	 * @param MessageReporter $messageReporter
+	 */
+	public function setMessageReporter( MessageReporter $messageReporter ) {
+		$this->messageReporter = $messageReporter;
 	}
 
 	/**
@@ -62,14 +76,13 @@ class TextContentCreator implements ContentCreator {
 		}
 
 		$indent = '   ...';
-		$indent_e = '      ';
 		$name = $importContents->getName();
 
 		if ( $name === '' ) {
 			return $this->messageReporter->reportMessage( "$indent no valid page name, abort import." );
 		}
 
-		$title = $this->titleFactory->newFromText(
+		$title = Title::newFromText(
 			$name,
 			$importContents->getNamespace()
 		);
@@ -78,40 +91,27 @@ class TextContentCreator implements ContentCreator {
 			return $this->messageReporter->reportMessage( "$indent $name returned with a null title, abort import." );
 		}
 
-		$page = $this->titleFactory->createPage( $title );
 		$prefixedText = $title->getPrefixedText();
 
-		$replaceable = false;
-
-		if ( $importContents->getOption( 'canReplace' ) ) {
-			$replaceable = $importContents->getOption( 'canReplace' );
-		} elseif( $importContents->getOption( 'replaceable' ) ) {
-			$replaceable = $importContents->getOption( 'replaceable' );
-		}
-
-		if ( isset( $replaceable['LAST_EDITOR'] ) && $replaceable['LAST_EDITOR'] === 'IS_IMPORTER' ) {
-			$replaceable = $this->isCreatorLastEditor( $page );
-		}
-
-		if ( $title->exists() && !$replaceable ) {
-			return $this->messageReporter->reportMessage( "$indent skipping $prefixedText\n$indent_e already exists ...\n" );
-		} elseif( $title->exists() && $replaceable ) {
-			$this->messageReporter->reportMessage( "$indent replacing $prefixedText\n$indent_e importer was last editor ...\n" );
+		if ( $title->exists() && !$importContents->getOption( 'canReplace' ) && !$importContents->getOption( 'replaceable' ) ) {
+			return $this->messageReporter->reportMessage( "$indent skipping $prefixedText, already exists ...\n" );
 		} elseif( $title->exists() ) {
-			$this->messageReporter->reportMessage( "$indent replacing $prefixedText ...\n" );
+			$this->messageReporter->reportMessage( "$indent replacing $prefixedText contents ...\n" );
 		} else {
-			$this->messageReporter->reportMessage( "$indent creating $prefixedText ...\n" );
+			$this->messageReporter->reportMessage( "$indent creating $prefixedText contents ...\n" );
 		}
 
 		// Avoid a possible "Notice: WikiPage::doEditContent: Transaction already
 		// in progress (from DatabaseUpdater::doUpdates), performing implicit
 		// commit ..."
-		$this->connection->onTransactionIdle( function() use ( $page, $title, $importContents ) {
-			$this->doCreateContent( $page, $title, $importContents );
+		$this->connection->onTransactionIdle( function() use ( $title, $importContents ) {
+			$this->doCreateContent( $title, $importContents );
 		} );
 	}
 
-	private function doCreateContent( $page, $title, $importContents ) {
+	private function doCreateContent( $title, $importContents ) {
+
+		$page = $this->pageCreator->createPage( $title );
 
 		$content = ContentHandler::makeContent(
 			$this->fetchContents( $importContents ),
@@ -145,25 +145,6 @@ class TextContentCreator implements ContentCreator {
 				true
 			)
 		);
-	}
-
-	private function isCreatorLastEditor( $page ) {
-
-		$lastEditor = \User::newFromID(
-			$page->getUser()
-		);
-
-		if ( !$lastEditor instanceof \User ) {
-			return false;
-		}
-
-		$creator = $page->getCreator();
-
-		if ( !$creator instanceof \User ) {
-			return false;
-		}
-
-		return $creator->equals( $lastEditor );
 	}
 
 }

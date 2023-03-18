@@ -16,14 +16,14 @@ use Title;
  */
 class ConceptQuerySegmentBuilderTest extends \PHPUnit_Framework_TestCase {
 
-	private $conditionBuilder;
+	private $querySegmentListBuilder;
 	private $querySegmentListProcessor;
 	private $queryParser;
 
 	protected function setUp() {
 		parent::setUp();
 
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
+		$this->querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -40,7 +40,7 @@ class ConceptQuerySegmentBuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			'\SMW\SQLStore\QueryEngine\ConceptQuerySegmentBuilder',
-			new ConceptQuerySegmentBuilder( $this->conditionBuilder, $this->querySegmentListProcessor )
+			new ConceptQuerySegmentBuilder( $this->querySegmentListBuilder, $this->querySegmentListProcessor )
 		);
 	}
 
@@ -55,7 +55,7 @@ class ConceptQuerySegmentBuilderTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( $description ) );
 
 		$instance = new ConceptQuerySegmentBuilder(
-			$this->conditionBuilder,
+			$this->querySegmentListBuilder,
 			$this->querySegmentListProcessor
 		);
 

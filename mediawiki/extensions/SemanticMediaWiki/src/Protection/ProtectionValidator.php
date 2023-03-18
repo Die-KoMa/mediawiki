@@ -3,15 +3,17 @@
 namespace SMW\Protection;
 
 use Onoi\Cache\Cache;
+use SMW\CachedPropertyValuesPrefetcher;
 use SMW\DIProperty;
 use SMW\DIWikiPage;
 use SMW\RequestOptions;
-use SMW\Store;
-use SMW\EntityCache;
 use Title;
 
 /**
  * Handles protection validation.
+ *
+ * The lookup is cached using the `CachedPropertyValuesPrefetcher` to avoid a
+ * continued access to the Store or DB layer.
  *
  * @license GNU GPL v2+
  * @since 2.5
@@ -21,14 +23,19 @@ use Title;
 class ProtectionValidator {
 
 	/**
-	 * @var Store
+	 * Reference used in InMemoryPoolCache
 	 */
-	private $store;
+	const POOLCACHE_ID = 'protection.validator';
 
 	/**
-	 * @var EntityCache
+	 * @var CachedPropertyValuesPrefetcher
 	 */
-	private $entityCache;
+	private $cachedPropertyValuesPrefetcher;
+
+	/**
+	 * @var Cache
+	 */
+	private $intermediaryMemoryCache;
 
 	/**
 	 * @var boolean|string
@@ -48,12 +55,12 @@ class ProtectionValidator {
 	/**
 	 * @since 2.5
 	 *
-	 * @param Store $store
-	 * @param EntityCache $entityCache
+	 * @param CachedPropertyValuesPrefetcher $cachedPropertyValuesPrefetcher
+	 * @param Cache $intermediaryMemoryCache
 	 */
-	public function __construct( Store $store, EntityCache $entityCache ) {
-		$this->store = $store;
-		$this->entityCache = $entityCache;
+	public function __construct( CachedPropertyValuesPrefetcher $cachedPropertyValuesPrefetcher, Cache $intermediaryMemoryCache ) {
+		$this->cachedPropertyValuesPrefetcher = $cachedPropertyValuesPrefetcher;
+		$this->intermediaryMemoryCache = $intermediaryMemoryCache;
 	}
 
 	/**
@@ -104,17 +111,21 @@ class ProtectionValidator {
 	/**
 	 * @since 2.5
 	 *
+	 * @param DIWikiPage $subject
+	 */
+	private function resetCacheBy( DIWikiPage $subject ) {
+		$this->cachedPropertyValuesPrefetcher->resetCacheBy( $subject );
+	}
+
+	/**
+	 * @since 2.5
+	 *
 	 * @param Title $title
 	 *
 	 * @return boolean
 	 */
 	public function hasEditProtectionOnNamespace( Title $title ) {
-
-		$subject = DIWikiPage::newFromTitle(
-			$title
-		);
-
-		return $this->editProtectionRight && $this->checkProtection( $subject->asBase() );
+		return $this->editProtectionRight && $this->checkProtection( DIWikiPage::newFromTitle( $title )->asBase() );
 	}
 
 	/**
@@ -129,11 +140,7 @@ class ProtectionValidator {
 		$subject = DIWikiPage::newFromTitle( $title )->asBase();
 		$namespace = $subject->getNamespace();
 
-		if ( $namespace !== SMW_NS_PROPERTY && $namespace !== NS_CATEGORY ) {
-			return false;
-		}
-
-		if ( $this->changePropagationProtection === false ) {
+		if ( ( $namespace !== SMW_NS_PROPERTY && $namespace !== NS_CATEGORY ) || $this->changePropagationProtection === false ) {
 			return false;
 		}
 
@@ -148,27 +155,18 @@ class ProtectionValidator {
 	 * @return boolean
 	 */
 	public function hasProtection( Title $title ) {
-
-		$subject = DIWikiPage::newFromTitle(
-			$title
-		);
-
-		return $this->checkProtection( $subject->asBase() );
+		return $this->checkProtection( DIWikiPage::newFromTitle( $title )->asBase() );
 	}
 
 	/**
 	 * @since 3.0
 	 *
 	 * @param Title $title
+	 * @param Title $title
 	 *
 	 * @return boolean
 	 */
-	public function hasCreateProtection( Title $title = null ) {
-
-		if ( $title === null ) {
-			return false;
-		}
-
+	public function hasCreateProtection( Title $title ) {
 		return $this->createProtectionRight && !$title->userCan( 'edit' );
 	}
 
@@ -176,7 +174,7 @@ class ProtectionValidator {
 	 * @note There is not direct validation of the permission within this method,
 	 * it is done by the Title::userCan when probing against the User and hooks
 	 * that carry out the permission check including the validation provided by
-	 * SMW's `PermissionManager`.
+	 * SMW's `PermissionPthValidator`.
 	 *
 	 * @since 2.5
 	 *
@@ -184,17 +182,8 @@ class ProtectionValidator {
 	 *
 	 * @return boolean
 	 */
-	public function hasEditProtection( Title $title = null ) {
-
-		if ( $title === null ) {
-			return false;
-		}
-
-		$subject = DIWikiPage::newFromTitle(
-			$title
-		);
-
-		return !$title->userCan( 'edit' ) && $this->checkProtection( $subject->asBase() );
+	public function hasEditProtection( Title $title ) {
+		return !$title->userCan( 'edit' ) && $this->checkProtection( DIWikiPage::newFromTitle( $title )->asBase() );
 	}
 
 	private function checkProtection( $subject, $property = null ) {
@@ -203,27 +192,29 @@ class ProtectionValidator {
 			$property = new DIProperty( '_EDIP' );
 		}
 
-		$key = $this->entityCache->makeCacheKey( 'protection', $subject->getHash() );
+		$key = $subject->getHash() . $property->getKey();
 		$hasProtection = false;
 
-		if ( $this->entityCache->contains( $key ) ) {
-			return $this->entityCache->fetch( $key ) === 'yes';
+		if ( $this->intermediaryMemoryCache->contains( $key ) ) {
+			return $this->intermediaryMemoryCache->fetch( $key );
 		}
 
-		$dataItems = $this->store->getPropertyValues(
+		// Set editProtectionRight to influence the key to detect changes
+		// before the cache is evicted
+		$requestOptions = new RequestOptions();
+		$requestOptions->addExtraCondition( $this->editProtectionRight );
+
+		$dataItems = $this->cachedPropertyValuesPrefetcher->getPropertyValues(
 			$subject,
-			$property
+			$property,
+			$requestOptions
 		);
 
 		if ( $dataItems !== null && $dataItems !== [] ) {
 			$hasProtection = $property->getKey() === '_EDIP' ? end( $dataItems )->getBoolean() : true;
 		}
 
-		// Store as literal so that the check avoids a `false` and is not
-		// attempting to read from the store on every check where it hasn't
-		// found a positive confirmation
-		$this->entityCache->save( $key, ( $hasProtection ? 'yes' : 'no' ) );
-		$this->entityCache->associate( $subject, $key );
+		$this->intermediaryMemoryCache->save( $key, $hasProtection );
 
 		return $hasProtection;
 	}

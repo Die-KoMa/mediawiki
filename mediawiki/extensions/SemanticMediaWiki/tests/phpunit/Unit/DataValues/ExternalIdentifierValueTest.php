@@ -120,28 +120,25 @@ class ExternalIdentifierValueTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	/**
-	 * @dataProvider identifierProvider
-	 */
-	public function testGetShortHTMLText( $value, $uri, $expected_text, $expected_html ) {
+	public function testGetShortHTMLText() {
 
 		$this->propertySpecificationLookup->expects( $this->once() )
 			->method( 'getExternalFormatterUri' )
-			->will( $this->returnValue( $uri ) );
+			->will( $this->returnValue( $this->dataItemFactory->newDIUri( 'http', 'example.org/$1' ) ) );
 
 		$instance = new ExternalIdentifierValue();
 		$instance->setDataValueServiceFactory( $this->dataValueServiceFactory );
 
-		$instance->setUserValue( $value );
+		$instance->setUserValue( 'foo' );
 		$instance->setProperty( $this->dataItemFactory->newDIProperty( 'Bar' ) );
 
 		$this->assertEquals(
-			$expected_text,
+			'foo',
 			$instance->getShortHTMLText()
 		);
 
 		$this->assertEquals(
-			$expected_html,
+			'<a href="http://example.org/foo" target="_blank">foo</a>',
 			$instance->getShortHTMLText( 'linker' )
 		);
 
@@ -168,50 +165,6 @@ class ExternalIdentifierValueTest extends \PHPUnit_Framework_TestCase {
 		$this->assertNotEmpty(
 			$instance->getErrors()
 		);
-	}
-
-	public function identifierProvider() {
-
-		$dataItemFactory = new DataItemFactory();
-
-		yield [
-			'foo',
-			$dataItemFactory->newDIUri( 'http', 'example.org/$1' ),
-			'foo',
-			'<a href="http://example.org/foo" target="_blank">foo</a>'
-		];
-
-		// foo + 1001 [main,extra]
-		yield [
-			'foo{1001}',
-			$dataItemFactory->newDIUri( 'http', 'example.org/$1&id=$2' ),
-			'foo{1001}',
-			'<a href="http://example.org/foo&amp;id=1001" target="_blank">foo</a>'
-		];
-
-		// trim space / main part and extra parameters
-		yield [
-			'foo {1001}',
-			$dataItemFactory->newDIUri( 'http', 'example.org/$1&id=$2' ),
-			'foo {1001}',
-			'<a href="http://example.org/foo&amp;id=1001" target="_blank">foo</a>'
-		];
-
-		// encoded comma
-		yield [
-			'foo {1\,2\,and}',
-			$dataItemFactory->newDIUri( 'http', 'example.org/$1&id=$2' ),
-			'foo {1,2,and}',
-			'<a href="http://example.org/foo&amp;id=1,2,and" target="_blank">foo</a>'
-		];
-
-		// no multi substitute
-		yield [
-			'foo {1001}',
-			$dataItemFactory->newDIUri( 'http', 'example.org/$1' ),
-			'foo {1001}',
-			'<a href="http://example.org/foo_%7B1001%7D" target="_blank">foo {1001}</a>'
-		];
 	}
 
 }

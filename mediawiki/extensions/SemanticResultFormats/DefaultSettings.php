@@ -9,6 +9,10 @@
  * @author Daniel Werner < danweetz@web.de >
  */
 
+if ( !defined( 'MEDIAWIKI' ) ) {
+  die( "This file is part of the Semantic Result Formats extension. It is not a valid entry point.\n" );
+}
+
 // The formats you want to be able to use.
 // See the INSTALL file or
 // http://www.semantic-mediawiki.org/wiki/Semantic_Result_Formats#Installation
@@ -48,22 +52,7 @@ $GLOBALS['srfgFormats'] = [
 	'dygraphs',
 	'media',
 	'datatables',
-	'spreadsheet',
-	'gantt',
-	'graph',
-	'variance',
-	'samplevariance',
-	'standarddeviation',
-	'samplestandarddeviation',
-	'range',
-	'quartillower',
-	'quartilupper',
-	'quartillower.exc',
-	'quartilupper.exc',
-	'interquartilerange',
-	'interquartilerange.exc',
-	'mode',
-	'interquartilemean'
+
 	// Boilerplate
 	// Enable access to the format identifier
 	// 'boilerplate',
@@ -78,7 +67,7 @@ $GLOBALS['srfgFormats'] = [
 	// Still in alpha:
 	// 'jitgraph', // Several issues need to be fixed before this can be enabled, most notably it does not work properly with the RL.
 
-	// Disabled by default since they contact external sites:
+	// Disabled by default sicne they contact external sites:
 	// 'googlebar',
 	// 'googlepie',
 
@@ -93,6 +82,11 @@ if(	array_key_exists( 'ExtHashTables', $GLOBALS['wgAutoloadClasses'] ) && define
 	|| isset( $GLOBALS['wgHashTables'] ) // Version < 1.0 alpha
 ) {
 	$GLOBALS['srfgFormats'][] = 'hash';
+}
+
+// Enable the excel format only if PHPExcel can be loaded.
+if( class_exists( 'PHPExcel' ) ){
+	$GLOBALS['srfgFormats'][] = 'excel';
 }
 
 // Used for Array and Hash formats.

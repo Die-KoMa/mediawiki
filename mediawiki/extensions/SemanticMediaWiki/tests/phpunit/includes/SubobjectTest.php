@@ -4,7 +4,7 @@ namespace SMW\Tests;
 
 use SMW\DataValueFactory;
 use SMW\Subobject;
-use SMW\Tests\TestEnvironment;
+use SMW\Tests\Utils\UtilityFactory;
 use SMWDIBlob;
 use Title;
 
@@ -28,15 +28,7 @@ class SubobjectTest extends \PHPUnit_Framework_TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->testEnvironment = new TestEnvironment();
-
-		$propertySpecificationLookup = $this->getMockBuilder( '\SMW\Property\SpecificationLookup' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->semanticDataValidator = $this->testEnvironment->getUtilityFactory()->newValidatorFactory()->newSemanticDataValidator();
-
-		$this->testEnvironment->registerObject( 'PropertySpecificationLookup', $propertySpecificationLookup );
+		$this->semanticDataValidator = UtilityFactory::getInstance()->newValidatorFactory()->newSemanticDataValidator();
 	}
 
 	public function testCanConstruct() {

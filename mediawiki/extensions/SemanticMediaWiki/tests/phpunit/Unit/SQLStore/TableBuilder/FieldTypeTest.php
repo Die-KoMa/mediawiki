@@ -62,12 +62,6 @@ class FieldTypeTest extends \PHPUnit_Framework_TestCase {
 			'notMatchableTypeThereforeReturnAsIs'
 		];
 
-		$provider[] = [
-			[ FieldType::TYPE_ENUM, [ 'a', 'b', 'c' ] ],
-			[ 'enum' => 'ENUM' ],
-			"ENUM('a','b','c')"
-		];
-
 		return $provider;
 	}
 

@@ -51,7 +51,7 @@ class ResourceLoaderTestModules extends HookHandler {
 	 *
 	 * @return boolean
 	 */
-	public function process( array &$testModules ) {
+	public function process(  array &$testModules ) {
 
 		$testModules['qunit']['ext.smw.tests'] = [
 			'scripts' => [

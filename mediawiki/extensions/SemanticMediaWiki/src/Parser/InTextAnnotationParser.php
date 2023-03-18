@@ -6,7 +6,6 @@ use Hooks;
 use SMW\ApplicationFactory;
 use SMW\DataValueFactory;
 use SMW\Localizer;
-use SMW\SemanticData;
 use SMW\MediaWiki\MagicWordsFinder;
 use SMW\MediaWiki\RedirectTargetFinder;
 use SMW\MediaWiki\StripMarkerDecoder;
@@ -59,9 +58,9 @@ class InTextAnnotationParser {
 	private $redirectTargetFinder;
 
 	/**
-	 * @var AnnotationProcessor
+	 * @var DataValueFactory
 	 */
-	private $annotationProcessor;
+	private $dataValueFactory = null;
 
 	/**
 	 * @var ApplicationFactory
@@ -108,6 +107,7 @@ class InTextAnnotationParser {
 		$this->linksProcessor = $linksProcessor;
 		$this->magicWordsFinder = $magicWordsFinder;
 		$this->redirectTargetFinder = $redirectTargetFinder;
+		$this->dataValueFactory = DataValueFactory::getInstance();
 		$this->applicationFactory = ApplicationFactory::getInstance();
 	}
 
@@ -127,15 +127,6 @@ class InTextAnnotationParser {
 	 */
 	public function showErrors( $showErrors ) {
 		$this->showErrors = (bool)$showErrors;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @return SemanticData
-	 */
-	public function getSemanticData() {
-		return $this->parserData->getSemanticData();
 	}
 
 	/**
@@ -162,11 +153,6 @@ class InTextAnnotationParser {
 			$text
 		);
 
-		$this->annotationProcessor = new AnnotationProcessor(
-			$this->parserData->getSemanticData(),
-			DataValueFactory::getInstance()
-		);
-
 		// Obscure [/] to find a set of [[ :: ... ]] while those in-between are left for
 		// decoding in a post-processing so that the regex can split the text
 		// appropriately
@@ -183,17 +169,6 @@ class InTextAnnotationParser {
 			$text
 		);
 
-		$this->annotationProcessor->setCanAnnotate(
-			$this->parserData->canUse()
-		);
-
-		Hooks::run( 'SMW::Parser::AfterLinksProcessingComplete',
-			[
-				&$text,
-				$this->annotationProcessor
-			]
-		);
-
 		// Ensure remaining encoded entities are decoded again
 		$text = LinksEncoder::removeLinkObfuscation( $text );
 
@@ -202,10 +177,7 @@ class InTextAnnotationParser {
 			$this->parserData->addExtraParserKey( 'userlang' );
 		}
 
-		$this->parserData->copyToParserOutput();
-
-		// Remove context
-		$this->annotationProcessor->release();
+		$this->parserData->pushSemanticDataToParserOutput();
 
 		$this->parserData->addLimitReport(
 			'intext-parsertime',
@@ -224,17 +196,6 @@ class InTextAnnotationParser {
 	 */
 	public static function hasMarker( $text ) {
 		return strpos( $text, self::OFF ) !== false || strpos( $text, self::ON ) !== false;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string $text
-	 *
-	 * @return boolean
-	 */
-	public static function hasPropertyLink( $text ) {
-		return strpos( $text, '::@@@' ) !== false;
 	}
 
 	/**
@@ -383,9 +344,8 @@ class InTextAnnotationParser {
 
 		$subject = $this->parserData->getSubject();
 
-		// #1855
-		if ( substr( $value, 0, 3 ) === '@@@' ) {
-			return $this->makePropertyLink( $subject, $properties, $value, $valueCaption );
+		if ( ( $propertyLink = $this->getPropertyLink( $subject, $properties, $value, $valueCaption ) ) !== '' ) {
+			return $propertyLink;
 		}
 
 		return $this->addPropertyValue( $subject, $properties, $value, $valueCaption );
@@ -410,7 +370,7 @@ class InTextAnnotationParser {
 
 		// Add properties to the semantic container
 		foreach ( $properties as $property ) {
-			$dataValue = $this->annotationProcessor->newDataValueByText(
+			$dataValue = $this->dataValueFactory->newDataValueByText(
 				$property,
 				$value,
 				$valueCaption,
@@ -472,38 +432,31 @@ class InTextAnnotationParser {
 		return $this->applicationFactory->getNamespaceExaminer()->isSemanticEnabled( $title->getNamespace() );
 	}
 
-	private function makePropertyLink( $subject, $properties, $value, $caption ) {
+	private function getPropertyLink( $subject, $properties, $value, $valueCaption ) {
 
-		$property = end( $properties );
-		$linker = smwfGetLinker();
-		$class = 'smw-property';
-
-		// #4037
-		// [[Foo::@@@|#] where `|#` indicates a noLink request
-		if ( $caption === '#' ) {
-			$linker = false;
-			$caption = false;
-			$class = 'smw-property nolink';
+		// #1855
+		if ( substr( $value, 0, 3 ) !== '@@@' ) {
+			return '';
 		}
 
-		$dataValue = DataValueFactory::getInstance()->newPropertyValueByLabel(
+		$property = end( $properties );
+
+		$dataValue = $this->dataValueFactory->newPropertyValueByLabel(
 			$property,
-			$caption,
+			$valueCaption,
 			$subject
 		);
-
-		$dataValue->setLinkAttributes( [ 'class' => $class ] );
 
 		if ( ( $lang = Localizer::getAnnotatedLanguageCodeFrom( $value ) ) !== false ) {
 			$dataValue->setOption( $dataValue::OPT_USER_LANGUAGE, $lang );
 			$dataValue->setCaption(
-				$caption === false ? $dataValue->getWikiValue() : $caption
+				$valueCaption === false ? $dataValue->getWikiValue() : $valueCaption
 			);
 		}
 
 		$dataValue->setOption( $dataValue::OPT_HIGHLIGHT_LINKER, true );
 
-		return $dataValue->getShortWikitext( $linker );
+		return $dataValue->getShortWikitext( smwfGetLinker() );
 	}
 
 }

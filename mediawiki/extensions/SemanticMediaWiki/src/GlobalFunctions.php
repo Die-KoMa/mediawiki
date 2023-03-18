@@ -52,10 +52,7 @@ function smwfNormalTitleText( $text ) {
 		$text = $wgContLang->ucfirst( $text );
 	}
 
-	// https://www.mediawiki.org/wiki/Manual:Page_title
-	// Titles beginning or ending with a space (underscore), or containing two
-	// or more consecutive spaces (underscores).
-	return str_replace( [ '__', '_', '  ' ], ' ', $text );
+	return str_replace( '_', ' ', $text );
 }
 
 /**
@@ -92,11 +89,17 @@ function smwfNumberFormat( $value, $decplaces = 3 ) {
  */
 function smwfAbort( $text ) {
 
-	if ( PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg' ) {
-		$text = strip_tags( $text );
+	if ( PHP_SAPI === 'cli' && PHP_SAPI === 'phpdbg' ) {
+		die( $text );
 	}
 
-	die( $text );
+	$html = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"  \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+	$html .= "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\" dir=\"ltr\">\n";
+	$html .= "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
+	$html .= "<title>Error</title></head><body><h2>Error</h2><hr style='border: 0; height: 0; border-top: 1px solid rgba(0, 0, 0, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.3);'>";
+	$html .= "<p>{$text}</p></body></html>";
+
+	die( $html );
 }
 
 /**
@@ -105,12 +108,12 @@ function smwfAbort( $text ) {
  *
  * @param array $messages
  * @param string $icon Acts like an enum. Callers must ensure safety, since this value is used directly in the output.
- * @param string $separator
+ * @param string $seperator
  * @param boolean $escape Should the messages be escaped or not (ie when they already are)
  *
  * @return string
  */
-function smwfEncodeMessages( array $messages, $type = 'warning', $separator = ' <!--br-->', $escape = true ) {
+function smwfEncodeMessages( array $messages, $type = 'warning', $seperator = ' <!--br-->', $escape = true ) {
 
 	$messages = ProcessingErrorMsgHandler::normalizeAndDecodeMessages( $messages );
 
@@ -129,7 +132,7 @@ function smwfEncodeMessages( array $messages, $type = 'warning', $separator = ' 
 			$message = '<li>' . $message . '</li>';
 		}
 
-		$content = '<ul>' . implode( $separator, $messages ) . '</ul>';
+		$content = '<ul>' . implode( $seperator, $messages ) . '</ul>';
 	}
 
 	// Stop when a previous processing produced an error and it is expected to be
@@ -170,7 +173,7 @@ function smwfCacheKey( $namespace, $key ) {
 
 	$cachePrefix = $GLOBALS['wgCachePrefix'] === false ? wfWikiID() : $GLOBALS['wgCachePrefix'];
 
-	if ( $namespace[0] !== ':' ) {
+	if ( $namespace{0} !== ':' ) {
 		$namespace = ':' . $namespace;
 	}
 
@@ -244,16 +247,8 @@ function swfCountDown( $seconds ) {
 function enableSemantics( $namespace = null, $complete = false ) {
 	global $smwgNamespace;
 
-	// Avoid "Uncaught Exception: It was attempted to load SemanticMediaWiki
-	// twice" in case users added `wfLoadExtension` manually to the
-	// `LocalSettings.php`
-	if ( !ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' ) ) {
-		// #1732 + #2813
-		wfLoadExtension( 'SemanticMediaWiki', dirname( __DIR__ ) . '/extension.json' );
-	}
-
-	// #4107
-	define( 'SMW_EXTENSION_LOADED', true );
+	// #1732 + #2813
+	wfLoadExtension( 'SemanticMediaWiki', dirname( __DIR__ ) . '/extension.json' );
 
 	// Apparently this is required (1.28+) as the earliest possible execution
 	// point in order for settings that refer to the SMW_NS_PROPERTY namespace
@@ -284,15 +279,4 @@ function enableSemantics( $namespace = null, $complete = false ) {
  */
 function disableSemantics() {
 	CompatibilityMode::disableSemantics();
-}
-
-/**
- * @see https://www.php.net/manual/en/function.is-iterable.php
- *
- * PHP 7.1- polyfill
- */
-if ( !function_exists(  'is_iterable' ) ) {
-	function is_iterable( $obj ) {
-		return is_array( $obj ) || ( is_object( $obj ) && ( $obj instanceof \Traversable ) );
-	}
 }

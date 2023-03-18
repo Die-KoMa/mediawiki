@@ -202,7 +202,7 @@ class QueryResultSerializer implements DispatchableSerializer {
 			$result = [ 'printouts' => [] ];
 
 			foreach ( $queryResult->getPrintRequests() as $printRequest ) {
-				$resultArray = SMWResultArray::factory( $diWikiPage, $printRequest, $queryResult );
+				$resultArray = new SMWResultArray( $diWikiPage, $printRequest, $queryResult->getStore() );
 
 				if ( $printRequest->getMode() === PrintRequest::PRINT_THIS ) {
 					$dataItems = $resultArray->getContent();

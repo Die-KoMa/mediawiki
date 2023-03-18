@@ -33,13 +33,7 @@ class PageDeleter {
 	 */
 	public function deletePage( Title $title ) {
 		$page = new WikiPage( $title );
-
-		try {
-			$page->doDeleteArticle( 'SMW system test: delete page' );
-		} catch( \Exception $e ) {
-			//
-		}
-
+		$page->doDeleteArticle( 'SMW system test: delete page' );
 		$this->testEnvironment->executePendingDeferredUpdates();
 	}
 

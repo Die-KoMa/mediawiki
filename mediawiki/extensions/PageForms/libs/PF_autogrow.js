@@ -31,7 +31,8 @@ function autoGrow(textArea) {
 
     if (linesCount >= autoGrowRowsDefault[textArea.id]) {
         textArea.rows = linesCount + 1;
-    } else {
+    }
+    else {
         textArea.rows = autoGrowRowsDefault[textArea.id];
     }
 }

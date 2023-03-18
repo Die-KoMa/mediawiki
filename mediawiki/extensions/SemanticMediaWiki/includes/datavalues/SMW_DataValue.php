@@ -9,6 +9,7 @@
  */
 
 use SMW\DataValues\InfoLinksProvider;
+use SMW\Deserializers\DVDescriptionDeserializerRegistry;
 use SMW\DIProperty;
 use SMW\Localizer;
 use SMW\Message;
@@ -16,7 +17,6 @@ use SMW\Options;
 use SMW\Query\QueryComparator;
 use SMW\Services\DataValueServiceFactory;
 use SMW\Utils\CharArmor;
-use SMW\ProcessingError;
 
 /**
  * Objects of this type represent all that is known about a certain user-provided
@@ -144,11 +144,6 @@ abstract class SMWDataValue {
 	private $mErrors = [];
 
 	/**
-	 * @var array
-	 */
-	private $errorsByType = [];
-
-	/**
 	 * Boolean indicating if there where any errors.
 	 * Should be modified accordingly when modifying $mErrors.
 	 * @var boolean
@@ -179,16 +174,6 @@ abstract class SMWDataValue {
 	 * @var DataValueServiceFactory
 	 */
 	protected $dataValueServiceFactory;
-
-	/**
-	 * @var DescriptionBuilderRegistry
-	 */
-	private $descriptionBuilderRegistry;
-
-	/**
-	 * @var []
-	 */
-	private $callables = [];
 
 	/**
 	 * Constructor.
@@ -245,7 +230,7 @@ abstract class SMWDataValue {
 		}
 
 		if ( $this->isValid() && !$this->getOption( self::OPT_QUERY_CONTEXT ) ) {
-			$this->checkConstraints();
+			$this->checkAllowedValues();
 		}
 	}
 
@@ -399,22 +384,10 @@ abstract class SMWDataValue {
 	 * @note Errors should not be escaped here in any way, in contradiction to what
 	 * the docs used to say here in 1.5 and before. Escaping should happen at the output.
 	 *
-	 * @param array|string|ProcessingError $error
+	 * @param mixed $error A single string, or array of strings.
 	 */
 	public function addError( $error ) {
-
-		if ( $error instanceof ProcessingError ) {
-			$hash = $error->getHash();
-			$type = $error->getType();
-
-			if ( !isset( $this->errorsByType[$type] ) ) {
-				$this->errorsByType[$type] = [];
-			}
-
-			$this->mErrors[$hash] = $error->encode();
-			$this->errorsByType[$type][] = $hash;
-			$this->mHasErrors = true;
-		} elseif ( is_array( $error ) ) {
+		if ( is_array( $error ) ) {
 			$this->mErrors = array_merge( $this->mErrors, $error );
 			$this->mHasErrors = $this->mHasErrors || ( count( $error ) > 0 );
 		} else {
@@ -431,25 +404,12 @@ abstract class SMWDataValue {
 	 *
 	 * @since 2.4
 	 *
-	 * @param array|string|ProcessingError $error
+	 * @param $parameters
 	 * @param integer|null $type
+	 * @param integer|null $language
 	 */
-	public function addErrorMsg( $error, $type = Message::TEXT ) {
-
-		if ( $error instanceof ProcessingError ) {
-			$hash = $error->getHash();
-			$type = $error->getType();
-
-			if ( !isset( $this->errorsByType[$type] ) ) {
-				$this->errorsByType[$type] = [];
-			}
-
-			$this->mErrors[$hash] = $error->encode();
-			$this->errorsByType[$type][] = $hash;
-		} else {
-			$this->mErrors[Message::getHash( $error, $type )] = Message::encode( $error, $type );
-		}
-
+	public function addErrorMsg( $parameters, $type = null ) {
+		$this->mErrors[Message::getHash( $parameters, $type )] = Message::encode( $parameters, $type );
 		$this->mHasErrors = true;
 	}
 
@@ -471,26 +431,6 @@ abstract class SMWDataValue {
 	 */
 	public function getErrors() {
 		return $this->mErrors;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string|null $type
-	 *
-	 * @return array
-	 */
-	public function getErrorsByType( $type = null ) {
-
-		if ( $type === null ) {
-			return $this->errorsByType;
-		}
-
-		if ( isset( $this->errorsByType[$type] ) ) {
-			return $this->errorsByType[$type];
-		}
-
-		return [];
 	}
 
 	/**
@@ -528,13 +468,10 @@ abstract class SMWDataValue {
 	 */
 	public function getQueryDescription( $value ) {
 
-		$descriptionBuilderRegistry = $this->dataValueServiceFactory->getDescriptionBuilderRegistry();
-		$descriptionBuilder = $descriptionBuilderRegistry->getDescriptionBuilder( $this );
+		$descriptionDeserializer = DVDescriptionDeserializerRegistry::getInstance()->getDescriptionDeserializerBy( $this );
+		$description = $descriptionDeserializer->deserialize( $value );
 
-		$descriptionBuilder->clearErrors();
-		$description = $descriptionBuilder->newDescription( $this, $value );
-
-		foreach ( $descriptionBuilder->getErrors() as $error ) {
+		foreach ( $descriptionDeserializer->getErrors() as $error ) {
 			$this->addError( $error );
 		}
 
@@ -544,10 +481,10 @@ abstract class SMWDataValue {
 	/**
 	 * @deprecated since 2.3
 	 *
-	 * @see DescriptionBuilder::prepareValue
+	 * @see DescriptionDeserializer::prepareValue
 	 *
 	 * This method should no longer be used for direct public access, instead a
-	 * DataValue is expected to register a DescriptionBuilder with
+	 * DataValue is expected to register a DescriptionDeserializer with
 	 * DVDescriptionDeserializerRegistry.
 	 */
 	static public function prepareValue( &$value, &$comparator ) {
@@ -595,10 +532,8 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linked controls linking of values such as titles and should
 	 * be non-NULL and non-false if this is desired.
-	 *
-	 * @param Linker|null|bool $linker
 	 */
-	abstract public function getShortWikiText( $linker = null );
+	abstract public function getShortWikiText( $linked = null );
 
 	/**
 	 * Returns a short textual representation for this data value. If the value
@@ -609,8 +544,6 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linker controls linking of values such as titles and should
 	 * be some Linker object (or NULL for no linking).
-	 *
-	 * @param Linker|null|bool $linker
 	 */
 	abstract public function getShortHTMLText( $linker = null );
 
@@ -621,10 +554,8 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linked controls linking of values such as titles and should
 	 * be non-NULL and non-false if this is desired.
-	 *
-	 * @param Linker|null|bool $linker
 	 */
-	abstract public function getLongWikiText( $linker = null );
+	abstract public function getLongWikiText( $linked = null );
 
 	/**
 	 * Return the long textual description of the value, as printed for
@@ -633,8 +564,6 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linker controls linking of values such as titles and should
 	 * be some Linker object (or NULL for no linking).
-	 *
-	 * @param Linker|null|bool $linker
 	 */
 	abstract public function getLongHTMLText( $linker = null );
 
@@ -655,12 +584,9 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linker controls linking of values such as titles and should
 	 * be some Linker object (for HTML output), or NULL for no linking.
-	 *
-	 * @param int $outputFormat
-	 * @param Linker|null|bool $linker
 	 */
-	public function getShortText( $outputFormat, $linker = null ) {
-		switch ( $outputFormat ) {
+	public function getShortText( $outputformat, $linker = null ) {
+		switch ( $outputformat ) {
 			case SMW_OUTPUT_WIKI:
 				return $this->getShortWikiText( $linker );
 			case SMW_OUTPUT_HTML:
@@ -677,12 +603,9 @@ abstract class SMWDataValue {
 	 *
 	 * The parameter $linker controls linking of values such as titles and should
 	 * be some Linker object (for HTML output), or NULL for no linking.
-	 *
-	 * @param int $outputFormat
-	 * @param Linker|null|bool $linker
 	 */
-	public function getLongText( $outputFormat, $linker = null ) {
-		switch ( $outputFormat ) {
+	public function getLongText( $outputformat, $linker = null ) {
+		switch ( $outputformat ) {
 			case SMW_OUTPUT_WIKI:
 				return $this->getLongWikiText( $linker );
 			case SMW_OUTPUT_HTML:
@@ -696,12 +619,12 @@ abstract class SMWDataValue {
 	 * Return text serialisation of info links. Ensures more uniform layout
 	 * throughout wiki (Factbox, Property pages, ...).
 	 *
-	 * @param integer $outputFormat Element of the SMW_OUTPUT_ enum
-	 * @param Linker|null|bool $linker
+	 * @param integer $outputformat Element of the SMW_OUTPUT_ enum
+	 * @param $linker
 	 *
 	 * @return string
 	 */
-	public function getInfolinkText( $outputFormat, $linker = null ) {
+	public function getInfolinkText( $outputformat, $linker = null ) {
 
 		if ( $this->getOption( self::OPT_DISABLE_INFOLINKS ) === true ) {
 			return '';
@@ -719,7 +642,7 @@ abstract class SMWDataValue {
 			$this->getOption( self::OPT_COMPACT_INFOLINKS, false )
 		);
 
-		return $this->infoLinksProvider->getInfolinkText( $outputFormat, $linker );
+		return $this->infoLinksProvider->getInfolinkText( $outputformat, $linker );
 	}
 
 	/**
@@ -762,9 +685,9 @@ abstract class SMWDataValue {
 	public function isNumeric() {
 		if ( isset( $this->m_dataitem ) ) {
 			return is_numeric( $this->m_dataitem->getSortKey() );
+		} else {
+			return false;
 		}
-
-		return false;
 	}
 
 	/**
@@ -803,46 +726,42 @@ abstract class SMWDataValue {
 	}
 
 	/**
-	 * @since 3.1
+	 * @since 2.3
 	 *
-	 * @param string $key
-	 * @param callable $callable
+	 * @param string $name
+	 * @param array $parameters
 	 *
+	 * @return mixed
 	 * @throws RuntimeException
 	 */
-	public function addCallable( $key, callable $callable ) {
-
-		if ( isset( $this->callables[$key] ) ) {
-			throw new RuntimeException( "`$key` is alread in use, please clear the callable first!" );
-		}
-
-		$this->callables[$key] = $callable;
+	public function getExtraneousFunctionFor( $name, array $parameters = [] ) {
+		return $this->dataValueServiceFactory->newExtraneousFunctionByName( $name, $parameters );
 	}
 
 	/**
-	 * @since 3.1
+	 * @since 3.0
 	 *
 	 * @param string $key
-	 *
-	 * @return callable
-	 * @throws RuntimeException
+	 * @param mixed $data
 	 */
-	public function getCallable( $key ) {
-
-		if ( !isset( $this->callables[$key] ) ) {
-			throw new RuntimeException( "`$key` as callable is unknown or not registered!" );
-		}
-
-		return $this->callables[$key];
+	public function setExtensionData( $key, $data ) {
+		$this->extenstionData[$key] = $data;
 	}
 
 	/**
-	 * @since 3.1
+	 * @since 3.0
 	 *
 	 * @param string $key
+	 *
+	 * @return mixed
 	 */
-	public function clearCallable( $key ) {
-		unset( $this->callables[$key] );
+	public function getExtensionData( $key ) {
+
+		if ( isset( $this->extenstionData[$key] ) ) {
+			return $this->extenstionData[$key];
+		}
+
+		return null;
 	}
 
 	/**
@@ -963,26 +882,16 @@ abstract class SMWDataValue {
 	}
 
 	/**
-	 * @deprecated since 3.1, use DataValue::checkConstraints
+	 * Check if property is range restricted and, if so, whether the current value is allowed.
+	 * Creates an error if the value is illegal.
 	 */
 	protected function checkAllowedValues() {
-		$this->checkConstraints();
-	}
-
-	/**
-	 * @since 3.1
-	 */
-	public function checkConstraints() {
 
 		if ( $this->dataValueServiceFactory === null ) {
 			return;
 		}
 
 		$this->dataValueServiceFactory->getConstraintValueValidator()->validate( $this );
-	}
-
-	function __destruct() {
-		$this->callables = [];
 	}
 
 }

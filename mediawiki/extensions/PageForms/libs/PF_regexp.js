@@ -8,7 +8,7 @@
 /**
  * Validates inputs of type regexp.
  *
- * @param inputId (String) the id string of the input to check
+ * @param input_id (String) the id string of the input to check
  * @param params (Object) the parameter object for the check, contains
  *		retext: (String) regular expression the input's value has to match
  *		inverse: (Boolean) if the check result shall be inverted
@@ -16,13 +16,13 @@
  * @return (Boolean) true, if the input's value matches the regular expression in
  *         retext, false otherwise; the value is inverted if inverse is true
  */
-window.PF_RE_validate = function( inputId, params ) { //input_number, retext, inverse, message, multiple
+window.SFI_RE_validate = function( input_id, params ) { //input_number, retext, inverse, message, multiple
 
 	var match;
 	var message;
 	try {
 		var re = new RegExp( params.retext );
-		match = re.test( jQuery('#' + inputId).val() );
+		match = re.test( jQuery('#' + input_id).val() );
 		message = params.message;
 	} catch (e) {
 		match = false;
@@ -32,7 +32,7 @@ window.PF_RE_validate = function( inputId, params ) { //input_number, retext, in
 	if ( ( match && ! params.inverse ) || ( ! match && params.inverse ) ) {
 		return true;
 	} else {
-		jQuery( '#' + inputId ).parent().addErrorMessage( message );
+		jQuery( '#' + input_id ).parent().addErrorMessage( message );
 		return false;
 	}
 };

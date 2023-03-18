@@ -8,12 +8,11 @@ use SMW\ApplicationFactory;
 use SMW\SemanticData;
 use SMW\NamespaceExaminer;
 use Title;
-use SMW\MediaWiki\RevisionGuard;
 
 /**
  * LinksUpdateConstructed hook is called at the end of LinksUpdate()
  *
- * @see https://www.mediawiki.org/wiki/Manual:Hooks/LinksUpdateConstructed
+ * @see http://www.mediawiki.org/wiki/Manual:Hooks/LinksUpdateConstructed
  *
  * @license GNU GPL v2+
  * @since 1.9
@@ -76,8 +75,12 @@ class LinksUpdateConstructed extends HookHandler {
 		}
 
 		$title = $linksUpdate->getTitle();
+		$latestRevID = $title->getLatestRevID( Title::GAID_FOR_UPDATE );
 
-		if ( RevisionGuard::isSkippableUpdate( $title ) ) {
+		$opts = [ 'defer' => $this->enabledDeferredUpdate ];
+
+		// Allow any third-party extension to suppress the update process
+		if ( \Hooks::run( 'SMW::LinksUpdate::ApprovedUpdate', [ $title, $latestRevID ] ) === false ) {
 			return true;
 		}
 
@@ -98,8 +101,6 @@ class LinksUpdateConstructed extends HookHandler {
 			}
 		}
 
-		$opts = [ 'defer' => $this->enabledDeferredUpdate ];
-
 		// Push updates on properties directly without delay
 		if ( $title->getNamespace() === SMW_NS_PROPERTY ) {
 			$opts['defer'] = false;
@@ -118,6 +119,12 @@ class LinksUpdateConstructed extends HookHandler {
 
 		$parserData->setOrigin( 'LinksUpdateConstructed' );
 		$parserData->updateStore( $opts );
+
+		// Track the update on per revision because MW 1.29 made the LinksUpdate a
+		// EnqueueableDataUpdate which creates updates as JobSpecification
+		// (refreshLinksPrioritized) and posses a possibility of running an
+		// update more than once for the same RevID
+		$parserData->markUpdate( $latestRevID );
 
 		return true;
 	}

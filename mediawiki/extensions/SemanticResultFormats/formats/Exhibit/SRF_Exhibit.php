@@ -7,8 +7,6 @@
  * @ingroup SMWQuery
  */
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * Result printer using Exhibit to display query results
  *
@@ -73,7 +71,7 @@ class SRFExhibit extends SMWResultPrinter {
 			$remote = true;
 
 			// fetch interwiki link
-			$dbr = &wfGetDB( DB_REPLICA );
+			$dbr = &wfGetDB( DB_SLAVE );
 			$cl = $dbr->tableName( 'interwiki' );
 			$dbres = $dbr->select( $cl, 'iw_url', "iw_prefix='" . $this->params['remote'] . "'", __METHOD__, [] );
 			$row = $dbr->fetchRow( $dbres );
@@ -337,6 +335,7 @@ class SRFExhibit extends SMWResultPrinter {
 
 		// prepare automatic lenses
 
+		global $wgParser;
 		$lenscounter = 0;
 		$linkcounter = 0;
 		$imagecounter = 0;
@@ -405,10 +404,9 @@ class SRFExhibit extends SMWResultPrinter {
 				}
 			}
 
-			$parser = MediaWikiServices::getInstance()->getParser();
-			$lenshtml = $parser->internalParse(
+			$lenshtml = $wgParser->internalParse(
 				$lenswikitext
-			);// $parser->parse($lenswikitext, $lenstitle, new ParserOptions(), true, true)->getText();
+			);// $wgParser->parse($lenswikitext, $lenstitle, new ParserOptions(), true, true)->getText();
 
 			$lenssrc = "var ex_lens = '" . str_replace(
 					"\n",

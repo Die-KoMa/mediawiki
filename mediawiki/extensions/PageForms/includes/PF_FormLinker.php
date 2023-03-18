@@ -10,31 +10,29 @@
 
 class PFFormLinker {
 
-	private static $formPerNamespace = [];
-
 	static function getDefaultForm( $title ) {
 		// The title passed in can be null in at least one
 		// situation: if the "namespace page" is being checked, and
 		// the project namespace alias contains any non-ASCII
 		// characters. There may be other cases too.
 		// If that happens, just exit.
-		if ( $title === null ) {
+		if ( is_null( $title ) ) {
 			return null;
 		}
 
 		$pageID = $title->getArticleID();
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = wfGetDB( DB_SLAVE );
 		$res = $dbr->select( 'page_props',
-			[
+			array(
 				'pp_value'
-			],
-			[
+			),
+			array(
 				'pp_page' => $pageID,
 				// Keep backward compatibility with
 				// the page property name for
 				// Semantic Forms.
-				'pp_propname' => [ 'PFDefaultForm', 'SFDefaultForm' ]
-			]
+				'pp_propname' => array( 'PFDefaultForm', 'SFDefaultForm' )
+			)
 		);
 
 		if ( $row = $dbr->fetchRow( $res ) ) {
@@ -43,7 +41,6 @@ class PFFormLinker {
 	}
 
 	public static function createPageWithForm( $title, $formName ) {
-		/** @var PFFormPrinter $wgPageFormsFormPrinter */
 		global $wgPageFormsFormPrinter;
 
 		$formTitle = Title::makeTitleSafe( PF_NS_FORM, $formName );
@@ -51,23 +48,19 @@ class PFFormLinker {
 		$preloadContent = null;
 
 		// Allow outside code to set/change the preloaded text.
-		Hooks::run( 'PageForms::EditFormPreloadText', [ &$preloadContent, $title, $formTitle ] );
+		Hooks::run( 'PageForms::EditFormPreloadText', array( &$preloadContent, $title, $formTitle ) );
 
-		list( $formText, $pageText, $formPageTitle, $generatedPageName ) =
-			$wgPageFormsFormPrinter->formHTML(
-				$formDefinition, false, false, null, $preloadContent,
-				'Some very long page name that will hopefully never get created ABCDEF123',
-				null, false, false, true
-			);
-		$params = [];
+		list ( $formText, $pageText, $formPageTitle, $generatedPageName ) =
+			$wgPageFormsFormPrinter->formHTML( $formDefinition, false, false, null, $preloadContent, 'Some very long page name that will hopefully never get created ABCDEF123', null );
+		$params = array();
 
 		// Get user "responsible" for all auto-generated
 		// pages from red links.
 		$userID = 1;
 		global $wgPageFormsAutoCreateUser;
-		if ( $wgPageFormsAutoCreateUser !== null ) {
+		if ( !is_null( $wgPageFormsAutoCreateUser ) ) {
 			$user = User::newFromName( $wgPageFormsAutoCreateUser );
-			if ( $user !== null ) {
+			if ( !is_null( $user ) ) {
 				$userID = $user->getId();
 			}
 		}
@@ -75,50 +68,29 @@ class PFFormLinker {
 		$params['page_text'] = $pageText;
 		$job = new PFCreatePageJob( $title, $params );
 
-		$jobs = [ $job ];
+		$jobs = array( $job );
 		JobQueueGroup::singleton()->push( $jobs );
 	}
 
 	/**
-	 * Called by the HtmlPageLinkRendererEnd hook.
-	 * The $target argument is listed in the documentation as being of type
-	 * LinkTarget, but in practice it seems to sometimes be of type Title
-	 * and sometimes of type TitleValue. So we just leave out a type
-	 * declaration for that argument in the header.
-	 *
-	 * @param LinkRenderer $linkRenderer
-	 * @param Title $target
-	 * @param bool $isKnown
-	 * @param string &$text
-	 * @param array &$attribs
-	 * @param bool &$ret
-	 * @return true
+	 * Sets the URL for form-based creation of a nonexistent (broken-linked,
+	 * AKA red-linked) page
 	 */
-	static function setBrokenLink( MediaWiki\Linker\LinkRenderer $linkRenderer, $target, $isKnown, &$text, &$attribs, &$ret ) {
+	static function setBrokenLink( $linker, $target, $options, $text, &$attribs, &$ret ) {
 		// If it's not a broken (red) link, exit.
-		if ( $isKnown ) {
+		if ( !in_array( 'broken', $options, true ) ) {
 			return true;
 		}
 		// If the link is to a special page, exit.
-		$namespace = $target->getNamespace();
-		if ( $namespace == NS_SPECIAL ) {
+		if ( $target->getNamespace() == NS_SPECIAL ) {
 			return true;
 		}
 
 		global $wgPageFormsLinkAllRedLinksToForms;
-		// Don't do this if it's a category page - it probably
+		// Don't do this is it it's a category page - it probably
 		// won't have an associated form.
 		if ( $wgPageFormsLinkAllRedLinksToForms && $target->getNamespace() != NS_CATEGORY ) {
-			// The class of $target can be either Title or
-			// TitleValue.
-			$title = Title::newFromLinkTarget( $target );
-			$attribs['href'] = $title->getLinkURL( [ 'action' => 'formedit', 'redlink' => '1' ] );
-			return true;
-		}
-
-		if ( self::getDefaultFormForNamespace( $namespace ) !== null ) {
-			$title = Title::newFromLinkTarget( $target );
-			$attribs['href'] = $title->getLinkURL( [ 'action' => 'formedit', 'redlink' => '1' ] );
+			$attribs['href'] = $target->getLinkURL( array( 'action' => 'formedit', 'redlink' => '1' ) );
 			return true;
 		}
 
@@ -131,8 +103,6 @@ class PFFormLinker {
 	 * - the default form(s) for a category that this article belongs to,
 	 * if there are any; or
 	 * - the default form(s) for the article's namespace, if there are any.
-	 * @param Title $title
-	 * @return array
 	 */
 	static function getDefaultFormsForPage( $title ) {
 		// See if the page itself has a default form (or forms), and
@@ -140,12 +110,8 @@ class PFFormLinker {
 		// (Disregard category pages for this check.)
 		if ( $title->getNamespace() != NS_CATEGORY ) {
 			$default_form = self::getDefaultForm( $title );
-			if ( $default_form === '' ) {
-				// A call to "{{#default_form:}}" (i.e., no form
-				// specified) should cancel any inherited forms.
-				return [];
-			} elseif ( $default_form !== null ) {
-				return [ $default_form ];
+			if ( $default_form != '' ) {
+				return array( $default_form );
 			}
 		}
 
@@ -153,7 +119,7 @@ class PFFormLinker {
 		// for its parent category or categories.
 		$namespace = $title->getNamespace();
 		if ( NS_CATEGORY !== $namespace ) {
-			$default_forms = [];
+			$default_forms = array();
 			$categories = PFValuesUtils::getCategoriesForPage( $title );
 			foreach ( $categories as $category ) {
 				if ( class_exists( 'PSSchema' ) ) {
@@ -161,7 +127,7 @@ class PFFormLinker {
 					$psSchema = new PSSchema( $category );
 					if ( $psSchema->isPSDefined() ) {
 						$formName = PFPageSchemas::getFormName( $psSchema );
-						if ( $formName !== null ) {
+						if ( !is_null( $formName ) ) {
 							$default_forms[] = $formName;
 						}
 					}
@@ -183,40 +149,27 @@ class PFFormLinker {
 		// a subpage, exit out - default forms for namespaces don't
 		// apply to subpages.
 		if ( $title->isSubpage() ) {
-			return [];
+			return array();
 		}
 
-		$default_form = self::getDefaultFormForNamespace( $namespace );
-		if ( $default_form != '' ) {
-			return [ $default_form ];
-		}
-
-		return [];
-	}
-
-	public static function getDefaultFormForNamespace( $namespace ) {
-		if ( array_key_exists( $namespace, self::$formPerNamespace ) ) {
-			return self::$formPerNamespace[$namespace];
-		}
-
+		// If we're still here, just return the default form for the
+		// namespace, which may well be null.
 		if ( NS_MAIN === $namespace ) {
 			// If it's in the main (blank) namespace, check for the
 			// file named with the word for "Main" in this language.
 			$namespace_label = wfMessage( 'pf_blank_namespace' )->inContentLanguage()->text();
 		} else {
-			$namespace_labels = PFUtils::getContLang()->getNamespaces();
-			if ( !array_key_exists( $namespace, $namespace_labels ) ) {
-				// This can happen if it's a custom namespace that
-				// was not entirely correctly declared.
-				self::$formPerNamespace[$namespace] = null;
-				return null;
-			}
+			global $wgContLang;
+			$namespace_labels = $wgContLang->getNamespaces();
 			$namespace_label = $namespace_labels[$namespace];
 		}
 
 		$namespacePage = Title::makeTitleSafe( NS_PROJECT, $namespace_label );
-		$defaultForm = self::getDefaultForm( $namespacePage );
-		self::$formPerNamespace[$namespace] = $defaultForm;
-		return $defaultForm;
+		$default_form = self::getDefaultForm( $namespacePage );
+		if ( $default_form != '' ) {
+			return array( $default_form );
+		}
+
+		return array();
 	}
 }

@@ -1,15 +1,12 @@
 {
 	"@metadata": {
 		"authors": [
-			"Jinoytommanjaly",
 			"Praveenp",
 			"Shijualex"
 		]
 	},
-	"createproperty": "ഒരു പ്രോപ്പർട്ടി സൃഷ്ടിക്കുക",
-	"pf_createproperty_propname": "പ്രോപ്പർട്ടി നാമം:",
+	"pf_createproperty_propname": "പേര്‌:",
 	"pf_createproperty_proptype": "തരം:",
-	"pf_createproperty_editsummary": "$1 തരത്തിലുള്ള ഒരു പ്രോപ്പർട്ടി സൃഷ്‌ടിച്ചു",
 	"templates": "ഫലകങ്ങൾ",
 	"pf_templates_docu": "താഴെ പ്രദർശിപ്പിച്ചിരിക്കുന്ന ഫലകങ്ങൾ ഈ വിക്കിയിൽ നിലവിലുണ്ട്.",
 	"pf_templates_definescat": "വർഗ്ഗം നിർ‌വചിക്കുന്നു: $1",
@@ -53,7 +50,6 @@
 	"pf_bad_url_error": "'http' എന്നു തുടങ്ങുന്ന ശരിയായ URL രൂപം ഉപയോഗിക്കണം",
 	"pf_bad_email_error": "സാധുവായ ഇമെയിൽ വിലാസ ഫോർമാറ്റ് നിർബന്ധമാണ്‌",
 	"pf_bad_number_error": "സാധുവായ സംഖ്യ നിർബന്ധമാണ്‌",
-	"pf_bad_integer_error": "നിർബന്ധമായും സാധുവായ ഒരു അക്കമാകണം",
 	"pf_bad_date_error": "സാധുവായ തീയതി നിർബന്ധമാണ്‌",
 	"pf_template_docufooter": "ഫലകത്തിന്റെ ഉള്ളടക്കം കാണാൻ താൾ തിരുത്തുക.",
 	"pf_category_hasdefaultform": "ഈ വർഗ്ഗം $1 എന്ന ഫോം ഉപയോഗിക്കുന്നു.",

@@ -110,28 +110,33 @@ class ParameterInput {
 	 * @return string
 	 */
 	public function getHtml() {
-		$allowedValues = $this->param->getAllowedValues();
+		$valueList = [];
 
-		if ( $allowedValues === [] ) {
+		if ( is_array( $this->param->getAllowedValues() ) ) {
+			$valueList = $this->param->getAllowedValues();
+		}
+
+		if ( $valueList === [] ) {
 			switch ( $this->param->getType() ) {
 				case 'char':
 				case 'float':
 				case 'integer':
 				case 'number':
-					return $this->getNumberInput();
+					$html = $this->getNumberInput();
+					break;
 				case 'boolean':
-					return $this->getBooleanInput();
+					$html = $this->getBooleanInput();
+					break;
 				case 'string':
 				default:
-					return $this->getStrInput();
+					$html = $this->getStrInput();
+					break;
 			}
+		} else {
+			$html = $this->param->isList() ? $this->getCheckboxListInput( $valueList ) : $this->getSelectInput( $valueList );
 		}
 
-		if ( $this->param->isList() ) {
-			return $this->getCheckboxListInput( $allowedValues );
-		}
-
-		return $this->getSelectInput( $allowedValues );
+		return $html;
 	}
 
 	/**

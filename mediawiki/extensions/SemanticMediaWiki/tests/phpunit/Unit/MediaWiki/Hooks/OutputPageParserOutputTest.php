@@ -24,9 +24,6 @@ use SMW\Tests\Utils\Mock\MockTitle;
 class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 
 	private $applicationFactory;
-	private $outputPage;
-	private $parserOutput;
-	private $namespaceExaminer;
 
 	protected function setUp() {
 		parent::setUp();
@@ -41,18 +38,6 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 				'smwgMainCacheType'        => 'hash'
 			]
 		);
-
-		$this->namespaceExaminer = $this->getMockBuilder( '\SMW\NamespaceExaminer' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->outputPage = $this->getMockBuilder( '\OutputPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->parserOutput = $this->getMockBuilder( '\ParserOutput' )
-			->disableOriginalConstructor()
-			->getMock();
 	}
 
 	protected function tearDown() {
@@ -62,9 +47,17 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$outputPage = $this->getMockBuilder( '\OutputPage' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$parserOutput = $this->getMockBuilder( '\ParserOutput' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$this->assertInstanceOf(
-			OutputPageParserOutput::class,
-			new OutputPageParserOutput( $this->namespaceExaminer )
+			'\SMW\MediaWiki\Hooks\OutputPageParserOutput',
+			new OutputPageParserOutput( $outputPage, $parserOutput )
 		);
 	}
 
@@ -73,28 +66,21 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testProcess( $parameters, $expected ) {
 
-		$this->namespaceExaminer->expects( $this->any() )
-			->method( 'isSemanticEnabled' )
-			->will( $this->returnValue( $parameters['smwgNamespacesWithSemanticLinks'] ) );
-
-		$entityCache = new \SMW\EntityCache(
-			$this->applicationFactory->newCacheFactory()->newFixedInMemoryCache()
-		);
-
-		$this->testEnvironment->registerObject( 'EntityCache', $entityCache );
-
 		$store = $this->getMockBuilder( '\SMW\Store' )
 			->disableOriginalConstructor()
 			->getMockForAbstractClass();
 
 		$this->testEnvironment->registerObject( 'Store', $store );
 
+		$this->testEnvironment->addConfiguration(
+			'smwgNamespacesWithSemanticLinks',
+			$parameters['smwgNamespacesWithSemanticLinks']
+		);
+
 		$outputPage   = $parameters['outputPage'];
 		$parserOutput = $parameters['parserOutput'];
 
-		$instance = new OutputPageParserOutput(
-			$this->namespaceExaminer
-		);
+		$instance = new OutputPageParserOutput( $outputPage, $parserOutput );
 
 		$cachedFactbox = $this->applicationFactory->create( 'FactboxFactory' )->newCachedFactbox();
 
@@ -107,13 +93,13 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 			->method( 'newCachedFactbox' )
 			->will( $this->returnValue( $cachedFactbox ) );
 
-		$this->testEnvironment->registerObject( 'FactboxFactory', $factboxFactory );
+		$this->applicationFactory->registerObject( 'FactboxFactory', $factboxFactory );
 
 		$this->assertEmpty(
 			$cachedFactbox->retrieveContent( $outputPage )
 		);
 
-		$instance->process( $outputPage, $parserOutput );
+		$instance->process();
 
 		if ( $expected['text'] == '' ) {
 			return $this->assertFalse( isset( $outputPage->mSMWFactboxText ) );
@@ -205,13 +191,13 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getContext' )
 			->will( $this->returnValue( new \RequestContext() ) );
 
-		$outputPage->expects( $this->any() )
+		$outputPage->expects( $this->atLeastOnce() )
 			->method( 'getLanguage' )
 			->will( $this->returnValue( $language ) );
 
 		$provider[] = [
 			[
-				'smwgNamespacesWithSemanticLinks' => true,
+				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
 				'outputPage'   => $outputPage,
 				'parserOutput' => $this->makeParserOutput( $semanticData ),
 			],
@@ -245,7 +231,7 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 
 		$provider[] = [
 			[
-				'smwgNamespacesWithSemanticLinks' => false,
+				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => false ],
 				'outputPage'   => $outputPage,
 				'parserOutput' => $this->makeParserOutput( $semanticData ),
 			],
@@ -275,7 +261,7 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 
 		$provider[] = [
 			[
-				'smwgNamespacesWithSemanticLinks' => true,
+				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
 				'outputPage'   => $outputPage,
 				'parserOutput' => $this->makeParserOutput( $semanticData ),
 			],
@@ -303,16 +289,9 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getTitle' )
 			->will( $this->returnValue( $title ) );
 
-		$context = new \RequestContext( );
-		$context->setRequest( new \FauxRequest() );
-
-		$outputPage->expects( $this->any() )
-			->method( 'getContext' )
-			->will( $this->returnValue( $context ) );
-
 		$provider[] = [
 			[
-				'smwgNamespacesWithSemanticLinks' => true,
+				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
 				'outputPage'   => $outputPage,
 				'parserOutput' => $this->makeParserOutput( $semanticData ),
 			],
@@ -347,13 +326,13 @@ class OutputPageParserOutputTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getContext' )
 			->will( $this->returnValue( $context ) );
 
-		$outputPage->expects( $this->any() )
+		$outputPage->expects( $this->atLeastOnce() )
 			->method( 'getLanguage' )
 			->will( $this->returnValue( $language ) );
 
 		$provider[] = [
 			[
-				'smwgNamespacesWithSemanticLinks' => true,
+				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
 				'outputPage'   => $outputPage,
 				'parserOutput' => $this->makeParserOutput( $semanticData ),
 			],

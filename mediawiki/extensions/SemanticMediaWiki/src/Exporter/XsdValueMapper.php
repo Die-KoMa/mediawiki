@@ -8,7 +8,6 @@ use SMWDIBlob as DIBlob;
 use SMWDIBoolean as DIBoolean;
 use SMWDINumber as DINumber;
 use SMWDITime as DITime;
-use SMW\Exporter\Element\ExpLiteral;
 
 /**
  * This class only maps primitive types (string, boolean, integers ) mostly to
@@ -23,52 +22,71 @@ use SMW\Exporter\Element\ExpLiteral;
 class XsdValueMapper {
 
 	/**
+	 * @var string
+	 */
+	private $xsdValue = '';
+
+	/**
+	 * @var string
+	 */
+	private $xsdType = '';
+
+	/**
 	 * @since 2.2
 	 *
 	 * @param DataItem $dataItem
 	 *
-	 * @return array
 	 * @throws RuntimeException
 	 */
-	public static function map( DataItem $dataItem ) {
+	public function map( DataItem $dataItem ) {
 
 		if ( $dataItem instanceof DIBoolean ) {
-			$val = self::mapBoolean( $dataItem );
+			$this->parseToBooleanValue( $dataItem );
 		} elseif ( $dataItem instanceof DINumber ) {
-			$val = self::mapNumber( $dataItem );
+			$this->parseToDoubleValue( $dataItem );
 		} elseif ( $dataItem instanceof DIBlob ) {
-			$val = self::mapString( $dataItem );
+			$this->parseToStringValue( $dataItem );
 		} elseif ( $dataItem instanceof DITime && $dataItem->getCalendarModel() === DITime::CM_GREGORIAN ) {
-			$val = self::mapGregorianCalendarModelTime( $dataItem );
+			$this->parseToTimeValueForGregorianCalendarModel( $dataItem );
 		} else {
-			throw new RuntimeException( "Cannot match the dataItem with type " . $dataItem->getDIType() );
+			throw new RuntimeException( "Cannot match the dataItem of type " . $dataItem->getDIType() );
 		}
-
-		return $val;
 	}
 
-	private static function mapString( DIBlob $dataItem ) {
-		return [
-			'http://www.w3.org/2001/XMLSchema#string',
-			smwfHTMLtoUTF8( $dataItem->getString() )
-		];
+	/**
+	 * @since 2.2
+	 *
+	 * @return string
+	 */
+	public function getXsdValue() {
+		return $this->xsdValue;
 	}
 
-	private static function mapNumber( DINumber $dataItem ) {
-		return[
-			'http://www.w3.org/2001/XMLSchema#double',
-			strval( $dataItem->getNumber() )
-		];
+	/**
+	 * @since 2.2
+	 *
+	 * @return string
+	 */
+	public function getXsdType() {
+		return $this->xsdType;
 	}
 
-	private static function mapBoolean( DIBoolean $dataItem ) {
-		return [
-			'http://www.w3.org/2001/XMLSchema#boolean',
-			$dataItem->getBoolean() ? 'true' : 'false'
-		];
+	private function parseToStringValue( DIBlob $dataItem ) {
+		$this->xsdValue = smwfHTMLtoUTF8( $dataItem->getString() );
+		$this->xsdType = 'http://www.w3.org/2001/XMLSchema#string';
 	}
 
-	private static function mapGregorianCalendarModelTime( DITime $dataItem  ) {
+	private function parseToDoubleValue( DINumber $dataItem ) {
+		$this->xsdValue = strval( $dataItem->getNumber() );
+		$this->xsdType = 'http://www.w3.org/2001/XMLSchema#double';
+	}
+
+	private function parseToBooleanValue( DIBoolean $dataItem ) {
+		$this->xsdValue = $dataItem->getBoolean() ? 'true' : 'false';
+		$this->xsdType = 'http://www.w3.org/2001/XMLSchema#boolean';
+	}
+
+	private function parseToTimeValueForGregorianCalendarModel( DITime $dataItem  ) {
 
 		if ( $dataItem->getYear() > 0 ) {
 			$xsdvalue = str_pad( $dataItem->getYear(), 4, "0", STR_PAD_LEFT );
@@ -100,7 +118,8 @@ class XsdValueMapper {
 			}
 		}
 
-		return [ $xsdtype, $xsdvalue ];
+		$this->xsdValue = $xsdvalue;
+		$this->xsdType = $xsdtype;
 	}
 
 }

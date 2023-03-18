@@ -50,9 +50,6 @@ class SpecialAdminTest extends \PHPUnit_Framework_TestCase {
 
 	public function testExecuteWithValidUser() {
 
-		$user = new MockSuperUser();
-		$this->testEnvironment->overrideUserPermissions( $user, [ 'smw-admin' ] );
-
 		$outputPage = $this->getMockBuilder( '\OutputPage' )
 			->disableOriginalConstructor()
 			->getMock();
@@ -70,7 +67,7 @@ class SpecialAdminTest extends \PHPUnit_Framework_TestCase {
 		$oldOutput = $instance->getOutput();
 
 		$instance->getContext()->setOutput( $outputPage );
-		$instance->getContext()->setUser( $user );
+		$instance->getContext()->setUser( new MockSuperUser() );
 
 		$instance->execute( $query );
 
@@ -83,8 +80,6 @@ class SpecialAdminTest extends \PHPUnit_Framework_TestCase {
 		$user = $this->getMockBuilder( '\User' )
 			->disableOriginalConstructor()
 			->getMock();
-
-		$this->testEnvironment->overrideUserPermissions( $user, [] );
 
 		$query = '';
 		$instance = new SpecialAdmin();

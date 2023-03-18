@@ -2,7 +2,6 @@
 	"@metadata": {
 		"authors": [
 			"Firilacroco",
-			"Fitoschido",
 			"KlaudiuMihaila",
 			"Mihai",
 			"Minisarm",
@@ -81,7 +80,6 @@
 	"runquery": "Executare interogare",
 	"pf_blank_error": "nu poate fi gol",
 	"pf_bad_number_error": "trebuie să fie un număr corect",
-	"pf_bad_integer_error": "trebuie să fie un număr întreg",
 	"pf_bad_date_error": "trebuie să fie o dată corectă",
 	"uploadwindow": "Fereastra de încărcare",
 	"pf_deletionlog": "Jurnalul ștergerilor",

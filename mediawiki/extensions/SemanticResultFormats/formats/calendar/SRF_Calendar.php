@@ -3,8 +3,6 @@
 $wgAutoloadClasses['SRFCHistoricalDate'] = dirname( __FILE__ )
 	. '/SRFC_HistoricalDate.php';
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * Result printer that prints query results as a monthly calendar.
  *
@@ -276,9 +274,9 @@ class SRFCalendar extends SMWResultPrinter {
 			$wgLang = $this->mRealUserLang;
 		}
 
-		$parser = MediaWikiServices::getInstance()->getParser();
-		if ( is_null( $parser->getTitle() ) ) {
-			// Backward compatibility; getTitle never returns null in MW 1.35
+		global $wgParser;
+
+		if ( is_null( $wgParser->getTitle() ) ) {
 			return $result;
 		} else {
 			return [ $result, 'noparse' => 'true', 'isHTML' => 'true' ];
@@ -316,15 +314,14 @@ class SRFCalendar extends SMWResultPrinter {
 	}
 
 	function displayCalendar( $events ) {
+		global $wgParser;
 		global $srfgFirstDayOfWeek;
 		global $srfgScriptPath;
 
 		$context = RequestContext::getMain();
 		$request = $context->getRequest();
-		$parser = MediaWikiServices::getInstance()->getParser();
-		// NOTE: mFirstCall is never false in MW >= 1.35
-		if ( !$parser->mFirstCall ) {
-			$parser->disableCache();
+		if ( !$wgParser->mFirstCall ) {
+			$wgParser->disableCache();
 		}
 
 		$context->getOutput()->addLink(
@@ -343,7 +340,7 @@ class SRFCalendar extends SMWResultPrinter {
 		// Special:RunQuery.
 		$pageTitle = $context->getTitle();
 		if ( !$pageTitle ) {
-			$pageTitle = $parser->getTitle();
+			$pageTitle = $wgParser->getTitle();
 		}
 		$additionalQueryString = '';
 		$hiddenInputs = '';
@@ -609,9 +606,9 @@ END;
 						$templatetext = '{{' . $this->mTemplate . $otherText .
 							'|thisdate=' . $dateStr . '}}';
 						$templatetext =
-							$parser->replaceVariables( $templatetext );
+							$wgParser->replaceVariables( $templatetext );
 						$templatetext =
-							$parser->recursiveTagParse( $templatetext );
+							$wgParser->recursiveTagParse( $templatetext );
 						$text .= $templatetext;
 					} else {
 						$eventStr = Linker::link( $eventTitle );

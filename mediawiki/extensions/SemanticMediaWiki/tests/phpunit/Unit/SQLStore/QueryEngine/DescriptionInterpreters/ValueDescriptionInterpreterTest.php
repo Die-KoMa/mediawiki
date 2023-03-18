@@ -19,8 +19,7 @@ use SMW\Tests\TestEnvironment;
  */
 class ValueDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $conditionBuilder;
+	private $querySegmentValidator;
 	private $descriptionFactory;
 	private $dataItemFactory;
 
@@ -30,23 +29,19 @@ class ValueDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 		$this->descriptionFactory = new DescriptionFactory();
 		$this->dataItemFactory = new DataItemFactory();
 
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMock();
-
 		$testEnvironment = new TestEnvironment();
 		$this->querySegmentValidator = $testEnvironment->getUtilityFactory()->newValidatorFactory()->newQuerySegmentValidator();
 	}
 
 	public function testCanConstruct() {
 
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
 		$this->assertInstanceOf(
-			ValueDescriptionInterpreter::Class,
-			new ValueDescriptionInterpreter( $this->store, $this->conditionBuilder )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\ValueDescriptionInterpreter',
+			new ValueDescriptionInterpreter( $querySegmentListBuilder )
 		);
 	}
 
@@ -71,19 +66,22 @@ class ValueDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->method( 'addQuotes' )
 			->will( $this->returnArgument( 0 ) );
 
-		$this->store->expects( $this->any() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->any() )
 			->method( 'getConnection' )
 			->will( $this->returnValue( $connection ) );
 
-		$this->store->expects( $this->any() )
+		$store->expects( $this->any() )
 			->method( 'getObjectIds' )
 			->will( $this->returnValue( $objectIds ) );
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new ValueDescriptionInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder()
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(

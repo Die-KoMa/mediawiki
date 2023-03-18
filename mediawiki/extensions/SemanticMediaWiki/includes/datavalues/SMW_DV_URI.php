@@ -254,42 +254,43 @@ class SMWURIValue extends SMWDataValue {
 			( $this->m_outformat == '-' ) || ( $this->m_outformat == 'nowiki' ) ||
 			( $this->m_caption === '' ) || $linker === false ) {
 			return $caption;
+		} else {
+			return $linker->makeExternalLink( $url, $caption );
 		}
-
-		return $linker->makeExternalLink( $url, $caption );
 	}
 
-	public function getLongWikiText( $linker = null ) {
+	public function getLongWikiText( $linked = null ) {
+
 		if ( !$this->isValid() ) {
 			return $this->getErrorText();
 		}
 
-		list( $url, $wikitext ) = $this->decodeUriContext( $this->m_wikitext, $linker );
+		list( $url, $wikitext ) = $this->decodeUriContext( $this->m_wikitext, $linked );
 
-		if ( $linker === null || $linker === false || $url === '' || $this->m_outformat == '-' ) {
+		if ( is_null( $linked ) || ( $linked === false ) || ( $url === '' ) ||
+			( $this->m_outformat == '-' ) || $linked === false ) {
 			return $wikitext;
-		}
-
-		if ( $this->m_outformat == 'nowiki' ) {
+		} elseif ( $this->m_outformat == 'nowiki' ) {
 			return $this->makeNonlinkedWikiText( $wikitext );
+		} else {
+			return '[' . $url . ' ' . $wikitext . ']';
 		}
-
-		return '[' . $url . ' ' . $wikitext . ']';
 	}
 
 	public function getLongHTMLText( $linker = null ) {
+
 		if ( !$this->isValid() ) {
 			return $this->getErrorText();
 		}
 
 		list( $url, $wikitext ) = $this->decodeUriContext( $this->m_wikitext, $linker );
 
-		if ( is_null( $linker ) || $linker === false || $url === '' ||
-			$this->m_outformat == '-' || $this->m_outformat == 'nowiki' ) {
+		if ( is_null( $linker ) || ( !$this->isValid() ) || ( $url === '' ) ||
+			( $this->m_outformat == '-' ) || ( $this->m_outformat == 'nowiki' ) || $linker === false ) {
 			return $wikitext;
+		} else {
+			return $linker->makeExternalLink( $url, $wikitext );
 		}
-
-		return $linker->makeExternalLink( $url, $wikitext );
 	}
 
 	public function getWikiValue() {

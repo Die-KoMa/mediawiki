@@ -87,19 +87,18 @@ class SRFSlideShowApi extends ApiBase {
 		}
 
 		// query SMWQueryProcessor and set query result as API call result
-		$query = SMWQueryProcessor::createQuery(
-			'[[' . $title . ']]',
-			$queryParams,
-			SMWQueryProcessor::INLINE_QUERY,
-			'',
-			$printouts
-		);
-
 		$this->getResult()->addValue(
 			null,
 			$requestParams['pageid'],
-			SMWQueryProcessor::getResultFromQuery( $query, $queryParams, SMW_OUTPUT_HTML, SMWQueryProcessor::INLINE_QUERY )
+			SMWQueryProcessor::getResultFromQueryString(
+				'[[' . $title . ']]',
+				$queryParams,
+				$printouts,
+				SMW_OUTPUT_HTML,
+				SMWQueryProcessor::INLINE_QUERY
+			)
 		);
+
 	}
 
 	/**

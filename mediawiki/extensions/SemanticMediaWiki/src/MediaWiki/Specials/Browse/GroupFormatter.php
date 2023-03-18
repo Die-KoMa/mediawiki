@@ -6,7 +6,6 @@ use Html;
 use SMW\DIWikiPage;
 use SMW\Message;
 use SMW\PropertySpecificationLookup;
-use SMW\Schema\SchemaFinder;
 use SMWDataItem as DataItem;
 
 /**
@@ -35,11 +34,6 @@ class GroupFormatter {
 	private $propertySpecificationLookup;
 
 	/**
-	 * @var SchemaFinder
-	 */
-	private $schemaFinder;
-
-	/**
 	 * @var boolean
 	 */
 	private $showGroup = true;
@@ -59,9 +53,8 @@ class GroupFormatter {
 	 *
 	 * @param PropertySpecificationLookup $propertySpecificationLookup
 	 */
-	public function __construct( PropertySpecificationLookup $propertySpecificationLookup, SchemaFinder $schemaFinder ) {
+	public function __construct( PropertySpecificationLookup $propertySpecificationLookup ) {
 		$this->propertySpecificationLookup = $propertySpecificationLookup;
-		$this->schemaFinder = $schemaFinder;
 	}
 
 	/**
@@ -98,16 +91,12 @@ class GroupFormatter {
 	 */
 	public function findGroupMembership( array &$properties ) {
 
-		$list = $this->prepareListFromSchema(
-			$this->schemaFinder->getSchemaListByType( 'PROPERTY_GROUP_SCHEMA' )
-		);
-
 		$groupedProperties = [];
 		$this->groupLinks = [];
 
 		foreach ( $properties as $key => $property ) {
 
-			$group = $this->findGroup( $property, $list );
+			$group = $this->findGroup( $property );
 
 			if ( !isset( $groupedProperties[$group] ) ) {
 				$groupedProperties[$group] = [];
@@ -168,28 +157,22 @@ class GroupFormatter {
 		);
 	}
 
-	private function findGroup( $property, $list ) {
+	private function findGroup( $property ) {
 
 		if ( $this->showGroup === false ) {
 			return '';
 		}
 
-		$dataItem = null;
-		$group = '';
-		$msg_key = '';
+		$group = null;
 
 		// Special handling for a `Category` property instance that itself cannot
 		// be annotated with a `Is property group` therefor use the fixed
 		// `smw-category-group` message to point to a group
 		if ( $property->getKey() === '_INST' && Message::exists( 'smw-category-group' ) ) {
-			$group = Message::get( 'smw-category-group' );
-		} elseif( ( $dataItem = $this->propertySpecificationLookup->getPropertyGroup( $property ) ) instanceof DataItem ) {
-			$group = str_replace( '_', ' ', $dataItem->getDBKey() );
-		} elseif( $list !== [] ) {
-			$group = $this->findGroupFromList( $list, $property, $dataItem, $msg_key );
-		}
-
-		if ( $group === '' || $group === null ) {
+			$gr = Message::get( 'smw-category-group' );
+		} elseif( ( $group = $this->propertySpecificationLookup->getPropertyGroup( $property ) ) instanceof DataItem ) {
+			$gr = str_replace( '_', ' ', $group->getDBKey() );
+		} else {
 			return '';
 		}
 
@@ -199,14 +182,14 @@ class GroupFormatter {
 		// Convention key to allow a category to transtable using the
 		// `smw-group-...` as key and transforms a group `Foo bar` to
 		// `smw-group-foo-bar`
-		$key = mb_strtolower( str_replace( ' ', '-', $group ) );
+		$key = mb_strtolower( str_replace( ' ', '-', $gr ) );
 
-		if ( $msg_key === '' ) {
-			$msg_key = self::MESSAGE_GROUP_LABEL . $key;
-		}
-
-		if ( Message::exists( $msg_key ) ) {
-			$group = Message::get( $msg_key, Message::TEXT, Message::USER_LANGUAGE );
+		if ( Message::exists( self::MESSAGE_GROUP_LABEL . $key ) ) {
+			$gr = Message::get(
+				self::MESSAGE_GROUP_LABEL . $key,
+				Message::TEXT,
+				Message::USER_LANGUAGE
+			);
 		}
 
 		if ( Message::exists( self::MESSAGE_GROUP_DESCRIPTION . $key ) ) {
@@ -217,13 +200,13 @@ class GroupFormatter {
 			);
 		}
 
-		if ( $dataItem instanceof DataItem ) {
+		if ( $group instanceof DataItem ) {
 			$link = Html::rawElement(
 				'a',
 				[
-					'href' => $dataItem->getTitle()->getFullURL()
+					'href' => $group->getTitle()->getFullURL()
 				],
-				$group
+				$gr
 			);
 		}
 
@@ -244,55 +227,11 @@ class GroupFormatter {
 			);
 		}
 
-		if ( !isset( $this->groupLinks[$group] ) || $this->groupLinks[$group] === '' ) {
-			$this->groupLinks[$group] = $link;
+		if ( !isset( $this->groupLinks[$gr] ) || $this->groupLinks[$gr] === '' ) {
+			$this->groupLinks[$gr] = $link;
 		}
 
-		return $group;
-	}
-
-	private function prepareListFromSchema( $schemaList ) {
-		$list = [];
-
-		foreach ( $schemaList->getList() as $schemaDefinition ) {
-			foreach ( $schemaDefinition->get( 'groups' ) as $data ) {
-
-				if ( !isset( $data['properties'] ) || !isset( $data['group_name'] ) ) {
-					continue;
-				}
-
-				$group = str_replace( '_', ' ', $data['group_name'] );
-				$message_key = isset( $data['message_key'] ) ? $data['message_key'] : '';
-
-				if ( $message_key !== '' && !Message::exists( $message_key ) && isset( $data['group_name'] ) ) {
-					$group = $data['group_name'];
-				}
-
-				$list[$group] = [
-					'properties' => array_flip( $data['properties'] ),
-					'msg_key' => $message_key,
-					'item' => DIWikiPage::newFromText( $schemaDefinition->getName(), SMW_NS_SCHEMA )
-				];
-			}
-		}
-
-		return $list;
-	}
-
-	private function findGroupFromList( $list, $property, &$dataItem, &$label ) {
-		foreach ( $list as $group => $data ) {
-
-			$properties = $data['properties'];
-
-			if ( !isset( $properties[$property->getKey()] ) && !isset( $properties[$property->getLabel()] ) ) {
-				continue;
-			}
-
-			$label = $data['msg_key'];
-			$dataItem = $data['item'];
-
-			return $group;
-		}
+		return $gr;
 	}
 
 }

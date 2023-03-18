@@ -35,7 +35,7 @@ class HierarchyTempTableBuilderTest extends \PHPUnit_Framework_TestCase {
 	public function testCanConstruct() {
 
 		$this->assertInstanceOf(
-			HierarchyTempTableBuilder::class,
+			'\SMW\SQLStore\QueryEngine\HierarchyTempTableBuilder',
 			new HierarchyTempTableBuilder( $this->connection, $this->temporaryTableBuilder )
 		);
 	}
@@ -53,11 +53,11 @@ class HierarchyTempTableBuilderTest extends \PHPUnit_Framework_TestCase {
 			$this->temporaryTableBuilder
 		);
 
-		$instance->setTableDefinitions( [ 'property' => [ 'table' => 'bar', 'depth' => 3 ] ] );
+		$instance->setPropertyHierarchyTableDefinition( 'bar', 3 );
 
 		$this->assertEquals(
 			[ '_bar', 3 ],
-			$instance->getTableDefinitionByType( 'property' )
+			$instance->getHierarchyTableDefinitionForType( 'property' )
 		);
 	}
 
@@ -69,10 +69,10 @@ class HierarchyTempTableBuilderTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->setExpectedException( 'RuntimeException' );
-		$instance->getTableDefinitionByType( 'foo' );
+		$instance->getHierarchyTableDefinitionForType( 'foo' );
 	}
 
-	public function testFillTempTable() {
+	public function testCreateHierarchyTempTable() {
 
 		$this->connection->expects( $this->once() )
 			->method( 'tableName' )
@@ -88,9 +88,8 @@ class HierarchyTempTableBuilderTest extends \PHPUnit_Framework_TestCase {
 			$this->temporaryTableBuilder
 		);
 
-		$instance->setTableDefinitions( [ 'class' => [ 'table' => 'bar', 'depth' => 3 ] ] );
-
-		$instance->fillTempTable( 'class', 'foobar', '(42)' );
+		$instance->setClassHierarchyTableDefinition( 'bar', 3 );
+		$instance->createHierarchyTempTableFor( 'class', 'foobar', '(42)' );
 
 		$expected = [
 			'(42)' => 'foobar'

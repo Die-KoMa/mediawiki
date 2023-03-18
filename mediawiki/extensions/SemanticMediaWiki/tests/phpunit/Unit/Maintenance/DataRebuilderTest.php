@@ -99,19 +99,19 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testRebuildAllWithoutOptions() {
 
-		$rebuilder = $this->getMockBuilder( '\SMW\SQLStore\Rebuilder\Rebuilder' )
+		$entityRebuildDispatcher = $this->getMockBuilder( '\SMW\SQLStore\EntityRebuildDispatcher' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$rebuilder->expects( $this->once() )
+		$entityRebuildDispatcher->expects( $this->once() )
 			->method( 'rebuild' )
 			->will( $this->returnCallback( [ $this, 'refreshDataOnMockCallback' ] ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getMaxId' )
 			->will( $this->returnValue( 1000 ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getDispatchedEntities' )
 			->will( $this->returnValue( [] ) );
 
@@ -122,7 +122,7 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$store->expects( $this->once() )
 			->method( 'refreshData' )
-			->will( $this->returnValue( $rebuilder ) );
+			->will( $this->returnValue( $entityRebuildDispatcher ) );
 
 		$store->setConnectionManager( $this->connectionManager );
 
@@ -145,19 +145,19 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testRebuildAllWithFullDelete() {
 
-		$rebuilder = $this->getMockBuilder( '\SMW\SQLStore\Rebuilder\Rebuilder' )
+		$entityRebuildDispatcher = $this->getMockBuilder( '\SMW\SQLStore\EntityRebuildDispatcher' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$rebuilder->expects( $this->atLeastOnce() )
+		$entityRebuildDispatcher->expects( $this->atLeastOnce() )
 			->method( 'rebuild' )
 			->will( $this->returnCallback( [ $this, 'refreshDataOnMockCallback' ] ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getMaxId' )
 			->will( $this->returnValue( 1000 ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getDispatchedEntities' )
 			->will( $this->returnValue( [] ) );
 
@@ -170,7 +170,7 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$store->expects( $this->once() )
 			->method( 'refreshData' )
-			->will( $this->returnValue( $rebuilder ) );
+			->will( $this->returnValue( $entityRebuildDispatcher ) );
 
 		$store->expects( $this->once() )
 			->method( 'drop' );
@@ -197,19 +197,19 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testRebuildAllWithStopRangeOption() {
 
-		$rebuilder = $this->getMockBuilder( '\SMW\SQLStore\Rebuilder\Rebuilder' )
+		$entityRebuildDispatcher = $this->getMockBuilder( '\SMW\SQLStore\EntityRebuildDispatcher' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$rebuilder->expects( $this->exactly( 6 ) )
+		$entityRebuildDispatcher->expects( $this->exactly( 6 ) )
 			->method( 'rebuild' )
 			->will( $this->returnCallback( [ $this, 'refreshDataOnMockCallback' ] ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getMaxId' )
 			->will( $this->returnValue( 1000 ) );
 
-		$rebuilder->expects( $this->any() )
+		$entityRebuildDispatcher->expects( $this->any() )
 			->method( 'getDispatchedEntities' )
 			->will( $this->returnValue( [] ) );
 
@@ -220,7 +220,7 @@ class DataRebuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$store->expects( $this->once() )
 			->method( 'refreshData' )
-			->will( $this->returnValue( $rebuilder ) );
+			->will( $this->returnValue( $entityRebuildDispatcher ) );
 
 		$store->setConnectionManager( $this->connectionManager );
 

@@ -8,8 +8,6 @@
  *
  * @licence GNU GPL v2+
  * @author Jatin Mehta
- * @author Yaron Koren
- * @author Priyanshu Varshney
  */
 
 ( function( $, mw, pf ) {
@@ -24,6 +22,9 @@
 	pf.select2 = pf.select2 || {};
 
 	/**
+	 * Class constructor
+	 *
+	 *
 	 * @class
 	 * @constructor
 	 */
@@ -32,7 +33,6 @@
 	};
 
 	var tokens_proto = new pf.select2.base();
-
 	/*
 	 * Applies select2 to the HTML element
 	 *
@@ -40,70 +40,14 @@
 	 *
 	 */
 	tokens_proto.apply = function( element ) {
-		var cur_val = element.attr('value');
-		var existingValuesOnly = (element.attr("existingvaluesonly") == "true");
-		this.existingValuesOnly = existingValuesOnly;
 		this.id = element.attr( "id" );
+		var opts = this.setOptions();
+		var cur_val = element.val();
 
-		// This happens sometimes, although it shouldn't. If it does,
-		// something went wrong, so just exit.
-		if ( this.id == undefined ) {
-			return;
-		}
-
-		try {
-			var opts = this.setOptions();
-			var $input = element.select2(opts);
-			var inputData = $input.data("select2");
-		} catch (e) {
-			window.console.log(e);
-		}
-		$(inputData.$container[0]).on("keyup",function(e){
-			if( existingValuesOnly ){
-				return ;
-			}
-			if( e.keyCode === 9 ){
-				var rawValue = "";
-				var checkIfPresent = false;
-				var valHighlighted = inputData.$results.find('.select2-results__option--highlighted')[0];
-				if( valHighlighted !== undefined ){
-					rawValue = valHighlighted.textContent;
-				}
-				var newValue = $.grep(inputData.val(), function (value) {
-					if( value === rawValue ){
-						checkIfPresent = true;
-					}
-					return value !== rawValue;
-				});
-				if( checkIfPresent === false && rawValue !== "" ) {
-					newValue.push(rawValue);
-				}
-				if ( !$input.find( "option[value='" + rawValue + "']" ).length ) {
-					var newOption = new Option( rawValue, rawValue, false, false );
-					$input.append(newOption).trigger( 'change' );
-				}
-				$input.val( newValue ).trigger( 'change' );
-			}
-		});
-		if ( element.attr( "existingvaluesonly" ) !== "true" ) {
-			element.parent().on( "dblclick", "li.select2-selection__choice", function ( event ) {
-				var $target = $(event.target);
-
-				// get the text and id of the clicked value
-				var targetData = $target.data();
-				var clickedValue = $target[0].title;
-				var clickedValueId = targetData.select2Id;
-
-				// remove that value from select2 selection
-				var newValue = $.grep(inputData.val(), function (value) {
-					return value !== clickedValue;
-				});
-				$input.val(newValue).trigger("change");
-
-				// set the currently entered text to equal the clicked value
-				inputData.$container.find(".select2-search__field").val(clickedValue).trigger("input").focus();
-			} );
-		}
+		element.select2(opts);
+		this.sortable(element);
+		element.on( "change", this.onChange );
+		element.val(cur_val);
 	};
 	/*
 	 * Returns options to be set by select2
@@ -118,68 +62,67 @@
 		input_id = "#" + input_id;
 		var input_tagname = $(input_id).prop( "tagName" );
 		var autocomplete_opts = this.getAutocompleteOpts();
-		opts.escapeMarkup = function (m) { return m; };
+
 		if ( autocomplete_opts.autocompletedatatype !== undefined ) {
 			opts.ajax = this.getAjaxOpts();
 			opts.minimumInputLength = 1;
-			opts.formatInputTooShort = mw.msg( "pf-select2-input-too-short", opts.minimumInputLength );
-		} else if ( input_tagname === "SELECT" ) {
+			opts.formatInputTooShort = "";
+			opts.formatSelection = this.formatSelection;
+			opts.escapeMarkup = function (m) { return m; };
+		} else if ( input_tagname === "INPUT" ) {
 			opts.data = this.getData( autocomplete_opts.autocompletesettings );
 		}
 		var wgPageFormsAutocompleteOnAllChars = mw.config.get( 'wgPageFormsAutocompleteOnAllChars' );
 		if ( !wgPageFormsAutocompleteOnAllChars ) {
 			opts.matcher = function( term, text ) {
-				var folded_term = pf.select2.base.prototype.removeDiacritics( term.term ).toUpperCase();
-				var folded_text = pf.select2.base.prototype.removeDiacritics( text.text ).toUpperCase();
-				var position = folded_text.indexOf(folded_term);
-				var position_with_space = folded_text.indexOf(" " + folded_term);
+				var no_diac_text = pf.select2.base.prototype.removeDiacritics( text );
+				var position = no_diac_text.toUpperCase().indexOf(term.toUpperCase());
+				var position_with_space = no_diac_text.toUpperCase().indexOf(" " + term.toUpperCase());
 				if ( (position !== -1 && position === 0 ) || position_with_space !== -1 ) {
-					return text;
+					return true;
 				} else {
-					return null;
+					return false;
 				}
 			};
 		}
-		opts.templateResult = function( result ) {
-			var term = "";
-			if( $( input_id ).data("select2").results.lastParams !== undefined ){
-				term = $( input_id ).data("select2").results.lastParams.term;
-			}
-			if( term === "" || term === undefined ) {
-				term = $( input_id ).data("select2").$dropdown[0].textContent;
-				if( term === undefined || term === "" ) {
-					var lenChild = $( input_id ).data("select2").$selection[0].children	[0].children.length;
-					term = $( input_id ).data("select2").$selection[0].children	[0].children[lenChild-1].children[0].value;
-				}
-			}
-			var text = result.id;
-			var highlightedText = pf.select2.base.prototype.textHighlight( text, term );
-			var markup = highlightedText;
-
-			return markup;
-		};
+		opts.formatResult = this.formatResult;
 		opts.formatSearching = mw.msg( "pf-select2-searching" );
+		opts.formatNoMatches = "";
 		opts.placeholder = $(input_id).attr( "placeholder" );
-
-		var size = $(input_id).attr("data-size");
-		if ( size === undefined ) {
-			size = '100'; //default value
+		if ( $(input_id).attr( "existingvaluesonly" ) !== "true" && input_tagname === "INPUT" ) {
+			opts.createSearchChoice = function( term, data ) { if ( $(data).filter(function() { return this.text.localeCompare( term )===0; }).length===0 ) {return { id:term, text:term };} };
 		}
-		opts.containerCss = { 'min-width': size };
+		if ( $(input_id).val() !== "" && input_tagname === "INPUT" ) {
+			opts.initSelection = function ( element, callback ) {
+				var data = [];
+				var delim = self.getDelimiter($(input_id));
+				var i = 0;
+				$(element.val().trim().split(delim)).each(function () {
+					if ( this !== "" ) {
+						data.push({id: i, text: this});
+						i += 1;
+					}
+				});
+				element.val( "" );
+				callback(data);
+			};
+		}
+		var size = $(input_id).attr("size");
+		if ( size === undefined ) {
+			size = 100; //default value
+		}
+		opts.containerCss = { 'min-width': size * 6 };
 		opts.containerCssClass = 'pf-select2-container';
 		opts.dropdownCssClass = 'pf-select2-dropdown';
-		if( !this.existingValuesOnly ){
-			opts.tags = true;
-		}
+
 		opts.multiple = true;
-		opts.width= NaN; // A helpful way to expand tokenbox horizontally
 		opts.tokenSeparators = this.getDelimiter($(input_id));
+		opts.openOnEnter = true;
 		var maxvalues = $(input_id).attr( "maxvalues" );
 		if ( maxvalues !== undefined ) {
-			opts.maximumSelectionLength = maxvalues;
+			opts.maximumSelectionSize = maxvalues;
 			opts.formatSelectionTooBig = mw.msg( "pf-select2-selection-too-big", maxvalues );
 		}
-		// opts.selectOnClose = true;
 		opts.adaptContainerCssClass = function( clazz ) {
 			if (clazz === "mandatoryField") {
 				return "";
@@ -190,7 +133,6 @@
 
 		return opts;
 	};
-
 	/*
 	 * Returns data to be used by select2 for tokens autocompletion
 	 *
@@ -201,7 +143,7 @@
 	tokens_proto.getData = function( autocompletesettings ) {
 		var input_id = "#" + this.id;
 		var values = [];
-		var i, data;
+		var data;
 		var dep_on = this.dependentOn();
 		if ( dep_on === null ) {
 			if ( autocompletesettings === 'external data' ) {
@@ -211,11 +153,13 @@
 				data = {};
 				if ( wgPageFormsEDSettings[name].title !== undefined && wgPageFormsEDSettings[name].title !== "" ) {
 					data.title = edgValues[wgPageFormsEDSettings[name].title];
+					var i = 0;
 					if ( data.title !== undefined && data.title !== null ) {
 						data.title.forEach(function() {
 							values.push({
-								id: data.title[i], text: data.title[i]
+								id: i + 1, text: data.title[i]
 							});
+							i++;
 						});
 					}
 					if ( wgPageFormsEDSettings[name].image !== undefined && wgPageFormsEDSettings[name].image !== "" ) {
@@ -245,10 +189,12 @@
 				data = wgPageFormsAutocompleteValues[autocompletesettings];
 				//Convert data into the format accepted by Select2
 				if ( data !== undefined && data !== null ) {
+					var index = 1;
 					for (var key in data) {
 						values.push({
-							id: data[key], text: data[key]
+							id: index, text: data[key]
 						});
+						index++;
 					}
 				}
 			}
@@ -261,17 +207,12 @@
 				dataType: 'json',
 				async: false,
 				success: function(data) {
+					var id = 0;
 					//Convert data into the format accepted by Select2
 					data.pfautocomplete.forEach( function(item) {
-						if (item.displaytitle !== undefined) {
-							values.push({
-								id: item.displaytitle, text: item.displaytitle
-							});
-						} else {
-							values.push({
-								id: item.title, text: item.title
-							});
-						}
+						values.push({
+							id: id++, text: item.title
+						});
 					});
 					return values;
 				}
@@ -280,7 +221,6 @@
 
 		return values;
 	};
-
 	/*
 	 * Returns ajax options to be used by select2 for
 	 * remote autocompletion of tokens
@@ -295,7 +235,7 @@
 		var autocomplete_type = autocomplete_opts.autocompletedatatype;
 		if ( autocomplete_type === 'cargo field' ) {
 			var table_and_field = data_source.split('|');
-			my_server += "?action=pfautocomplete&format=json&cargo_table=" + table_and_field[0] + "&cargo_field=" + table_and_field[1];
+			my_server += "?action=pfautocomplete&format=json&cargo_table=" + table_and_field[0] + "&cargo_field=" + table_and_field[1] + "&field_is_array=true";
 		} else {
 			my_server += "?action=pfautocomplete&format=json&" + autocomplete_opts.autocompletedatatype + "=" + data_source;
 		}
@@ -305,18 +245,15 @@
 			dataType: 'json',
 			data: function (term) {
 				return {
-					substr: term.term, // search term
+					substr: term, // search term
 				};
 			},
-			processResults: function (data) { // parse the results into the format expected by Select2.
+			results: function (data, page, query) { // parse the results into the format expected by Select2.
+				var id = 0;
 				if (data.pfautocomplete !== undefined) {
 					data.pfautocomplete.forEach( function(item) {
-						item.id = item.title;
-						if (item.displaytitle !== undefined) {
-							item.text = item.displaytitle;
-						} else {
-							item.text = item.title;
-						}
+						item.id = id++;
+						item.text = item.title;
 					});
 					return {results: data.pfautocomplete};
 				} else {
@@ -327,7 +264,34 @@
 
 		return ajaxOpts;
 	};
+	/*
+	 * Used to set the value of the HTMLInputElement
+	 * when there is a change in the select2 value
+	 *
+	 */
+	tokens_proto.onChange = function() {
+		var self = this;
+		var data = $(this).select2( "data" );
+		var tokens = new pf.select2.tokens();
+		var delim = tokens.getDelimiter( $(this) );
+		var namespace = $(this).attr( "data-namespace" );
 
+		if (data !== null) {
+			var tokens_value = "";
+			data.forEach( function( token ) {
+ 				var val = token.text.trim();
+ 				if ( namespace && data.id === data.text ) {
+ 					if (val.indexOf( namespace + ':' ) !== 0 ) {
+ 						val = namespace + ':' + val;
+ 					}
+ 				}
+ 				tokens_value += val + delim + " ";
+			});
+			$(this).val( tokens_value );
+		} else {
+			$(this).val( '' );
+		}
+	};
 	/*
 	 * Returns delimiter for the token field
 	 *
@@ -335,20 +299,26 @@
 	 *
 	 */
 	tokens_proto.getDelimiter = function ( element ) {
-		var autoCompleteSettingsIntermediate;
-		if(element.attr('autocompletesettings') === undefined){
-			var tokenId = element.prevObject[0].firstElementChild.id;
-			autoCompleteSettingsIntermediate = $('#'+tokenId).attr('autocompletesettings');
-		} else {
-			autoCompleteSettingsIntermediate = element.attr('autocompletesettings');
-		}
-		var field_values = autoCompleteSettingsIntermediate.split( ',' );
+		var field_values = element.attr('autocompletesettings').split( ',' );
 		var delimiter = ",";
 		if (field_values[1] === 'list' && field_values[2] !== undefined && field_values[2] !== "") {
-			delimiter = field_values[2];
+				delimiter = field_values[2];
 		}
 
 		return delimiter;
+	};
+	/*
+	 * Makes the choices rearrangable in tokens
+	 *
+	 * @param {HTMLElement} element
+	 *
+	 */
+	tokens_proto.sortable = function( element ) {
+		element.select2("container").find("ul.select2-choices").sortable({
+			containment: 'parent',
+			start: function() { $(".pfTokens").select2("onSortStart"); },
+			update: function() { $(".pfTokens").select2("onSortEnd"); }
+		});
 	};
 
 	pf.select2.tokens.prototype = tokens_proto;

@@ -1,6 +1,7 @@
 <?php
 
 use SMW\NamespaceManager;
+use SMW\ApplicationFactory;
 use SMW\Setup;
 
 /**
@@ -53,10 +54,6 @@ class SemanticMediaWiki {
 				$GLOBALS[$key] = $value;
 			}
 		}
-
-		// Registration point before any `extension.json` invocation
-		// takes place
-		Setup::checkExtensionRegistration( $GLOBALS );
 	}
 
 	/**
@@ -64,21 +61,7 @@ class SemanticMediaWiki {
 	 */
 	public static function initExtension( $credits = [] ) {
 
-		if ( !defined( 'SMW_VERSION' ) && isset( $credits['version'] ) ) {
-			define( 'SMW_VERSION', $credits['version'] );
-		}
-
-		// https://phabricator.wikimedia.org/T212738
-		if ( !defined( 'MW_VERSION' ) ) {
-			define( 'MW_VERSION', $GLOBALS['wgVersion'] );
-		}
-
-		/**
-		 * @see https://www.mediawiki.org/wiki/Localisation#Localising_namespaces_and_special_page_aliases
-		 */
-		$GLOBALS['wgMessagesDirs']['SemanticMediaWiki'] = __DIR__ . '/i18n';
-		$GLOBALS['wgExtensionMessagesFiles']['SemanticMediaWikiAlias'] = __DIR__ . '/i18n/extra/SemanticMediaWiki.alias.php';
-		$GLOBALS['wgExtensionMessagesFiles']['SemanticMediaWikiMagic'] = __DIR__ . '/i18n/extra/SemanticMediaWiki.magic.php';
+		define( 'SMW_VERSION', isset( $credits['version'] ) ? $credits['version'] : 'N/A' );
 
 		// Registration point for required early registration
 		Setup::initExtension( $GLOBALS );
@@ -97,11 +80,29 @@ class SemanticMediaWiki {
 	 */
 	public static function onExtensionFunction() {
 
+		$applicationFactory = ApplicationFactory::getInstance();
+
 		$namespace = new NamespaceManager();
 		$namespace->init( $GLOBALS );
 
-		$setup = new Setup();
+		$setup = new Setup( $applicationFactory );
+
+		$setup->loadSchema( $GLOBALS );
 		$setup->init( $GLOBALS, __DIR__ );
+	}
+
+	/**
+	 * @since 2.4
+	 *
+	 * @return string|null
+	 */
+	public static function getVersion() {
+
+		if ( !defined( 'SMW_VERSION' ) ) {
+			return null;
+		}
+
+		return SMW_VERSION;
 	}
 
 }

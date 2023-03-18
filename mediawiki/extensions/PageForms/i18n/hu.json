@@ -1,15 +1,14 @@
 {
 	"@metadata": {
 		"authors": [
-			"Csega",
 			"Dani",
 			"Dj",
 			"Dorgan",
 			"Glanthor Reviol",
-			"Máté",
 			"TK-999",
-			"Tacsipacsi",
 			"Tgr",
+			"Csega",
+			"Máté",
 			"Wolf Rex"
 		]
 	},
@@ -100,7 +99,7 @@
 	"pf_editsource": "Forrás szerkesztése",
 	"pf_formedit_edittitle": "$1: $2 szerkesztése",
 	"pf_formedit_morethanoneform": "'''Figyelmeztetés:''' több mint egy alapértelmezett űrlap van megadva ehhez a laphoz.",
-	"pf_formedit_formwarning": "Figyelem: Ez a lap [[$1|már létezik]], de nem használja ezt az űrlapot.",
+	"pf_formedit_formwarning": "Figyelem: Ez a lap <a href=\"$1\">már létezik</a>, de nem használja ezt az űrlapot.",
 	"pf_formedit_remove": "Eltávolítás",
 	"pf_formedit_addanother": "Másik hozzáadása",
 	"pf_formedit_none": "Nincs",
@@ -112,9 +111,8 @@
 	"pf_formerrors_header": "Hibák voltak az űrlapon megadott adatokban; lásd lentebb",
 	"pf_blank_error": "nem lehet üres",
 	"pf_bad_url_error": "a helyes URL formátumban kell lennie, az elején „http://”-vel",
-	"pf_bad_email_error": "helyes e-mail-cím-formátumban kell lennie",
+	"pf_bad_email_error": "helyes e-mail cím formátumban kell lennie",
 	"pf_bad_number_error": "számnak kell lennie",
-	"pf_bad_integer_error": "egész számnak kell lennie",
 	"pf_bad_date_error": "érvényes dátumnak kell lennie",
 	"uploadwindow": "Feltöltési ablak",
 	"pf_deletionlog": "Törlési napló",

@@ -87,7 +87,10 @@ class RedirectTargetFinderIntegrationTest extends MwDBaseUnitTestCase {
 		$this->pageCreator
 			->createPage( Title::newFromText( __METHOD__ ) );
 
-		$this->pageCreator->doMoveTo( $target, true );
+		$this->pageCreator
+			->getPage()
+			->getTitle()
+			->moveTo( $target, false, 'test', true );
 
 		$this->testEnvironment->executePendingDeferredUpdates();
 
@@ -173,11 +176,9 @@ class RedirectTargetFinderIntegrationTest extends MwDBaseUnitTestCase {
 
 		$this->pageCreator
 			->createPage( Title::newFromText( 'DeepRedirectTargetResolverToFindTarget/1' ) )
-			->doEdit( '...' );
-
-		$this->pageCreator
-			->createPage( Title::newFromText( 'DeepRedirectTargetResolverToFindTarget/1' ) )
-			->doEdit( '#REDIRECT [[DeepRedirectTargetResolverToFindTarget/2]]' );
+			->getPage()
+			->getTitle()
+			->moveTo( $intermediateTarget, false, 'redirect test', true );
 
 		$this->pageCreator
 			->createPage( Title::newFromText( 'DeepRedirectTargetResolverToFindTarget/2' ) )

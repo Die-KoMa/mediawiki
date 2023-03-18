@@ -70,6 +70,7 @@ class TimeValueFormatter extends DataValueFormatter {
 	 *
 	 * @since 2.4
 	 *
+	 * @param DITime $dataItem
 	 * @param boolean $mindefault determining whether values below the
 	 * precision of our input should be completed with minimal or maximal
 	 * conceivable values
@@ -77,9 +78,7 @@ class TimeValueFormatter extends DataValueFormatter {
 	 * @return string
 	 */
 	public function getISO8601Date( $mindefault = true ) {
-		/**
-		 * @var DITime $dataItem
-		 */
+
 		$dataItem = $this->dataValue->getDataItemForCalendarModel( DITime::CM_GREGORIAN );
 		$precision = $dataItem->getPrecision();
 
@@ -112,13 +111,12 @@ class TimeValueFormatter extends DataValueFormatter {
 	 *
 	 * @since 2.4
 	 *
+	 * @param DITime $dataItem
+	 *
 	 * @return string
 	 */
 	public function getMediaWikiDate() {
 
-		/**
-		 * @var DITime $dataItem
-		 */
 		$dataItem = $this->dataValue->getDataItemForCalendarModel( DITime::CM_GREGORIAN );
 		$precision = $dataItem->getPrecision();
 
@@ -169,7 +167,7 @@ class TimeValueFormatter extends DataValueFormatter {
 	 *
 	 * @since 2.4
 	 *
-	 * @param DITime $dataItem
+	 * @param DITime $dataitem
 	 *
 	 * @return string
 	 */
@@ -227,9 +225,7 @@ class TimeValueFormatter extends DataValueFormatter {
 	 * @return string
 	 */
 	public function getTimeString( $default = '00:00:00' ) {
-		/**
-		 * @var DITime $dataItem
-		 */
+
 		$dataItem = $this->dataValue->getDataItemForCalendarModel( DITime::CM_GREGORIAN );
 
 		if ( $dataItem->getPrecision() < DITime::PREC_YMDT ) {
@@ -344,9 +340,6 @@ class TimeValueFormatter extends DataValueFormatter {
 	 */
 	protected function getPreferredCaption() {
 
-		/**
-		 * @var DITime $dataItem
-		 */
 		$dataItem = $this->dataValue->getDataItem();
 		$format = strtoupper( $this->dataValue->getOutputFormat() );
 
@@ -397,7 +390,7 @@ class TimeValueFormatter extends DataValueFormatter {
 		return '';
 	}
 
-	private function hintCalendarModel( DITime $dataItem ) {
+	private function hintCalendarModel( $dataItem ) {
 
 		if ( $this->dataValue->isEnabledFeature( SMW_DV_TIMEV_CM ) && $dataItem->getCalendarModel() !== DITime::CM_GREGORIAN ) {
 			return ' ' . \Html::rawElement( 'sup', [], $dataItem->getCalendarModelLiteral() );

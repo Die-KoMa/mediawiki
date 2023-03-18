@@ -55,17 +55,12 @@ class ListResultPrinter extends ResultPrinter {
 	 * @return string
 	 */
 	protected function getResultText( SMWQueryResult $queryResult, $outputMode ) {
+
 		$builder = $this->getBuilder( $queryResult );
 
 		$this->hasTemplates = $this->hasTemplates();
 
-		$result = $builder->getResultText() . $this->getFurtherResultsText( $queryResult, $outputMode );
-
-		if ( $result == '' ) {
-			return $this->params['default'];
-		}
-
-		return $result;
+		return $builder->getResultText() . $this->getFurtherResultsText( $queryResult, $outputMode );
 	}
 
 	/**
@@ -75,7 +70,7 @@ class ListResultPrinter extends ResultPrinter {
 	 */
 	private function getBuilder( SMWQueryResult $queryResult ) {
 
-		$builder = new ListResultBuilder( $queryResult, $this->mLinker, $GLOBALS['smwgPlainList'] );
+		$builder = new ListResultBuilder( $queryResult, $this->mLinker );
 
 		$builder->set( $this->params );
 

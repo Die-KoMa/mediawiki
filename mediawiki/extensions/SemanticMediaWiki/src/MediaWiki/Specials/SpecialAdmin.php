@@ -60,12 +60,16 @@ class SpecialAdmin extends SpecialPage {
 
 		$this->setHeaders();
 		$output = $this->getOutput();
-
 		$output->setPageTitle( $this->msg_text( 'smw-title' ) );
-		$output->addHelpLink(  $this->msg_text( 'smw-admin-helplink' ), true );
 
 		$output->addModuleStyles( 'ext.smw.special.style' );
 		$output->addModules( 'ext.smw.admin' );
+
+		if ( $query !== null ) {
+			$this->getRequest()->setVal( 'action', $query );
+		}
+
+		$action = $this->getRequest()->getText( 'action' );
 
 		$applicationFactory = ApplicationFactory::getInstance();
 		$mwCollaboratorFactory = $applicationFactory->newMwCollaboratorFactory();
@@ -103,12 +107,6 @@ class SpecialAdmin extends SpecialPage {
 			$adminFeatures
 		);
 
-		if ( $query !== null ) {
-			$this->getRequest()->setVal( 'action', $query );
-		}
-
-		$action = $this->getRequest()->getText( 'action' );
-
 		foreach ( $taskHandlerList['actions'] as $actionTask ) {
 			if ( $actionTask->isTaskFor( $action ) ) {
 				return $actionTask->handleRequest( $this->getRequest() );
@@ -129,17 +127,61 @@ class SpecialAdmin extends SpecialPage {
 
 	private function buildHTML( $taskHandlerList ) {
 
-		$maintenanceSection = '';
+		$tableSchemaTaskList = $taskHandlerList[TaskHandler::SECTION_SCHEMA];
 
-		foreach ( $taskHandlerList[TaskHandler::SECTION_MAINTENANCE] as $maintenanceTask ) {
-			$maintenanceSection .= $maintenanceTask->getHtml();
+		$dataRebuildSection = end( $tableSchemaTaskList )->getHtml();
+		$dataRebuildSection .= Html::rawElement(
+			'hr',
+			[
+				'class' => 'smw-admin-hr'
+			],
+			''
+		)  . Html::rawElement(
+			'p',
+			[
+				'class' => 'plainlinks',
+				'style' => 'margin-top:0.8em;'
+			],
+			$this->msg_text( 'smw-admin-job-scheduler-note', Message::PARSE )
+		);
+
+		$list = '';
+		$dataRepairTaskList = $taskHandlerList[TaskHandler::SECTION_DATAREPAIR];
+
+		foreach ( $dataRepairTaskList as $dataRepairTask ) {
+			$list .= $dataRepairTask->getHtml();
 		}
 
-		$supplementarySection = '';
+		$dataRebuildSection .= Html::rawElement( 'div', [ 'class' => 'smw-admin-data-repair-section' ],
+			$list
+		);
 
-		foreach ( $taskHandlerList[TaskHandler::SECTION_SUPPLEMENT] as $supplementaryTask ) {
-			$supplementarySection .= $supplementaryTask->getHtml();
+		$supplementarySection = Html::rawElement(
+			'p',
+			[
+				'class' => 'plainlinks'
+			],
+			$this->msg_text( 'smw-admin-supplementary-section-intro', Message::PARSE )
+		) . Html::rawElement(
+			'h3',
+			[],
+			$this->msg_text( 'smw-admin-supplementary-section-subtitle' )
+		);
+
+		$list = '';
+		$supplementaryTaskList = $taskHandlerList[TaskHandler::SECTION_SUPPLEMENT];
+
+		foreach ( $supplementaryTaskList as $supplementaryTask ) {
+			$list .= $supplementaryTask->getHtml();
 		}
+
+		$supplementarySection .= Html::rawElement(
+			'div',
+			[
+				'class' => 'smw-admin-supplementary-section'
+			],
+			Html::rawElement( 'ul', [], $list )
+		);
 
 		$deprecationNoticeTaskList = $taskHandlerList[TaskHandler::SECTION_DEPRECATION];
 		$deprecationNoticeTaskHandler = end( $deprecationNoticeTaskList );
@@ -166,15 +208,30 @@ class SpecialAdmin extends SpecialPage {
 			]
 		);
 
-		$htmlTabs->tab( 'maintenance', $this->msg_text( 'smw-admin-tab-maintenance' ) );
+		$htmlTabs->tab( 'rebuild', $this->msg_text( 'smw-admin-tab-rebuild' ) );
 		$htmlTabs->tab( 'supplement', $this->msg_text( 'smw-admin-tab-supplement' ) );
 
 		$supportTaskList = $taskHandlerList[TaskHandler::SECTION_SUPPORT];
-		$supportSection = end( $supportTaskList )->getHtml();
+		$supportListTaskHandler = end( $supportTaskList );
 
-		$htmlTabs->content( 'general', $supportSection );
+		$html = Html::rawElement(
+			'p',
+			[],
+			$this->msg_text( 'smw-admin-docu' )
+		) . Html::rawElement(
+			'h3',
+			[],
+			$this->msg_text( 'smw-admin-environment' )
+		) . Html::rawElement(
+			'pre',
+			[],
+			json_encode( $this->getInfo(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
+		) . $supportListTaskHandler->createSupportForm() .
+		$supportListTaskHandler->createRegistryForm();
+
+		$htmlTabs->content( 'general', $html );
 		$htmlTabs->content( 'notices', $deprecationNotices );
-		$htmlTabs->content( 'maintenance', $maintenanceSection );
+		$htmlTabs->content( 'rebuild', $dataRebuildSection );
 		$htmlTabs->content( 'supplement', $supplementarySection );
 
 		$html = $htmlTabs->buildHTML(
@@ -182,6 +239,18 @@ class SpecialAdmin extends SpecialPage {
 		);
 
 		return $html;
+	}
+
+	private function getInfo() {
+
+		$store = ApplicationFactory::getInstance()->getStore();
+
+		return $store->getInfo() + [
+			'smw' => SMW_VERSION,
+			'mediawiki' => $GLOBALS['wgVersion']
+		] + (
+			defined( 'HHVM_VERSION' ) ? [ 'hhvm' => HHVM_VERSION ] : [ 'php' => PHP_VERSION ]
+		);
 	}
 
 	private function msg_text( $key, $type = Message::TEXT) {

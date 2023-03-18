@@ -5,7 +5,6 @@ namespace SMW;
 use SMW\DataValues\TypeList;
 use SMW\Lang\Lang;
 use SMWDataItem as DataItem;
-use RuntimeException;
 
 /**
  * DataTypes registry class
@@ -69,7 +68,7 @@ class DataTypeRegistry {
 	/**
 	 * @var string[]
 	 */
-	private $subTypes = [];
+	private $subDataTypes = [];
 
 	/**
 	 * @var []
@@ -107,9 +106,19 @@ class DataTypeRegistry {
 	];
 
 	/**
+	 * @var Closure[]
+	 */
+	private $extraneousFunctions = [];
+
+	/**
 	 * @var []
 	 */
-	private $callables = [];
+	private $extenstionData = [];
+
+	/**
+	 * @var Options
+	 */
+	private $options = null;
 
 	/**
 	 * Returns a DataTypeRegistry instance
@@ -132,6 +141,11 @@ class DataTypeRegistry {
 
 		self::$instance->initDatatypes(
 			TypesRegistry::getDataTypeList()
+		);
+
+		self::$instance->setOption(
+			'smwgDVFeatures',
+			ApplicationFactory::getInstance()->getSettings()->get( 'smwgDVFeatures' )
 		);
 
 		return self::$instance;
@@ -203,7 +217,7 @@ class DataTypeRegistry {
 	 * @return boolean
 	 */
 	public function isSubDataType( $typeId ) {
-		return isset( $this->subTypes[$typeId] ) && $this->subTypes[$typeId];
+		return isset( $this->subDataTypes[$typeId] ) && $this->subDataTypes[$typeId];
 	}
 
 	/**
@@ -243,7 +257,7 @@ class DataTypeRegistry {
 	public function registerDataType( $id, $className, $dataItemId, $label = false, $isSubDataType = false, $isBrowsableType = false ) {
 		$this->typeClasses[$id] = $className;
 		$this->typeDataItemIds[$id] = $dataItemId;
-		$this->subTypes[$id] = $isSubDataType;
+		$this->subDataTypes[$id] = $isSubDataType;
 		$this->browsableTypes[$id] = $isBrowsableType;
 
 		if ( $label !== false ) {
@@ -321,13 +335,7 @@ class DataTypeRegistry {
 			$languageCode
 		);
 
-		$type = $lang->findDatatypeByLabel( $label );
-
-		if ( $type === '' ) {
-			$type = $this->findTypeByLabel( $label );
-		}
-
-		return $type;
+		return $lang->findDatatypeByLabel( $label );
 	}
 
 	/**
@@ -469,16 +477,7 @@ class DataTypeRegistry {
 	 * @return boolean
 	 */
 	public function hasDataTypeClassById( $typeId ) {
-
-		if ( !isset( $this->typeClasses[$typeId] ) ) {
-			return false;
-		}
-
-		if ( is_callable( $this->typeClasses[$typeId] ) ) {
-			return true;
-		}
-
-		return class_exists( $this->typeClasses[$typeId] );
+		return isset( $this->typeClasses[$typeId] ) && class_exists( $this->typeClasses[$typeId] );
 	}
 
 	/**
@@ -495,7 +494,7 @@ class DataTypeRegistry {
 			}
 
 			$this->typeDataItemIds[$id] = $definition[1];
-			$this->subTypes[$id] = $definition[2];
+			$this->subDataTypes[$id] = $definition[2];
 			$this->browsableTypes[$id] = $definition[3];
 		}
 
@@ -507,6 +506,54 @@ class DataTypeRegistry {
 	}
 
 	/**
+	 * @deprecated since 3.0, use DataTypeRegistry::setExtensionData
+	 * Inject services and objects that are planned to be used during the invocation of
+	 * a DataValue
+	 *
+	 * @since 2.3
+	 *
+	 * @param string  $name
+	 * @param \Closure $callback
+	 */
+	public function registerExtraneousFunction( $name, \Closure $callback ) {
+		$this->extraneousFunctions[$name] = $callback;
+	}
+
+	/**
+	 * @deprecated since 3.0, use DataTypeRegistry::getExtensionData
+	 * @since 2.3
+	 *
+	 * @return Closure[]
+	 */
+	public function getExtraneousFunctions() {
+		return $this->extraneousFunctions;
+	}
+
+	/**
+	 * @since 2.4
+	 *
+	 * @return Options
+	 */
+	public function getOptions() {
+
+		if ( $this->options === null ) {
+			$this->options = new Options();
+		}
+
+		return $this->options;
+	}
+
+	/**
+	 * @since 2.4
+	 *
+	 * @param string $key
+	 * @param string $value
+	 */
+	public function setOption( $key, $value ) {
+		$this->getOptions()->set( $key, $value );
+	}
+
+	/**
 	 * This function allows for registered types to add additional data or functions
 	 * required by an individual DataValue of that type.
 	 *
@@ -514,58 +561,41 @@ class DataTypeRegistry {
 	 * $dataTypeRegistry = DataTypeRegistry::getInstance();
 	 *
 	 * $dataTypeRegistry->registerDataType( '__foo', ... );
-	 * $dataTypeRegistry->registerCallable( '__foo', 'my.function', ... );
+	 * $dataTypeRegistry->setExtensionData( '__foo', [ 'ext.function' => ... ] );
 	 * ...
 	 *
 	 * Access the data:
 	 * $dataValueFactory = DataValueFactory::getInstance();
 	 *
 	 * $dataValue = $dataValueFactory->newDataValueByType( '__foo' );
-	 * $dataValue->getCallable( 'my.function' )
+	 * $dataValue->getExtensionData( 'ext.function' )
 	 * ...
 	 *
-	 * @since 3.1
+	 * @since 3.0
 	 *
-	 * @param string $typeId
-	 * @param string $key
-	 * @param callable $callable
-	 *
-	 * @throws RuntimeException
+	 * @param string $id
+	 * @param array $data
 	 */
-	public function registerCallable( $typeId, $key, callable $callable ) {
-
-		if ( !is_string( $typeId ) || !is_string( $key ) ) {
-			throw new RuntimeException( "`$key`, `$typeId` need to be a string!" );
+	public function setExtensionData( $id, array $data = [] ) {
+		if ( $this->isRegistered( $id ) ) {
+			$this->extenstionData[$id] = $data;
 		}
-
-		if ( isset( $this->callables[$typeId][$key] ) ) {
-			throw new RuntimeException( "`$key` is already in use for type `$typeId`!" );
-		}
-
-		$this->callables[$typeId][$key] = $callable;
 	}
 
 	/**
-	 * @since 3.1
+	 * @since 3.0
 	 *
-	 * @param string $typeId
+	 * @param string $id
 	 *
 	 * @return []
 	 */
-	public function getCallablesByTypeId( $typeId ) {
+	public function getExtensionData( $id ) {
 
-		if ( !isset( $this->callables[$typeId] ) ) {
-			return [];
+		if ( isset( $this->extenstionData[$id] ) ) {
+			return $this->extenstionData[$id];
 		}
 
-		return $this->callables[$typeId];
-	}
-
-	/**
-	 * @since 3.1
-	 */
-	public function clearCallables() {
-		$this->callables = [];
+		return [];
 	}
 
 	private function registerLabels() {

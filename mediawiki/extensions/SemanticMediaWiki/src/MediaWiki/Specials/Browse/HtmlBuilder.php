@@ -368,11 +368,9 @@ class HtmlBuilder {
 		$diProperties = $semanticData->getProperties();
 
 		$showGroup = $this->getOption( 'showGroup' ) && $this->getOption( 'group' ) !== 'hide';
-		$applicationFactory = ApplicationFactory::getInstance();
 
 		$groupFormatter = new GroupFormatter(
-			$applicationFactory->getPropertySpecificationLookup(),
-			$applicationFactory->singleton( 'SchemaFactory' )->newSchemaFinder( $this->store )
+			ApplicationFactory::getInstance()->getPropertySpecificationLookup()
 		);
 
 		$groupFormatter->showGroup( $showGroup );
@@ -494,12 +492,6 @@ class HtmlBuilder {
 		);
 
 		$dataValueFactory = DataValueFactory::getInstance();
-
-		// Sort by label instead of the key which may start with `_` or `__`
-		// and thereby distorts the lexicographical order
-		usort ( $properties, function( $a, $b ) {
-			return strnatcmp( $a->getLabel(), $b->getLabel() );
-		} );
 
 		foreach ( $properties as $diProperty ) {
 

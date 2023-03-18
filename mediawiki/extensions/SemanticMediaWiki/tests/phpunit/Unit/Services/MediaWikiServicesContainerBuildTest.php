@@ -32,7 +32,7 @@ class MediaWikiServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 		array_unshift( $parameters, $service );
 
 		$containerBuilder = $this->callbackContainerFactory->newCallbackContainerBuilder();
-		$containerBuilder->registerFromFile( $this->servicesFileDir . '/' . 'mediawiki.php' );
+		$containerBuilder->registerFromFile( $this->servicesFileDir . '/' . 'MediaWikiServices.php' );
 
 		$this->assertInstanceOf(
 			$expected,
@@ -80,12 +80,6 @@ class MediaWikiServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 			'JobQueueGroup',
 			[],
 			'\JobQueueGroup'
-		];
-
-		$provider[] = [
-			'SearchEngineConfig',
-			[],
-			'\SearchEngineConfig'
 		];
 
 		return $provider;

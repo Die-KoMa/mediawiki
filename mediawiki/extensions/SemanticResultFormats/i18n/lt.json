@@ -1,10 +1,10 @@
 {
 	"@metadata": {
 		"authors": [
-			"Eitvys200",
 			"Hugo.arg",
-			"Nemo bis",
-			"Zygimantus"
+			"Zygimantus",
+			"Eitvys200",
+			"Nemo bis"
 		]
 	},
 	"srf-module-loading": "Kraunama...",
@@ -171,5 +171,6 @@
 	"srf-ui-mediaplayer-label-repeat-off": "Nekartoti",
 	"srf-ui-mediaplayer-label-full-screen": "Visas ekranas",
 	"srf-ui-mediaplayer-label-restore-screen": "Atkurti ekraną",
-	"srf-spreadsheet-link": "Skaičiuoklė"
+	"srf-excel-missing-phpexcel": "Nepavyko eksportuoti MS-Excel, nes plėtinys [https://www.mediawiki.org/wiki/Extension:PHPExcel PHPExcel] nėra instaliuotas.",
+	"srf-paramdesc-excel-filename": "Sugeneruoto failo atsiuntimo pavadinimas"
 }

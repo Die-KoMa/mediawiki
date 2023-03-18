@@ -8,15 +8,14 @@
  * @author Yaron Koren
  */
 class PFTree {
-	public $title;
-	public $children;
+	var $title, $children;
 
-	public function __construct( $curTitle ) {
+	function __construct( $curTitle ) {
 		$this->title = $curTitle;
-		$this->children = [];
+		$this->children = array();
 	}
 
-	public function addChild( $child ) {
+	function addChild( $child ) {
 		$this->children[] = $child;
 	}
 
@@ -26,8 +25,6 @@ class PFTree {
 	 * by the "menuselect" input type in the Semantic Forms Inputs
 	 * extension - the difference here is that the text is manually
 	 * parsed, instead of being run through the MediaWiki parser.
-	 * @param string $wikitext
-	 * @return self
 	 */
 	public static function newFromWikiText( $wikitext ) {
 		// The top node, called "Top", will be ignored, because
@@ -39,9 +36,7 @@ class PFTree {
 			for ( $i = 0; $i < strlen( $line ) && $line[$i] == '*'; $i++ ) {
 				$numBullets++;
 			}
-			if ( $numBullets == 0 ) {
-				continue;
-			}
+			if ( $numBullets == 0 ) continue;
 			$lineText = trim( substr( $line, $numBullets ) );
 			$curParentNode = $fullTree->getLastNodeForLevel( $numBullets );
 			$curParentNode->addChild( new PFTree( $lineText ) );
@@ -49,7 +44,7 @@ class PFTree {
 		return $fullTree;
 	}
 
-	public function getLastNodeForLevel( $level ) {
+	function getLastNodeForLevel( $level ) {
 		if ( $level <= 1 || count( $this->children ) == 0 ) {
 			return $this;
 		}
@@ -58,10 +53,10 @@ class PFTree {
 	}
 
 	/**
-	 * @param string $top_category
+	 * @param $top_category String
 	 * @return mixed
 	 */
-	public static function newFromTopCategory( $top_category ) {
+	static function newFromTopCategory( $top_category ) {
 		$pfTree = new PFTree( $top_category );
 		$defaultDepth = 20;
 		$pfTree->populateChildren( $defaultDepth );
@@ -70,14 +65,11 @@ class PFTree {
 
 	/**
 	 * Recursive function to populate a tree based on category information.
-	 * @param int $depth
 	 */
 	private function populateChildren( $depth ) {
-		if ( $depth == 0 ) {
-			return;
-		}
+		if ( $depth == 0 ) return;
 		$subcats = self::getSubcategories( $this->title );
-		foreach ( $subcats as $subcat ) {
+		foreach( $subcats as $subcat ) {
 			$childTree = new PFTree( $subcat );
 			$childTree->populateChildren( $depth - 1 );
 			$this->addChild( $childTree );
@@ -87,32 +79,32 @@ class PFTree {
 	/**
 	 * Gets all the subcategories of the passed-in category.
 	 *
-	 * @todo This might not belong in this class.
+	 * @TODO This might not belong in this class.
 	 *
-	 * @param string $categoryName
+	 * @param Title $title
 	 * @return array
 	 */
 	private static function getSubcategories( $categoryName ) {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = wfGetDb( DB_SLAVE );
 
-		$tables = [ 'page', 'categorylinks' ];
-		$fields = [ 'page_id', 'page_namespace', 'page_title',
+		$tables = array( 'page', 'categorylinks' );
+		$fields = array( 'page_id', 'page_namespace', 'page_title',
 			'page_is_redirect', 'page_len', 'page_latest', 'cl_to',
-			'cl_from' ];
-		$where = [];
-		$joins = [];
-		$options = [ 'ORDER BY' => 'cl_type, cl_sortkey' ];
+			'cl_from' );
+		$where = array();
+		$joins = array();
+		$options = array( 'ORDER BY' => 'cl_type, cl_sortkey' );
 
-		$joins['categorylinks'] = [ 'JOIN', 'cl_from = page_id' ];
+		$joins['categorylinks'] = array( 'JOIN', 'cl_from = page_id' );
 		$where['cl_to'] = str_replace( ' ', '_', $categoryName );
 		$options['USE INDEX']['categorylinks'] = 'cl_sortkey';
 
-		$tables = array_merge( $tables, [ 'category' ] );
-		$fields = array_merge( $fields, [ 'cat_id', 'cat_title', 'cat_subcats', 'cat_pages', 'cat_files' ] );
-		$joins['category'] = [ 'LEFT JOIN', [ 'cat_title = page_title', 'page_namespace' => NS_CATEGORY ] ];
+		$tables = array_merge( $tables, array( 'category' ) );
+		$fields = array_merge( $fields, array( 'cat_id', 'cat_title', 'cat_subcats', 'cat_pages', 'cat_files' ) );
+		$joins['category'] = array( 'LEFT JOIN', array( 'cat_title = page_title', 'page_namespace' => NS_CATEGORY ) );
 
 		$res = $dbr->select( $tables, $fields, $where, __METHOD__, $options, $joins );
-		$subcats = [];
+		$subcats = array();
 
 		foreach ( $res as $row ) {
 			$t = Title::newFromRow( $row );

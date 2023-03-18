@@ -235,7 +235,7 @@ return [
 		'styles' => 'dygraphs/resources/ext.srf.dygraphs.css',
 		'dependencies' => [
 			'jquery.client',
-			'ext.jquery.async',
+			'jquery.async',
 			'ext.srf.util',
 			'ext.smw.tooltip',
 			'ext.dygraphs.combined',
@@ -473,7 +473,7 @@ return [
 		'styles'  => 'jqplot/resources/ext.srf.jqlpot.chart.css',
 		'dependencies' => [
 			'ext.jquery.jqplot.core',
-			'ext.jquery.async',
+			'jquery.async',
 			'ext.srf.util',
 			'ext.srf.jqplot.themes'
 		]
@@ -571,6 +571,7 @@ return [
 		'scripts' => 'timeline/resources/ext.srf.timeline.js',
 		'dependencies' => [
 			'ext.smile.timeline',
+			'mediawiki.legacy.wikibits'
 		],
 		'position' => 'top',
 		'targets' => [ 'mobile', 'desktop' ]
@@ -633,6 +634,7 @@ return [
 			'JitGraph/base.css',
 		],
 		'dependencies' => [
+			'mediawiki.legacy.wikibits',
 			'ext.srf.jquery.progressbar',
 			'ext.srf.jit',
 		],
@@ -864,7 +866,7 @@ return [
 	'ext.srf.timeseries.flot' => $formatModule + [
 		'scripts' => 'timeseries/resources/ext.srf.timeseries.flot.js',
 		'dependencies' => [
-			'ext.jquery.async',
+			'jquery.async',
 			'ext.jquery.flot',
 			'ext.srf.util',
 			'ext.srf.flot.core'
@@ -1009,12 +1011,6 @@ return [
 		],
 		'dependencies' => 'ext.srf.datatables'
 	],
-
-	// Mermaid Format
-	'ext.srf.gantt' => $formatModule + [
-			'scripts' => 'Gantt/resources/ext.gantt.js',
-			'dependencies' => 'ext.mermaid'
-	]
 
 	// Boilerplate example registration
 	/*

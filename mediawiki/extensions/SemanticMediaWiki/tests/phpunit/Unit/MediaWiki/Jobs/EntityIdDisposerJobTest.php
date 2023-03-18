@@ -18,18 +18,17 @@ use SMW\Tests\TestEnvironment;
 class EntityIdDisposerJobTest extends \PHPUnit_Framework_TestCase {
 
 	private $testEnvironment;
-	private $connection;
 
 	protected function setUp() {
 		parent::setUp();
 
 		$this->testEnvironment = new TestEnvironment();
 
-		$this->connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
+		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->connection->expects( $this->any() )
+		$connection->expects( $this->any() )
 			->method( 'select' )
 			->will( $this->returnValue( [ 'Foo' ] ) );
 
@@ -42,7 +41,7 @@ class EntityIdDisposerJobTest extends \PHPUnit_Framework_TestCase {
 
 		$connectionManager->expects( $this->any() )
 			->method( 'getConnection' )
-			->will( $this->returnValue( $this->connection ) );
+			->will( $this->returnValue( $connection ) );
 
 		$store->setConnectionManager( $connectionManager );
 
@@ -66,67 +65,10 @@ class EntityIdDisposerJobTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructOutdatedEntitiesResultIterator() {
-
-		$title = $this->getMockBuilder( 'Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new EntityIdDisposerJob( $title );
-
-		$this->assertInstanceOf(
-			'\SMW\Iterators\ResultIterator',
-			$instance->newOutdatedEntitiesResultIterator()
-		);
-	}
-
-	public function testCanConstructOutdatedQueryLinksResultIterator() {
-
-		$title = $this->getMockBuilder( 'Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new EntityIdDisposerJob( $title );
-
-		$this->assertInstanceOf(
-			'\SMW\Iterators\ResultIterator',
-			$instance->newOutdatedQueryLinksResultIterator()
-		);
-	}
-
-	public function testCanConstructUnassignedQueryLinksResultIterator() {
-
-		$title = $this->getMockBuilder( 'Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new EntityIdDisposerJob( $title );
-
-		$this->assertInstanceOf(
-			'\SMW\Iterators\ResultIterator',
-			$instance->newUnassignedQueryLinksResultIterator()
-		);
-	}
-
 	/**
 	 * @dataProvider parametersProvider
 	 */
 	public function testJobRun( $parameters ) {
-
-		$row = [
-			'smw_id' => 42,
-			'smw_title' => 'Foo',
-			'smw_namespace' => NS_MAIN,
-			'smw_iw' => '',
-			'smw_subobject' => '',
-			'smw_sort' => '',
-			'smw_sortkey' => '',
-			'smw_hash' => ''
-		];
-
-		$this->connection->expects( $this->any() )
-			->method( 'selectRow' )
-			->will( $this->returnValue( (object)$row ) );
 
 		$subject = DIWikiPage::newFromText( __METHOD__ );
 

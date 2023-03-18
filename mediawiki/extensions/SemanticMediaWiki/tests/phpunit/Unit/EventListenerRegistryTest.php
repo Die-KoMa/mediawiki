@@ -66,6 +66,11 @@ class EventListenerRegistryTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->verifyExporterResetEvent( $instance );
+		$this->verifyFactboxCacheDeleteEvent( $instance );
+		$this->verifyFactboxCacheDeleteEventOnEmpty( $instance );
+		$this->verifyCachedPropertyValuesPrefetcherResetEvent( $instance );
+		$this->verifyCachedPrefetcherResetEvent( $instance );
+		$this->verifyCachedUpdateMarkerDeleteEvent( $instance );
 	}
 
 	public function verifyExporterResetEvent( EventListenerCollection $instance ) {
@@ -74,6 +79,129 @@ class EventListenerRegistryTest extends \PHPUnit_Framework_TestCase {
 
 	public function verifyQueryComparatorResetEvent( EventListenerCollection $instance ) {
 		$this->assertListenerExecuteFor( 'query.comparator.reset', $instance, null );
+	}
+
+	public function verifyFactboxCacheDeleteEvent( EventListenerCollection $instance ) {
+
+		$cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$title = $this->getMockBuilder( '\Title' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$title->expects( $this->atLeastOnce() )
+			->method( 'getArticleID' )
+			->will( $this->returnValue( 42 ) );
+
+		$this->testEnvironment->registerObject( 'Cache', $cache );
+
+		$dispatchContext = $this->eventDispatcherFactory->newDispatchContext();
+
+		$dispatchContext->set(
+			'title',
+			$title
+		);
+
+		$this->assertListenerExecuteFor(
+			'factbox.cache.delete',
+			$instance,
+			$dispatchContext
+		);
+	}
+
+	public function verifyFactboxCacheDeleteEventOnEmpty( EventListenerCollection $instance ) {
+
+		$cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->testEnvironment->registerObject( 'Cache', $cache );
+
+		$dispatchContext = $this->eventDispatcherFactory->newDispatchContext();
+
+		$dispatchContext->set(
+			'title',
+			''
+		);
+
+		$this->assertListenerExecuteFor(
+			'factbox.cache.delete',
+			$instance,
+			$dispatchContext
+		);
+	}
+
+	public function verifyCachedPropertyValuesPrefetcherResetEvent( EventListenerCollection $instance ) {
+
+		$dispatchContext = $this->eventDispatcherFactory->newDispatchContext();
+
+		$title = $this->getMockBuilder( '\Title' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$title->expects( $this->atLeastOnce() )
+			->method( 'getNamespace' )
+			->will( $this->returnValue( NS_MAIN ) );
+
+		$dispatchContext->set(
+			'title',
+			$title
+		);
+
+		$this->assertListenerExecuteFor(
+			'cached.propertyvalues.prefetcher.reset',
+			$instance,
+			$dispatchContext
+		);
+	}
+
+	public function verifyCachedPrefetcherResetEvent( EventListenerCollection $instance ) {
+
+		$dispatchContext = $this->eventDispatcherFactory->newDispatchContext();
+
+		$title = $this->getMockBuilder( '\Title' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$title->expects( $this->atLeastOnce() )
+			->method( 'getNamespace' )
+			->will( $this->returnValue( NS_MAIN ) );
+
+		$dispatchContext->set(
+			'title',
+			$title
+		);
+
+		$this->assertListenerExecuteFor(
+			'cached.prefetcher.reset',
+			$instance,
+			$dispatchContext
+		);
+	}
+
+	public function verifyCachedUpdateMarkerDeleteEvent( EventListenerCollection $instance ) {
+
+		$dispatchContext = $this->eventDispatcherFactory->newDispatchContext();
+
+		$subject = $this->getMockBuilder( '\SMW\DIWikiPage' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$subject->expects( $this->atLeastOnce() )
+			->method( 'getHash' );
+
+		$dispatchContext->set(
+			'subject',
+			$subject
+		);
+
+		$this->assertListenerExecuteFor(
+			'cached.update.marker.delete',
+			$instance,
+			$dispatchContext
+		);
 	}
 
 	private function assertListenerExecuteFor( $eventName, $instance, $dispatchContext = null ) {

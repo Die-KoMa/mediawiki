@@ -1,17 +1,18 @@
 {
 	"@metadata": {
 		"authors": [
-			"Garam",
-			"Hwangjy9",
-			"Jerrykim306",
 			"Keysuck",
-			"Nemo bis",
+			"아라",
+			"Hwangjy9",
 			"Ykhwong",
-			"아라"
+			"Jerrykim306",
+			"Nemo bis",
+			"Garam"
 		]
 	},
 	"srf-desc": "시맨틱 미디어위키 쿼리용 추가 결과 포맷",
-	"prefs-srf": "시맨틱 결과 포맷",
+	"srf-name": "시맨틱 결과 포맷",
+	"prefs-srf": "Extension:시맨틱 결과 포맷",
 	"srf-prefs-intro-text": "시맨틱 결과 포맷 확장 기능을 설치하였습니다. 추가적인 도움을 받으려면 [https://www.semantic-mediawiki.org/wiki/Help:Result_formats 결과 포맷] 도움말 페이지를 방문해 주십시오.",
 	"prefs-srf-eventcalendar-options": "이벤트 캘린더 옵션",
 	"prefs-srf-datatables-options": "데이터테이블 옵션",
@@ -125,7 +126,7 @@
 	"srf-paramdesc-graphname": "그래프의 제목 설정",
 	"srf-paramdesc-graphsize": "그래프 크기를 픽셀 단위로 설정합니다",
 	"srf-paramdesc-graphlegend": "그래프 범례를 보이거나 보이지 않게 설정",
-	"srf-paramdesc-graphlabel": "픽셀 단위로 글꼴 크기 설정",
+	"srf-paramdesc-graphlabel": "그래프의 레이블 설정",
 	"srf-paramdesc-rankdir": "화살표의 방향 설정",
 	"srf-paramdesc-graphlink": "노드가 자신의 위키 페이지로 링크할지 설정합니다",
 	"srf-paramdesc-graphcolor": "그래프의 색 설정",
@@ -187,6 +188,7 @@
 	"srf-filtered-noscript-error": "자바스크립트를 사용하지 않고 있기 때문에 결과를 표시할 수 없습니다. $1 문서로 이동합니다.",
 	"srf-filtered-noscript-link-caption": "표 형식의 결과",
 	"srf-filtered-map-provider-missing-error": "\"map\" 뷰에 지도 제공자를 지정하지 않았습니다.",
+	"srf-filtered-map-geocoordinateparser-missing-error": "지리좌표 파서를 찾을 수 없습니다. 'data-values/geo'를 설치해야 합니다.",
 	"srf-filtered-value-filter-and": "그리고",
 	"srf-filtered-value-filter-or": "또는",
 	"srf-filtered-value-filter-placeholder": "필터 값을 선택하세요",
@@ -215,7 +217,6 @@
 	"srf-ui-eventcalendar-format-column-week": "M/d ddd",
 	"srf-ui-eventcalendar-format-column-day": "M/d dddd",
 	"srf-ui-eventcalendar-click-popup": "이벤트를 만드시겠습니까?",
-	"srf-paramdesc-datasource": "데이터 접근이 가능한 출처입니다. 허용된 값: \"file\", \"raw\", \"url\". 기본값: \"file\"",
 	"srf-paramdesc-yaxislabel": "y축에 표시되는 설명",
 	"srf-paramdesc-xaxislabel": "x축에 표시되는 설명",
 	"srf-paramdesc-unit": "단위",
@@ -239,13 +240,8 @@
 	"srf-ui-mediaplayer-label-repeat-off": "반복 해제",
 	"srf-ui-mediaplayer-label-full-screen": "전체 화면",
 	"srf-ui-mediaplayer-label-restore-screen": "화면 복구",
-	"srf-spreadsheet-link": "스프레드시트",
-	"srf-paramdesc-spreadsheet-filename": "다운로드를 위해 생성된 스프레드시트 파일의 파일 이름",
-	"srf-paramdesc-spreadsheet-templatefile": "생성된 파일의 서식을 제공하기 위한 \"파일\" 이름공간의 스프레드시트 파일의 이름입니다",
-	"srf-paramdesc-icalendar-timezone": "쉼표 구분 시간대 목록",
-	"srf-paramdesc-gantt-diagramtitle": "다이어그램 이름",
-	"srf-paramdesc-gantt-diagramtheme": "다이어그램 테마",
-	"srf-paramdesc-gantt-axisformat": "X축: 날짜 형식",
-	"srf-error-gantt-mermaid-not-installed": "Mermaid 확장 기능의 설치가 필요합니다.",
-	"srf-printername-gantt": "간트"
+	"srf-excel-link": "엑셀",
+	"srf-excel-missing-phpexcel": "확장 기능 [https://www.mediawiki.org/wiki/Extension:PHPExcel PHPExcel]이 설치되어 있지 않으므로 MS 액셀로 내보낼 수 없습니다.",
+	"srf-paramdesc-excel-filename": "생성된 파일의 다운로드 파일 이름",
+	"srf-paramdesc-icalendar-timezone": "쉼표 구분 시간대 목록"
 }

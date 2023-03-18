@@ -52,53 +52,24 @@ class ExternalFormatterUriValue extends UriValue {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @return boolean
-	 */
-	public function hasMultiSubstitute() {
-
-		$dataItem = $this->getDataItem();
-		$uri = str_replace( [ '%24' ], [ '$' ], $dataItem->getUri() );
-
-		// Has at least $1 and $2 (...)
-		return strpos( $uri, '$1' ) && strpos( $uri, '$2' );
-	}
-
-	/**
 	 * @since 2.5
 	 *
 	 * @param string $value
 	 *
 	 * @return string
 	 */
-	public function substituteAndFormatUri( $value, $parameters = [] ) {
+	public function getUriWithPlaceholderSubstitution( $value ) {
 
 		if ( !$this->isValid() ) {
 			return '';
 		}
 
-		// Convert MediWiki's ` ` as `_`
-		$value = str_replace( ' ' , '_', $value );
-		$uri = $this->getDataItem()->getUri();
-
 		// Avoid already encoded values like `W%D6LLEKLA01` to be
 		// encoded twice
 		$value = $this->encode( rawurldecode( $value ) );
-		$uri = str_replace( [ '%241', '$1' ], [ '$1', $value ], $uri );
-
-		// Fill the other parameters
-		foreach ( $parameters as $key => $val ) {
-			$pos = $key + 2;
-			$uri = str_replace(
-				[ "%24" . $pos, "$" . $pos ],
-				[ "$" . $pos, $this->encode( rawurldecode( $val ) ) ],
-				$uri
-			);
-		}
 
 		// %241 == encoded $1
-		return $uri;
+		return str_replace( [ '%241', '$1' ], [ '$1', $value ], $this->getDataItem()->getUri() );
 	}
 
 	// http://php.net/manual/en/function.urlencode.php#97969

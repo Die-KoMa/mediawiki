@@ -18,13 +18,8 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 	private $outputPage;
 	private $request;
 	private $skin;
-	private $title;
 
 	protected function setUp() {
-
-		$this->title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
 
 		$this->request = $this->getMockBuilder( '\WebRequest' )
 			->disableOriginalConstructor()
@@ -41,10 +36,6 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 		$this->outputPage = $this->getMockBuilder( '\OutputPage' )
 			->disableOriginalConstructor()
 			->getMock();
-
-		$this->outputPage->expects( $this->any() )
-			->method( 'getTitle' )
-			->will( $this->returnValue( $this->title ) );
 
 		$this->skin = $this->getMockBuilder( '\Skin' )
 			->disableOriginalConstructor()
@@ -63,27 +54,6 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testInformAboutExtensionAvailability() {
-
-		$this->title->expects( $this->once() )
-			->method( 'isSpecial' )
-			->with( $this->equalTo( 'Version' ) )
-			->will( $this->returnValue( true ) );
-
-		$this->outputPage->expects( $this->once() )
-			->method( 'prependHTML' );
-
-		$instance = new BeforePageDisplay();
-
-		$instance->setOptions(
-			[
-				'SMW_EXTENSION_LOADED' => false
-			]
-		);
-
-		$instance->informAboutExtensionAvailability( $this->outputPage );
-	}
-
 	public function testModules() {
 
 		$user = $this->getMockBuilder( '\User' )
@@ -95,7 +65,7 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 			->with( $this->equalTo( 'smw-prefs-general-options-suggester-textinput' ) )
 			->will( $this->returnValue( true ) );
 
-		$this->outputPage->expects( $this->exactly( 1 ) )
+		$this->outputPage->expects( $this->exactly( 2 ) )
 			->method( 'addModules' );
 
 		$this->outputPage->expects( $this->atLeastOnce() )
@@ -107,7 +77,7 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 		$instance->process( $this->outputPage, $this->skin );
 	}
 
-	public function testPrependHTML_IncompleteTasks() {
+	public function testPrependHTML_InstallerIncompleteTasks() {
 
 		$user = $this->getMockBuilder( '\User' )
 			->disableOriginalConstructor()
@@ -124,7 +94,7 @@ class BeforePageDisplayTest extends \PHPUnit_Framework_TestCase {
 
 		$instance->setOptions(
 			[
-				'incomplete_tasks' => [ 'Foo', 'Bar' ]
+				'installer.incomplete_tasks' => [ 'Foo', 'Bar' ]
 			]
 		);
 

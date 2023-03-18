@@ -6,7 +6,6 @@ use Onoi\MessageReporter\MessageReporter;
 use SMW\ApplicationFactory;
 use SMW\SQLStore\SQLStore;
 use SMW\SQLStore\Installer;
-use SMW\SetupFile;
 use SMW\Setup;
 use SMW\Store;
 
@@ -52,19 +51,18 @@ class PopulateHashField extends \Maintenance {
 	/**
 	 * @since 3.1
 	 *
-	 * @param boolean $complete
+	 * @param Store $store
 	 */
-	public function setComplete( $complete ) {
+	public function setComplete( $incomplete ) {
 
 		$this->reportMessage(
-			"   ... updating `" . Installer::POPULATE_HASH_FIELD_COMPLETE . "` status ... \n"
+			"   ... writing the status to the setup information file ... \n"
 		);
 
-		$setupFile = new SetupFile();
-
-		$setupFile->set(
+		Installer::setUpgradeFile(
+			$GLOBALS,
 			[
-				Installer::POPULATE_HASH_FIELD_COMPLETE => $complete
+				Installer::POPULATE_HASH_FIELD_COMPLETE => $incomplete
 			]
 		);
 	}
@@ -171,7 +169,7 @@ class PopulateHashField extends \Maintenance {
 		}
 
 		if ( $count == 0 ) {
-			$this->reportMessage( "   ... all rows populated ..."  );
+			$this->reportMessage( "   ... all rows populated ...\n"  );
 		} else {
 			$this->reportMessage( "   ... missing $count rows ...\n"  );
 
@@ -215,7 +213,7 @@ class PopulateHashField extends \Maintenance {
 	}
 
 	private function progress( $id, $i, $count ) {
-		return "\r". sprintf( "%-35s%s", "   ... updating entity", sprintf( "%s (%1.0f%%)", $id, round( ( $i / $count ) * 100 ) ) );
+		return "\r". sprintf( "%-35s%s", "   ... updating document no.", sprintf( "%s (%1.0f%%)", $id, round( ( $i / $count ) * 100 ) ) );
 	}
 
 }

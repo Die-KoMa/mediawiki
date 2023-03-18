@@ -222,12 +222,6 @@ class PropertyTableIdReferenceDisposer {
 		}
 
 		$this->connection->delete(
-			SQLStore::ID_AUXILIARY_TABLE,
-			[ 'smw_id' => $id ],
-			__METHOD__
-		);
-
-		$this->connection->delete(
 			SQLStore::PROPERTY_STATISTICS_TABLE,
 			[ 'p_id' => $id ],
 			__METHOD__
@@ -248,9 +242,11 @@ class PropertyTableIdReferenceDisposer {
 		// Avoid Query: DELETE FROM `smw_ft_search` WHERE s_id = '92575'
 		// Error: 126 Incorrect key file for table '.\mw@002d25@002d01\smw_ft_search.MYI'; ...
 		try {
-			if ( $this->connection->tableExists( SQLStore::FT_SEARCH_TABLE ) ) {
-				$this->connection->delete( SQLStore::FT_SEARCH_TABLE, [ 's_id' => $id ], __METHOD__ );
-			}
+			$this->connection->delete(
+				SQLStore::FT_SEARCH_TABLE,
+				[ 's_id' => $id ],
+				__METHOD__
+			);
 		} catch ( \DBError $e ) {
 			ApplicationFactory::getInstance()->getMediaWikiLogger()->info( __METHOD__ . ' reported: ' . $e->getMessage() );
 		}
@@ -269,16 +265,20 @@ class PropertyTableIdReferenceDisposer {
 		}
 
 		$eventHandler = EventHandler::getInstance();
-		$eventDispatcher = $eventHandler->getEventDispatcher();
 
-		$context = [
-			'context' => 'PropertyTableIdReferenceDisposal',
-			'title' => $subject->getTitle(),
-			'subject' => $subject
-		];
+		$dispatchContext = $eventHandler->newDispatchContext();
+		$dispatchContext->set( 'subject', $subject );
+		$dispatchContext->set( 'context', 'PropertyTableIdReferenceDisposal' );
 
-		$eventDispatcher->dispatch( 'InvalidateResultCache', $context );
-		$eventDispatcher->dispatch( 'InvalidateEntityCache', $context );
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.prefetcher.reset',
+			$dispatchContext
+		);
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'factbox.cache.delete',
+			$dispatchContext
+		);
 	}
 
 }

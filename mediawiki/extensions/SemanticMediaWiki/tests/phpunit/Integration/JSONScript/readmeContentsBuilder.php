@@ -23,7 +23,7 @@ class ReadmeContentsBuilder {
 	 * @var array
 	 */
 	private $urlLocationMap = [
-		'List of tests' => 'https://github.com/SemanticMediaWiki/SemanticMediaWiki/tree/master/tests/phpunit/Integration/JSONScript/TestCases'
+		'TestCases' => 'https://github.com/SemanticMediaWiki/SemanticMediaWiki/tree/master/tests/phpunit/Integration/JSONScript/TestCases'
 	];
 
 	/**
@@ -32,10 +32,12 @@ class ReadmeContentsBuilder {
 	public function run() {
 
 		$file = __DIR__ . '/README.md';
+		$dateTimeUtc = new \DateTime( 'now', new \DateTimeZone( 'UTC' ) );
 
 		$replacement = self::REPLACE_START_MARKER . "\n\n";
-		$replacement .= $this->doGenerateContentFor( 'List of tests', __DIR__ . '/TestCases' );
+		$replacement .= $this->doGenerateContentFor( 'TestCases', __DIR__ . '/TestCases' );
 
+		$replacement .= "\n-- Last updated on " .  $dateTimeUtc->format( 'Y-m-d' )  . " by `readmeContentsBuilder.php`". "\n";
 		$replacement .= "\n" . self::REPLACE_END_MARKER;
 
 		$contents = file_get_contents( $file );
@@ -50,21 +52,20 @@ class ReadmeContentsBuilder {
 
 	private function doGenerateContentFor( $title, $path ) {
 
-		$dateTimeUtc = new \DateTime( 'now', new \DateTimeZone( 'UTC' ) );
+		$output = '';
 		$urlLocation = $this->urlLocationMap[$title];
 
 		$counter = 0;
 		$tests = 0;
 		$previousFirstKey = '';
-		$list = '';
 
 		foreach ( $this->findFilesFor( $path, 'json' ) as $key => $location ) {
 
-			if ( $previousFirstKey !== $key[0] ) {
-				$list .= "\n" . '### ' . ucfirst( $key[0] ). "\n";
+			if ( $previousFirstKey !== $key{0} ) {
+				$output .= "\n" . '### ' . ucfirst( $key{0} ). "\n";
 			}
 
-			$list .= '* [' . $key .'](' . $urlLocation . '/' . $key . ')';
+			$output .= '* [' . $key .'](' . $urlLocation . '/' . $key . ')';
 
 			$contents = json_decode( file_get_contents( $location ), true );
 
@@ -73,23 +74,19 @@ class ReadmeContentsBuilder {
 			}
 
 			if ( isset( $contents['description'] ) ) {
-				$list .= " " . $contents['description'];
+				$output .= " " . $contents['description'];
 			}
 
 			if ( isset( $contents['tests'] ) ) {
 				$tests += count( $contents['tests'] );
 			}
 
-			$list .= "\n";
+			$output .= "\n";
 			$counter++;
-			$previousFirstKey = $key[0];
+			$previousFirstKey = $key{0};
 		}
 
-		$head = "## $title\n\n";
-		$head .= "- Files: $counter (includes $tests tests)\n";
-		$head .= "- Last update: " .  $dateTimeUtc->format( 'Y-m-d' ) . "\n";
-
-		return $head . $list;
+		return "## $title\n\n" . "Contains $counter files with a total of $tests tests:\n" . $output;
 	}
 
 	private function findFilesFor( $path, $extension ) {

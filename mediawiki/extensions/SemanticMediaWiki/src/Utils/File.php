@@ -50,7 +50,7 @@ class File {
 	 * @return boolean
 	 */
 	public function exists( $file ) {
-		return file_exists( self::dir( $file ) );
+		return file_exists( $file );
 	}
 
 	/**
@@ -63,8 +63,6 @@ class File {
 	 * @throws RuntimeException
 	 */
 	public function read( $file, $checkSum = null ) {
-
-		$file = self::dir( $file );
 
 		if ( !is_readable( $file ) ) {
 			throw new RuntimeException( "$file is not readable." );
@@ -83,7 +81,7 @@ class File {
 	 * @param string $file
 	 */
 	public function delete( $file ) {
-		@unlink( self::dir( $file ) );
+		@unlink( $file );
 	}
 
 	/**

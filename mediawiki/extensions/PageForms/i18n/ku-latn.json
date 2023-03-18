@@ -1,12 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"George Animal",
-			"Ghybu"
+			"George Animal"
 		]
 	},
 	"pf_createproperty_proptype": "Cure:",
-	"createtemplate": "Şablonekê çêke",
+	"createtemplate": "Şablonekî çêke",
 	"pf_createtemplate_namelabel": "Navê şablonê:",
 	"pf_createtemplate_standardformat": "Tablo",
 	"pf_createtemplate_sectionsformat": "Beş",

@@ -32,7 +32,7 @@ class AuxiliaryPropertyValueResourceBuilder extends PredefinedPropertyValueResou
 	 */
 	public function addResourceValue( ExpData $expData, DIProperty $property, DataItem $dataItem ) {
 
-		$expElement = $this->exporter->newExpElement(
+		$expElement = $this->exporter->getDataItemExpElement(
 			$dataItem
 		);
 

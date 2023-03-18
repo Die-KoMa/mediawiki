@@ -4,7 +4,7 @@ namespace SMW\Tests\MediaWiki\Hooks;
 
 use SMW\DataItemFactory;
 use SMW\MediaWiki\Hooks\ArticleProtectComplete;
-use SMW\Property\Annotators\EditProtectedPropertyAnnotator;
+use SMW\PropertyAnnotators\EditProtectedPropertyAnnotator;
 use SMW\Tests\TestEnvironment;
 
 /**
@@ -22,7 +22,6 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 	private $testEnvironment;
 	private $semanticDataFactory;
 	private $dataItemFactory;
-	private $editInfo;
 
 	protected function setUp() {
 		parent::setUp();
@@ -33,33 +32,11 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 		$this->spyLogger = $this->testEnvironment->getUtilityFactory()->newSpyLogger();
 		$this->semanticDataFactory = $this->testEnvironment->getUtilityFactory()->newSemanticDataFactory();
 
-		$propertySpecificationLookup = $this->getMockBuilder( '\SMW\Property\SpecificationLookup' )
-			->disableOriginalConstructor()
-			->getMock();
-
 		$store = $this->getMockBuilder( '\SMW\Store' )
 			->disableOriginalConstructor()
 			->getMockForAbstractClass();
 
-		$idTable = $this->getMockBuilder( '\stdClass' )
-			->setMethods( [ 'exists', 'findAssociatedRev' ] )
-			->getMock();
-
-		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->setMethods( [ 'getObjectIds' ] )
-			->getMock();
-
-		$store->expects( $this->any() )
-			->method( 'getObjectIds' )
-			->will( $this->returnValue( $idTable ) );
-
 		$this->testEnvironment->registerObject( 'Store', $store );
-		$this->testEnvironment->registerObject( 'PropertySpecificationLookup', $propertySpecificationLookup );
-
-		$this->editInfo = $this->getMockBuilder( '\SMW\MediaWiki\EditInfo' )
-			->disableOriginalConstructor()
-			->getMock();
 	}
 
 	protected function tearDown() {
@@ -73,9 +50,13 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$this->assertInstanceOf(
 			ArticleProtectComplete::class,
-			new ArticleProtectComplete( $title, $this->editInfo )
+			new ArticleProtectComplete( $title, $editInfoProvider )
 		);
 	}
 
@@ -85,9 +66,13 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$instance = new ArticleProtectComplete(
 			$title,
-			$this->editInfo
+			$editInfoProvider
 		);
 
 		$instance->setLogger( $this->spyLogger );
@@ -121,13 +106,17 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getNamespace' )
 			->will( $this->returnValue( NS_SPECIAL ) );
 
-		$this->editInfo->expects( $this->once() )
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$editInfoProvider->expects( $this->once() )
 			->method( 'getOutput' )
 			->will( $this->returnValue( $parserOutput ) );
 
 		$instance = new ArticleProtectComplete(
 			$title,
-			$this->editInfo
+			$editInfoProvider
 		);
 
 		$instance->setLogger( $this->spyLogger );
@@ -183,13 +172,17 @@ class ArticleProtectCompleteTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getNamespace' )
 			->will( $this->returnValue( NS_SPECIAL ) );
 
-		$this->editInfo->expects( $this->once() )
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$editInfoProvider->expects( $this->once() )
 			->method( 'getOutput' )
 			->will( $this->returnValue( $parserOutput ) );
 
 		$instance = new ArticleProtectComplete(
 			$title,
-			$this->editInfo
+			$editInfoProvider
 		);
 
 		$instance->setLogger( $this->spyLogger );

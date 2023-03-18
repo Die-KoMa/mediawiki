@@ -2,11 +2,10 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use Onoi\EventDispatcher\EventDispatcherAwareTrait;
 use ParserOutput;
 use SMW\ApplicationFactory;
 use SMW\EventHandler;
-use SMW\MediaWiki\EditInfo;
+use SMW\MediaWiki\EditInfoProvider;
 use SMW\MediaWiki\PageInfoProvider;
 use Title;
 
@@ -29,17 +28,15 @@ use Title;
  */
 class NewRevisionFromEditComplete extends HookHandler {
 
-	use EventDispatcherAwareTrait;
-
 	/**
 	 * @var Title
 	 */
 	private $title;
 
 	/**
-	 * @var EditInfo
+	 * @var EditInfoProvider
 	 */
-	private $editInfo;
+	private $editInfoProvider;
 
 	/**
 	 * @var PageInfoProvider
@@ -50,13 +47,13 @@ class NewRevisionFromEditComplete extends HookHandler {
 	 * @since 1.9
 	 *
 	 * @param Title $title
-	 * @param EditInfo $editInfo
+	 * @param EditInfoProvider $editInfoProvider
 	 * @param PageInfoProvider $pageInfoProvider
 	 */
-	public function __construct( Title $title, EditInfo $editInfo, PageInfoProvider $pageInfoProvider ) {
+	public function __construct( Title $title, EditInfoProvider $editInfoProvider, PageInfoProvider $pageInfoProvider ) {
 		parent::__construct();
 		$this->title = $title;
-		$this->editInfo = $editInfo;
+		$this->editInfoProvider = $editInfoProvider;
 		$this->pageInfoProvider = $pageInfoProvider;
 	}
 
@@ -67,9 +64,7 @@ class NewRevisionFromEditComplete extends HookHandler {
 	 */
 	public function process() {
 
-		$this->editInfo->fetchEditInfo();
-
-		$parserOutput = $this->editInfo->getOutput();
+		$parserOutput = $this->editInfoProvider->fetchEditInfo()->getOutput();
 		$schema = null;
 
 		if ( !$parserOutput instanceof ParserOutput ) {
@@ -102,21 +97,21 @@ class NewRevisionFromEditComplete extends HookHandler {
 			$schema
 		);
 
-		$context = [
-			'context' => 'NewRevisionFromEditComplete',
-			'title' => $this->title
-		];
+		$dispatchContext = EventHandler::getInstance()->newDispatchContext();
+		$dispatchContext->set( 'title', $this->title );
+		$dispatchContext->set( 'context', 'NewRevisionFromEditComplete' );
 
-		$this->eventDispatcher->dispatch( 'InvalidateResultCache', $context );
+		EventHandler::getInstance()->getEventDispatcher()->dispatch(
+			'cached.prefetcher.reset',
+			$dispatchContext
+		);
 
 		// If the concept was altered make sure to delete the cache
 		if ( $this->title->getNamespace() === SMW_NS_CONCEPT ) {
 			$applicationFactory->getStore()->deleteConceptCache( $this->title );
 		}
 
-		$parserData->copyToParserOutput();
-
-		$this->eventDispatcher->dispatch( 'InvalidateEntityCache', $context );
+		$parserData->pushSemanticDataToParserOutput();
 
 		return true;
 	}

@@ -2,12 +2,8 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use SMW\DependencyValidator;
-use SMW\NamespaceExaminer;
-use SMW\DIWikiPage;
-use SMW\EntityCache;
+use SMW\SQLStore\QueryDependency\DependencyLinksUpdateJournal;
 use Title;
-use Page;
 
 /**
  * @see https://www.mediawiki.org/wiki/Manual:Hooks/RejectParserCacheValue
@@ -20,24 +16,17 @@ use Page;
 class RejectParserCacheValue extends HookHandler {
 
 	/**
-	 * @var NamespaceExaminer
+	 * @var DependencyLinksUpdateJournal
 	 */
-	private $namespaceExaminer;
-
-	/**
-	 * @var DependencyValidator
-	 */
-	private $dependencyValidator;
+	private $dependencyLinksUpdateJournal;
 
 	/**
 	 * @since 3.0
 	 *
-	 * @param NamespaceExaminer $namespaceExaminer
-	 * @param DependencyValidator $dependencyValidator
+	 * @param DependencyLinksUpdateJournal $dependencyLinksUpdateJournal
 	 */
-	public function __construct( NamespaceExaminer $namespaceExaminer, DependencyValidator $dependencyValidator ) {
-		$this->namespaceExaminer = $namespaceExaminer;
-		$this->dependencyValidator = $dependencyValidator;
+	public function __construct( DependencyLinksUpdateJournal $dependencyLinksUpdateJournal ) {
+		$this->dependencyLinksUpdateJournal = $dependencyLinksUpdateJournal;
 	}
 
 	/**
@@ -47,28 +36,14 @@ class RejectParserCacheValue extends HookHandler {
 	 *
 	 * @return boolean
 	 */
-	public function process( Page $page ) {
+	public function process( Title $title ) {
 
-		$title = $page->getTitle();
-
-		if ( $this->namespaceExaminer->isSemanticEnabled( $title->getNamespace() ) === false ) {
-			return true;
+		if ( $this->dependencyLinksUpdateJournal->has( $title ) ) {
+			$this->dependencyLinksUpdateJournal->delete( $title );
+			return false;
 		}
 
-		$subject = DIWikiPage::newFromTitle( $title );
-
-		if ( $this->dependencyValidator->canKeepParserCache( $subject ) ) {
-			return true;
-		}
-
-		$this->logger->info(
-			[ 'RejectParserCacheValue', 'Rejected, found archaic query dependencies', '{etag}' ],
-			[ 'role' => 'user' ]
-		);
-
-		// Return false to reject an otherwise usable cached value from the
-		// parser cache
-		return false;
+		return true;
 	}
 
 }

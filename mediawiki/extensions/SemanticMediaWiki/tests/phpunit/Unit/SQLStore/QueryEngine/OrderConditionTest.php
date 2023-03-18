@@ -19,11 +19,11 @@ class OrderConditionTest extends \PHPUnit_Framework_TestCase {
 
 	use PHPUnitCompat;
 
-	private $conditionBuilder;
+	private $querySegmentListBuilder;
 
 	protected function setUp() {
 
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
+		$this->querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
 			->disableOriginalConstructor()
 			->getMock();
 	}
@@ -32,41 +32,20 @@ class OrderConditionTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			OrderCondition::class,
-			new OrderCondition( $this->conditionBuilder )
+			new OrderCondition( $this->querySegmentListBuilder )
 		);
 	}
 
 	public function testApplyWithoutSortKey() {
 
-		$this->conditionBuilder->expects( $this->once() )
+		$this->querySegmentListBuilder->expects( $this->once() )
 			->method( 'getQuerySegmentList' );
 
-		$instance = new OrderCondition();
-		$instance->addConditions( $this->conditionBuilder, 42 );
-	}
-
-	public function testApplyWithInvalidSortKeyThrowsException() {
-
-		$querySegment = new QuerySegment();
-
-		$this->conditionBuilder->expects( $this->never() )
-			->method( 'getQuerySegmentList' );
-
-		$this->conditionBuilder->expects( $this->atLeastOnce() )
-			->method( 'findQuerySegment' )
-			->will( $this->returnValue( $querySegment ) );
-
-		$instance = new OrderCondition();
-
-		$instance->setSortKeys( [
-				42 => 'ASC'
-			]
+		$instance = new OrderCondition(
+			$this->querySegmentListBuilder
 		);
 
-		$this->setExpectedException( 'RuntimeException' );
-		$instance->addConditions( $this->conditionBuilder, 42 );
-
-		$querySegment->reset();
+		$instance->apply( 42 );
 	}
 
 	/**
@@ -76,18 +55,46 @@ class OrderConditionTest extends \PHPUnit_Framework_TestCase {
 
 		$querySegment = new QuerySegment();
 
-		$this->conditionBuilder->expects( $this->once() )
+		$this->querySegmentListBuilder->expects( $this->once() )
 			->method( 'getQuerySegmentList' );
 
-		$this->conditionBuilder->expects( $this->atLeastOnce() )
+		$this->querySegmentListBuilder->expects( $this->atLeastOnce() )
 			->method( 'findQuerySegment' )
 			->will( $this->returnValue( $querySegment ) );
 
-		$instance = new OrderCondition();
+		$instance = new OrderCondition(
+			$this->querySegmentListBuilder
+		);
 
 		$instance->setSortKeys( $sortKeys );
 
-		$instance->addConditions( $this->conditionBuilder, 42 );
+		$instance->apply( 42 );
+		$querySegment->reset();
+	}
+
+	public function testApplyWithInvalidSortKeyThrowsException() {
+
+		$querySegment = new QuerySegment();
+
+		$this->querySegmentListBuilder->expects( $this->never() )
+			->method( 'getQuerySegmentList' );
+
+		$this->querySegmentListBuilder->expects( $this->atLeastOnce() )
+			->method( 'findQuerySegment' )
+			->will( $this->returnValue( $querySegment ) );
+
+		$instance = new OrderCondition(
+			$this->querySegmentListBuilder
+		);
+
+		$instance->setSortKeys( [
+				42 => 'ASC'
+			]
+		);
+
+		$this->setExpectedException( 'RuntimeException' );
+		$instance->apply( 42 );
+
 		$querySegment->reset();
 	}
 

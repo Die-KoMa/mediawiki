@@ -4,12 +4,12 @@ namespace SMW\Tests\Utils\Runners;
 
 use Job;
 use JobQueueGroup;
-use SMW\Connection\ConnectionProvider;
+use SMW\Connection\ConnectionProvider as IConnectionProvider;
 use SMW\Tests\TestEnvironment;
-use SMW\Tests\Utils\Connection\TestDatabaseConnectionProvider;
+use SMW\Tests\Utils\Connection\ConnectionProvider;
 
 /**
- * Partially copied from the MW 1.19 RunJobs maintenance script
+ * Partly copied from the MW 1.19 RunJobs maintenance script
  *
  * @group SMW
  * @group SMWExtension
@@ -32,14 +32,14 @@ class JobQueueRunner {
 	 * @since 1.9.2
 	 *
 	 * @param string|null $type
-	 * @param ConnectionProvider|null $connectionProvider
+	 * @param IConnectionProvider|null $connectionProvider
 	 */
-	public function __construct( $type = null, ConnectionProvider $connectionProvider = null ) {
+	public function __construct( $type = null, IConnectionProvider $connectionProvider = null ) {
 		$this->type = $type;
 		$this->connectionProvider = $connectionProvider;
 
 		if ( $this->connectionProvider === null ) {
-			$this->connectionProvider = new TestDatabaseConnectionProvider();
+			$this->connectionProvider = new ConnectionProvider();
 		}
 
 		$this->testEnvironment = new TestEnvironment();
@@ -64,7 +64,7 @@ class JobQueueRunner {
 	 *
 	 * @return JobQueueRunner
 	 */
-	public function setConnectionProvider( ConnectionProvider $connectionProvider ) {
+	public function setConnectionProvider( IConnectionProvider $connectionProvider ) {
 		$this->connectionProvider = $connectionProvider;
 		return $this;
 	}

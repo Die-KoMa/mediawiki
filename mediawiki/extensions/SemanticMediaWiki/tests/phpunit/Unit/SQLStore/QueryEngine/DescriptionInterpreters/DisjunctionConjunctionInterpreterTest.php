@@ -18,29 +18,11 @@ use SMW\Tests\TestEnvironment;
  */
 class DisjunctionConjunctionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $conditionBuilder;
 	private $querySegmentValidator;
 	private $descriptionFactory;
 
 	protected function setUp() {
 		parent::setUp();
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->any() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMock();
 
 		$testEnvironment = new TestEnvironment();
 		$this->querySegmentValidator = $testEnvironment->getUtilityFactory()->newValidatorFactory()->newQuerySegmentValidator();
@@ -48,9 +30,13 @@ class DisjunctionConjunctionInterpreterTest extends \PHPUnit_Framework_TestCase 
 
 	public function testCanConstruct() {
 
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
 		$this->assertInstanceOf(
-			DisjunctionConjunctionInterpreter::class,
-			new DisjunctionConjunctionInterpreter( $this->conditionBuilder )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\DisjunctionConjunctionInterpreter',
+			new DisjunctionConjunctionInterpreter( $querySegmentListBuilder )
 		);
 	}
 
@@ -59,12 +45,22 @@ class DisjunctionConjunctionInterpreterTest extends \PHPUnit_Framework_TestCase 
 	 */
 	public function testInterpretDescription( $description, $expected ) {
 
-		$queryEngineFactory = new QueryEngineFactory(
-			$this->store
-		);
+		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->any() )
+			->method( 'getConnection' )
+			->will( $this->returnValue( $connection ) );
+
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new DisjunctionConjunctionInterpreter(
-			$queryEngineFactory->newconditionBuilder()
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(

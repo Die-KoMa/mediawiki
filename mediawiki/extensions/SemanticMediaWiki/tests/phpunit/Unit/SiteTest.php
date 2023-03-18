@@ -71,14 +71,6 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testGetCacheExpireTime() {
-
-		$this->assertInternalType(
-			'integer',
-			Site::getCacheExpireTime( 'parser' )
-		);
-	}
-
 	public function testStats() {
 
 		$this->assertInternalType(

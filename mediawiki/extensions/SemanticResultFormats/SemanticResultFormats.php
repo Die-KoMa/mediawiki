@@ -109,36 +109,23 @@ class SemanticResultFormats {
 			'eventline' => 'SRFTimeline',
 			'vcard' => 'SRF\vCard\vCardFileExportPrinter',
 			'icalendar' => 'SRF\iCalendar\iCalendarFileExportPrinter',
-			'bibtex' => 'SRF\BibTex\BibTexFileExportPrinter',
+			'bibtex' => 'SRFBibTeX',
 			'calendar' => 'SRFCalendar',
 			'eventcalendar' => 'SRF\EventCalendar',
-			'outline' => 'SRF\Outline\OutlineResultPrinter',
+			'outline' => 'SRFOutline',
 			'sum' => 'SRFMath',
 			'product' => 'SRFMath',
 			'average' => 'SRFMath',
 			'min' => 'SRFMath',
 			'max' => 'SRFMath',
 			'median' => 'SRFMath',
-			'samplevariance' => 'SRFMath',
-			'variance' => 'SRFMath',
-			'standarddeviation' => 'SRFMath',
-			'samplestandarddeviation' => 'SRFMath',
-			'range' => 'SRFMath',
-			'quartillower' => 'SRFMath',
-			'quartilupper' => 'SRFMath',
-			'quartillower.exc' => 'SRFMath',
-			'quartilupper.exc' => 'SRFMath',
-			'interquartilerange' => 'SRFMath',
-			'interquartilerange.exc' => 'SRFMath',
-			'mode' => 'SRFMath',
-			'interquartilemean' => 'SRFMath',
 			'exhibit' => 'SRFExhibit',
 			'googlebar' => 'SRFGoogleBar',
 			'googlepie' => 'SRFGooglePie',
 			'jitgraph' => 'SRFJitGraph',
 			'jqplotchart' => 'SRFjqPlotChart',
 			'jqplotseries' => 'SRFjqPlotSeries',
-			'graph' => 'SRF\Graph\GraphPrinter',
+			'graph' => 'SRFGraph',
 			'process' => 'SRFProcess',
 			'gallery' => 'SRF\Gallery',
 			'tagcloud' => 'SRF\TagCloud',
@@ -160,8 +147,8 @@ class SemanticResultFormats {
 			'dygraphs' => 'SRFDygraphs',
 			'incoming' => 'SRFIncoming',
 			'media' => 'SRF\MediaPlayer',
-			'datatables' => 'SRF\DataTables',
-			'gantt' => 'SRF\Gantt\GanttPrinter'
+			'excel' => 'SRF\SRFExcel',
+			'datatables' => 'SRF\DataTables'
 		];
 
 		$formatAliases = [
@@ -173,11 +160,6 @@ class SemanticResultFormats {
 			'jqplotchart' => [ 'jqplot chart', 'jqplotpie', 'jqplotbar' ],
 			'jqplotseries' => [ 'jqplot series' ],
 		];
-
-		if ( class_exists( '\PhpOffice\PhpSpreadsheet\Spreadsheet' ) ) {
-			$formatClasses['spreadsheet'] = 'SRF\SpreadsheetPrinter';
-			$formatAliases['spreadsheet'] = [ 'excel' ];
-		}
 
 		foreach ( $GLOBALS['srfgFormats'] as $format ) {
 			if ( array_key_exists( $format, $formatClasses ) ) {

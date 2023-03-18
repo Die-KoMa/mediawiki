@@ -6,7 +6,6 @@ use DatabaseBase;
 use ReflectionClass;
 use SMW\Tests\PHPUnitCompat;
 use SMW\MediaWiki\Connection\LoadBalancerConnectionProvider;
-use SMW\Tests\TestEnvironment;
 
 /**
  * @covers \SMW\MediaWiki\Connection\LoadBalancerConnectionProvider
@@ -21,46 +20,24 @@ class LoadBalancerConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 
 	use PHPUnitCompat;
 
-	private $loadBalancer;
-
-	protected function setUp() {
-
-		$this->loadBalancer = $this->getMockBuilder( '\LoadBalancer' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$testEnvironment = new TestEnvironment();
-		$testEnvironment->registerObject( 'DBLoadBalancer', $this->loadBalancer );
-	}
-
 	public function testCanConstruct() {
 
 		$this->assertInstanceOf(
 			LoadBalancerConnectionProvider::class,
-			new LoadBalancerConnectionProvider( DB_REPLICA )
+			new LoadBalancerConnectionProvider( DB_SLAVE )
 		);
 	}
 
 	public function testGetAndReleaseConnection() {
 
-		$database = $this->getMockBuilder( '\IDatabase' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->loadBalancer->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $database ) );
-
 		$instance = new LoadBalancerConnectionProvider(
-			DB_REPLICA
+			DB_SLAVE
 		);
-
-		$instance->asConnectionRef( false );
 
 		$connection = $instance->getConnection();
 
 		$this->assertInstanceOf(
-			'\IDatabase',
+			'DatabaseBase',
 			$instance->getConnection()
 		);
 
@@ -71,53 +48,26 @@ class LoadBalancerConnectionProviderTest extends \PHPUnit_Framework_TestCase {
 		$instance->releaseConnection();
 	}
 
-	public function testGetAndReleaseConnectionRef() {
-
-		$database = $this->getMockBuilder( '\IDatabase' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->loadBalancer->expects( $this->once() )
-			->method( 'getConnectionRef' )
-			->will( $this->returnValue( $database ) );
-
-		$instance = new LoadBalancerConnectionProvider(
-			DB_REPLICA
-		);
-
-		$connection = $instance->getConnection();
-
-		$this->assertInstanceOf(
-			'\IDatabase',
-			$instance->getConnection()
-		);
-
-		$this->assertTrue(
-			$instance->getConnection() === $connection
-		);
-
-		$instance->releaseConnection();
-	}
-
-	public function testGetInvalidConnectionFromLoadBalancerThrowsException() {
-
-		$loadBalancer = $this->getMockBuilder( '\LoadBalancer' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$loadBalancer->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( 'Bar' ) );
-
-		$instance = new LoadBalancerConnectionProvider(
-			DB_REPLICA
-		);
-
-		$instance->setLoadBalancer( $loadBalancer );
-		$instance->asConnectionRef( false );
+	public function testGetConnectionThrowsException() {
 
 		$this->setExpectedException( 'RuntimeException' );
-		$instance->getConnection();
+
+		$instance = new LoadBalancerConnectionProvider(
+			DB_SLAVE
+		);
+
+		$reflector = new ReflectionClass(
+			LoadBalancerConnectionProvider::class
+		);
+
+		$connection = $reflector->getProperty( 'connection' );
+		$connection->setAccessible( true );
+		$connection->setValue( $instance, 'invalid' );
+
+		$this->assertInstanceOf(
+			'DatabaseBase',
+			$instance->getConnection()
+		);
 	}
 
 }

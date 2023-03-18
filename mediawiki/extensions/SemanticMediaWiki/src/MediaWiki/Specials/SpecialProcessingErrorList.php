@@ -49,11 +49,10 @@ class SpecialProcessingErrorList extends SpecialPage {
 			[
 				'q'      => '[[Has processing error text::+]]',
 				'po'     => '?Has improper value for|?Has processing error text',
-				'p'      => 'class=sortable-20smwtable-2Dstriped-20smwtable-2Dclean/sep=ul',
+				'p'      => 'class=sortable-20wikitable-20smwtable-2Dstriped',
 				'eq'     => 'no',
 				'limit'  =>  $limit,
 				'bTitle' => 'processingerrorlist',
-				'bHelp'  => 'smw-processingerrorlist-helplink',
 				'bMsg'   => 'smw-processingerrorlist-intro'
 			]
 		);
@@ -63,13 +62,7 @@ class SpecialProcessingErrorList extends SpecialPage {
 	 * @see SpecialPage::getGroupName
 	 */
 	protected function getGroupName() {
-
-		if ( version_compare( MW_VERSION, '1.33', '<' ) ) {
-			return 'smw_group';
-		}
-
-		// #3711, MW 1.33+
-		return 'smw_group/maintenance';
+		return 'smw_group';
 	}
 
 }

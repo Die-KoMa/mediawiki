@@ -9,5 +9,3 @@ composer.phar
 node_modules/
 vendor/
 extensions/
-
-.eslintcache

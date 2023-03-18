@@ -10,8 +10,8 @@ namespace SMW\Importer;
  */
 class ImportContents {
 
-	const CONTENT_TEXT = 'text/plain';
-	const CONTENT_XML = 'text/xml';
+	const CONTENT_TEXT = 'content.text';
+	const CONTENT_XML = 'content.xml';
 
 	/**
 	 * @var string

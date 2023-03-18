@@ -10,22 +10,46 @@
 /**
  * @ingroup PFSpecialPages
  */
-class PFTemplates extends QueryPage {
+class PFTemplates extends SpecialPage {
+
+	/**
+	 * Constructor
+	 */
+	function __construct() {
+		parent::__construct( 'Templates' );
+	}
+
+	function execute( $query ) {
+		$this->setHeaders();
+		list( $limit, $offset ) = $this->getRequest()->getLimitOffset();
+		$rep = new TemplatesPage();
+		$rep->execute( $query );
+	}
+
+	protected function getGroupName() {
+		return 'pages';
+	}
+}
+
+/**
+ * @ingroup PFSpecialPages
+ */
+class TemplatesPage extends QueryPage {
 
 	public function __construct( $name = 'Templates' ) {
 		parent::__construct( $name );
 	}
-
-	function isExpensive() {
-		return false;
+	
+	function getName() {
+		return "Templates";
 	}
 
-	function isSyndicated() {
-		return false;
-	}
+	function isExpensive() { return false; }
+
+	function isSyndicated() { return false; }
 
 	function getPageHeader() {
-		$header = Html::element( 'p', null, $this->msg( 'pf_templates_docu' )->text() );
+		$header = Html::element( 'p', null, wfMessage( 'pf_templates_docu' )->text() );
 		return $header;
 	}
 
@@ -33,11 +57,11 @@ class PFTemplates extends QueryPage {
 	}
 
 	function getQueryInfo() {
-		return [
-			'tables' => [ 'page' ],
-			'fields' => [ 'page_title AS title', 'page_title AS value' ],
-			'conds' => [ 'page_namespace' => NS_TEMPLATE ]
-		];
+		return array(
+			'tables' => array( 'page' ),
+			'fields' => array( 'page_title AS title', 'page_title AS value' ),
+			'conds' => array( 'page_namespace' => NS_TEMPLATE )
+		);
 	}
 
 	function sortDescending() {
@@ -45,8 +69,10 @@ class PFTemplates extends QueryPage {
 	}
 
 	function getCategoryDefinedByTemplate( $templateTitle ) {
+		global $wgContLang;
+
 		$templateText = PFUtils::getPageText( $templateTitle );
-		$cat_ns_name = PFUtils::getContLang()->getNsText( NS_CATEGORY );
+		$cat_ns_name = $wgContLang->getNsText( NS_CATEGORY );
 		if ( preg_match_all( "/\[\[(Category|$cat_ns_name):([^\]]*)\]\]/", $templateText, $matches ) ) {
 			// Get the last match - if there's more than one
 			// category tag, there's a good chance that the last
@@ -65,19 +91,14 @@ class PFTemplates extends QueryPage {
 
 	function formatResult( $skin, $result ) {
 		$title = Title::makeTitle( NS_TEMPLATE, $result->value );
-		$linkRenderer = $this->getLinkRenderer();
-		$text = $linkRenderer->makeKnownLink( $title, htmlspecialchars( $title->getText() ) );
+		$text = Linker::link( $title, htmlspecialchars( $title->getText() ) );
 		$category = $this->getCategoryDefinedByTemplate( $title );
 		if ( $category !== '' ) {
-			$text .= ' ' . $this->msg(
+			$text .= ' ' . wfMessage(
 				'pf_templates_definescat',
 				PFUtils::linkText( NS_CATEGORY, $category )
 			)->parse();
 		}
 		return $text;
-	}
-
-	protected function getGroupName() {
-		return 'pf_group';
 	}
 }

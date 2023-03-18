@@ -115,13 +115,15 @@ class UnusedPropertyListLookup implements ListLookup {
 			$conditions[] = $this->store->getSQLConditions( $this->requestOptions, '', 'smw_sortkey', false );
 		}
 
+		$idTable = $this->store->getObjectIds()->getIdTable();
+
 		$res = $this->store->getConnection( 'mw.db' )->select(
-			[ SQLStore::ID_TABLE, SQLStore::PROPERTY_STATISTICS_TABLE ],
+			[ $idTable ,$this->propertyStatisticsStore->getStatisticsTable() ],
 			[ 'smw_title', 'usage_count' ],
 			$conditions,
 			__METHOD__,
 			$options,
-			[  SQLStore::ID_TABLE => [ 'INNER JOIN', [ 'smw_id=p_id' ] ] ]
+			[ $idTable => [ 'INNER JOIN', [ 'smw_id=p_id' ] ] ]
 		);
 
 		return $res;

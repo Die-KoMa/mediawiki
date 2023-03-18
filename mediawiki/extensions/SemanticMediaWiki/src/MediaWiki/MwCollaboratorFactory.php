@@ -57,7 +57,7 @@ class MwCollaboratorFactory {
 	 * @return MagicWordsFinder
 	 */
 	public function newMagicWordsFinder() {
-		return ApplicationFactory::getInstance()->create( 'MagicWordsFinder' );
+		return new MagicWordsFinder();
 	}
 
 	/**
@@ -120,17 +120,8 @@ class MwCollaboratorFactory {
 	 *
 	 * @return LoadBalancerConnectionProvider
 	 */
-	public function newLoadBalancerConnectionProvider( $connectionType, $asConnectionRef = true ) {
-
-		$loadBalancerConnectionProvider = new LoadBalancerConnectionProvider(
-			$connectionType
-		);
-
-		$loadBalancerConnectionProvider->asConnectionRef(
-			$asConnectionRef
-		);
-
-		return $loadBalancerConnectionProvider;
+	public function newLoadBalancerConnectionProvider( $connectionType ) {
+		return new LoadBalancerConnectionProvider( $connectionType );
 	}
 
 	/**
@@ -171,30 +162,16 @@ class MwCollaboratorFactory {
 	}
 
 	/**
-	 * @deprecated since 3.1
 	 * @since 2.5
 	 *
 	 * @param WikiPage $wkiPage
 	 * @param Revision $revision
 	 * @param User|null $user
 	 *
-	 * @return EditInfo
+	 * @return EditInfoProvider
 	 */
 	public function newEditInfoProvider( WikiPage $wkiPage, Revision $revision, User $user = null ) {
-		return $this->newEditInfo( $wkiPage, $revision, $user );
-	}
-
-	/**
-	 * @since 2.5
-	 *
-	 * @param WikiPage $wkiPage
-	 * @param Revision $revision
-	 * @param User|null $user
-	 *
-	 * @return EditInfo
-	 */
-	public function newEditInfo( WikiPage $wkiPage, Revision $revision, User $user = null ) {
-		return new EditInfo( $wkiPage, $revision, $user );
+		return new EditInfoProvider( $wkiPage, $revision, $user );
 	}
 
 	/**

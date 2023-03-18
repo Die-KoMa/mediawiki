@@ -16,14 +16,14 @@ use SMW\Importer\ImportContents;
  */
 class TextContentCreatorTest extends \PHPUnit_Framework_TestCase {
 
-	private $titleFactory;
+	private $pageCreator;
 	private $connection;
 	private $messageReporter;
 
 	protected function setUp() {
 		parent::setUp();
 
-		$this->titleFactory = $this->getMockBuilder( '\SMW\MediaWiki\TitleFactory' )
+		$this->pageCreator = $this->getMockBuilder( '\SMW\MediaWiki\PageCreator' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -40,14 +40,14 @@ class TextContentCreatorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			'\SMW\Importer\ContentCreators\TextContentCreator',
-			new TextContentCreator( $this->titleFactory, $this->connection )
+			new TextContentCreator( $this->pageCreator, $this->connection )
 		);
 	}
 
 	public function testCanCreateContentsFor() {
 
 		$instance = new TextContentCreator(
-			$this->titleFactory,
+			$this->pageCreator,
 			$this->connection
 		);
 
@@ -59,25 +59,13 @@ class TextContentCreatorTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCreate() {
+	public function testDoCreateFrom() {
 
 		$this->connection->expects( $this->once() )
 			->method( 'onTransactionIdle' )
 			->will( $this->returnCallback( function( $callback ) {
 				return call_user_func( $callback ); }
 			) );
-
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'getNamespace' )
-			->will( $this->returnValue( NS_MAIN ) );
-
-		$title->expects( $this->any() )
-			->method( 'getContentModel' )
-			->will( $this->returnValue( CONTENT_MODEL_TEXT ) );
 
 		$page = $this->getMockBuilder( '\WikiPage' )
 			->disableOriginalConstructor()
@@ -86,16 +74,12 @@ class TextContentCreatorTest extends \PHPUnit_Framework_TestCase {
 		$page->expects( $this->once() )
 			->method( 'doEditContent' );
 
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'newFromText' )
-			->will( $this->returnValue( $title ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
+		$this->pageCreator->expects( $this->atLeastOnce() )
 			->method( 'createPage' )
 			->will( $this->returnValue( $page ) );
 
 		$instance = new TextContentCreator(
-			$this->titleFactory,
+			$this->pageCreator,
 			$this->connection
 		);
 
@@ -106,179 +90,6 @@ class TextContentCreatorTest extends \PHPUnit_Framework_TestCase {
 		$importContents = new ImportContents();
 		$importContents->setContentType( ImportContents::CONTENT_TEXT );
 		$importContents->setName( 'Foo' );
-
-		$instance->create( $importContents );
-	}
-
-	public function testCreate_NotReplaceable() {
-
-		$this->connection->expects( $this->never() )
-			->method( 'onTransactionIdle' );
-
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
-
-		$page = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$page->expects( $this->never() )
-			->method( 'doEditContent' );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'newFromText' )
-			->will( $this->returnValue( $title ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'createPage' )
-			->will( $this->returnValue( $page ) );
-
-		$instance = new TextContentCreator(
-			$this->titleFactory,
-			$this->connection
-		);
-
-		$instance->setMessageReporter(
-			$this->messageReporter
-		);
-
-		$importContents = new ImportContents();
-		$importContents->setContentType( ImportContents::CONTENT_TEXT );
-		$importContents->setName( 'Foo' );
-		$importContents->setOptions( [ 'replaceable' => false ] );
-
-		$instance->create( $importContents );
-	}
-
-	public function testCreate_ReplaceableOnCreator() {
-
-		$this->connection->expects( $this->once() )
-			->method( 'onTransactionIdle' )
-			->will( $this->returnCallback( function( $callback ) {
-				return call_user_func( $callback ); }
-			) );
-
-		$user = $this->getMockBuilder( '\User' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$user->expects( $this->any() )
-			->method( 'equals' )
-			->will( $this->returnValue( true ) );
-
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
-
-		$title->expects( $this->any() )
-			->method( 'getNamespace' )
-			->will( $this->returnValue( NS_MAIN ) );
-
-		$title->expects( $this->any() )
-			->method( 'getContentModel' )
-			->will( $this->returnValue( CONTENT_MODEL_TEXT ) );
-
-		$page = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$page->expects( $this->once() )
-			->method( 'doEditContent' );
-
-		$page->expects( $this->atLeastOnce() )
-			->method( 'getCreator' )
-			->will( $this->returnValue( $user ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'newFromText' )
-			->will( $this->returnValue( $title ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'createPage' )
-			->will( $this->returnValue( $page ) );
-
-		$instance = new TextContentCreator(
-			$this->titleFactory,
-			$this->connection
-		);
-
-		$instance->setMessageReporter(
-			$this->messageReporter
-		);
-
-		$importContents = new ImportContents();
-		$importContents->setContentType( ImportContents::CONTENT_TEXT );
-		$importContents->setName( 'Foo' );
-		$importContents->setOptions( [ 'replaceable' => [ 'LAST_EDITOR' => 'IS_IMPORTER' ] ] );
-
-		$instance->create( $importContents );
-	}
-
-	public function testCreate_ReplaceableOnCreator_WithNoAvailableUser() {
-
-		$this->connection->expects( $this->once() )
-			->method( 'onTransactionIdle' )
-			->will( $this->returnCallback( function( $callback ) {
-				return call_user_func( $callback ); }
-			) );
-
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( false ) );
-
-		$title->expects( $this->any() )
-			->method( 'getNamespace' )
-			->will( $this->returnValue( NS_MAIN ) );
-
-		$title->expects( $this->any() )
-			->method( 'getContentModel' )
-			->will( $this->returnValue( CONTENT_MODEL_TEXT ) );
-
-		$page = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$page->expects( $this->once() )
-			->method( 'doEditContent' );
-
-		$page->expects( $this->atLeastOnce() )
-			->method( 'getCreator' )
-			->will( $this->returnValue( null ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'newFromText' )
-			->will( $this->returnValue( $title ) );
-
-		$this->titleFactory->expects( $this->atLeastOnce() )
-			->method( 'createPage' )
-			->will( $this->returnValue( $page ) );
-
-		$instance = new TextContentCreator(
-			$this->titleFactory,
-			$this->connection
-		);
-
-		$instance->setMessageReporter(
-			$this->messageReporter
-		);
-
-		$importContents = new ImportContents();
-		$importContents->setContentType( ImportContents::CONTENT_TEXT );
-		$importContents->setName( 'Foo' );
-		$importContents->setOptions( [ 'replaceable' => [ 'LAST_EDITOR' => 'IS_IMPORTER' ] ] );
 
 		$instance->create( $importContents );
 	}

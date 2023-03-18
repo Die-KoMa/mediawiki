@@ -17,17 +17,6 @@ use ParserOutput;
 class FactboxFactory {
 
 	/**
-	 * @since 3.1
-	 *
-	 * @param array $options
-	 *
-	 * @return CheckMagicWords
-	 */
-	public function newCheckMagicWords( array $options ) {
-		return new CheckMagicWords( $options );
-	}
-
-	/**
 	 * @since 2.0
 	 *
 	 * @return CachedFactbox
@@ -38,11 +27,13 @@ class FactboxFactory {
 		$settings = $applicationFactory->getSettings();
 
 		$cachedFactbox = new CachedFactbox(
-			$applicationFactory->getEntityCache()
+			$applicationFactory->getCache(
+				$settings->get( 'smwgMainCacheType' )
+			)
 		);
 
 		// Month = 30 * 24 * 3600
-		$cachedFactbox->setCacheTTL( 2592000 );
+		$cachedFactbox->setExpiryInSeconds( 2592000 );
 
 		$cachedFactbox->isEnabled(
 			$settings->isFlagSet( 'smwgFactboxFeatures', SMW_FACTBOX_CACHE )
@@ -50,18 +41,6 @@ class FactboxFactory {
 
 		$cachedFactbox->setFeatureSet(
 			$settings->get( 'smwgFactboxFeatures' )
-		);
-
-		$cachedFactbox->setShowFactboxEdit(
-			$settings->get( 'smwgShowFactboxEdit' )
-		);
-
-		$cachedFactbox->setShowFactbox(
-			$settings->get( 'smwgShowFactbox' )
-		);
-
-		$cachedFactbox->setLogger(
-			$applicationFactory->getMediaWikiLogger()
 		);
 
 		return $cachedFactbox;

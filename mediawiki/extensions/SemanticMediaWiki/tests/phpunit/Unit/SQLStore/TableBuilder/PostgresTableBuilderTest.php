@@ -22,7 +22,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$this->connection = $this->getMockBuilder( '\DatabaseBase' )
 			->disableOriginalConstructor()
-			->setMethods( [ 'tableExists', 'query', 'dbSchema', 'tablePrefix', 'onTransactionIdle', 'selectField' ] )
+			->setMethods( [ 'tableExists', 'query', 'dbSchema', 'tablePrefix', 'onTransactionIdle' ] )
 			->getMockForAbstractClass();
 
 		$this->connection->expects( $this->any() )
@@ -48,7 +48,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateTableOnNewTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -70,7 +70,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateTableOnNewTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -92,7 +92,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateTableWithNewField() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -119,7 +119,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateTableWithNewField_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -146,7 +146,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateTableWithNewFieldAndDefault() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -174,7 +174,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateTableWithNewFieldAndDefault_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -202,7 +202,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateIndex() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -234,7 +234,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateIndex_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -266,7 +266,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDropTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -286,7 +286,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDropTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -306,7 +306,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDoCheckOnAfterCreate() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -314,13 +314,9 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 			->method( 'onTransactionIdle' )
 			->will( $this->returnCallback( function( $callback ) { return $callback(); } ) );
 
-		$this->connection->expects( $this->once() )
+		$this->connection->expects( $this->at( 4 ) )
 			->method( 'query' )
 			->with( $this->stringContains( 'ALTER SEQUENCE' ) );
-
-		$this->connection->expects( $this->any() )
-			->method( 'selectField' )
-			->will( $this->returnValue( 42 ) );
 
 		$instance = PostgresTableBuilder::factory( $this->connection );
 
@@ -329,7 +325,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDoCheckOnAfterCreate_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -337,13 +333,9 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 			->method( 'onTransactionIdle' )
 			->will( $this->returnCallback( function( $callback ) { return $callback(); } ) );
 
-		$this->connection->expects( $this->once() )
+		$this->connection->expects( $this->at( 6 ) )
 			->method( 'query' )
 			->with( $this->stringContains( 'ALTER SEQUENCE' ) );
-
-		$this->connection->expects( $this->any() )
-			->method( 'selectField' )
-			->will( $this->returnValue( 42 ) );
 
 		$instance = PostgresTableBuilder::factory( $this->connection );
 
@@ -352,7 +344,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testOptimizeTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -372,7 +364,7 @@ class PostgresTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testOptimizeTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 

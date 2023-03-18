@@ -10,7 +10,7 @@
  * @author Harold Solbrig
  * @author Eugene Mednikov
  */
-/*global wgPageFormsShowOnSelect, wgPageFormsFieldProperties, wgPageFormsCargoFields, wgPageFormsDependentFields, validateAll, alert, mwTinyMCEInit, pf, Sortable*/
+/*global wgPageFormsShowOnSelect, wgPageFormsFieldProperties, wgPageFormsCargoFields, wgPageFormsDependentFields, validateAll, alert, pf*/
 
 // Activate autocomplete functionality for the specified field
 ( function ( $, mw ) {
@@ -18,26 +18,20 @@
 /* extending jQuery functions for custom highlighting */
 $.ui.autocomplete.prototype._renderItem = function( ul, item) {
 
-	var delim = this.element[0].delimiter;
+	var delim = this.element.context.delimiter;
 	var term;
 	if ( delim === null ) {
 		term = this.term;
 	} else {
 		term = this.term.split( delim ).pop();
 	}
-	var re = new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
-		term.replace(/([\^\$\(\)\[\]\{\}\*\.\+\?\|\\])/gi, "\\$1") +
-		")(?![^<>]*>)(?![^&;]+;)", "gi");
-	// HTML-encode the value's label.
-	var itemLabel = $('<div/>').text(item.label).html();
-	var loc = itemLabel.search(re);
+	var re = new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term.replace(/([\^\$\(\)\[\]\{\}\*\.\+\?\|\\])/gi, "\\$1") + ")(?![^<>]*>)(?![^&;]+;)", "gi");
+	var loc = item.label.search(re);
 	var t;
 	if (loc >= 0) {
-		t = itemLabel.substr(0, loc) +
-			'<strong>' + itemLabel.substr(loc, term.length) + '</strong>' +
-			itemLabel.substr(loc + term.length);
+		t = item.label.substr(0, loc) + '<strong>' + item.label.substr(loc, term.length) + '</strong>' + item.label.substr(loc + term.length);
 	} else {
-		t = itemLabel;
+		t = item.label;
 	}
 	return $( "<li></li>" )
 		.data( "item.autocomplete", item )
@@ -46,7 +40,6 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item) {
 };
 
 $.fn.attachAutocomplete = function() {
-	try {
 	return this.each(function() {
 		// Get all the necessary values from the input's "autocompletesettings"
 		// attribute. This should probably be done as three separate attributes,
@@ -55,6 +48,7 @@ $.fn.attachAutocomplete = function() {
 
 		if ( typeof field_string === 'undefined' ) {
 			return;
+
 		}
 
 		var field_values = field_string.split(',');
@@ -91,17 +85,7 @@ $.fn.attachAutocomplete = function() {
 				if ( wgPageFormsAutocompleteOnAllChars ) {
 					matcher = new RegExp($.ui.autocomplete.escapeRegex(term), "i" );
 				} else {
-					matcher = new RegExp("(^|\\s)" + $.ui.autocomplete.escapeRegex(term), "i" );
-				}
-				// This may be an associative array instead of a
-				// regular one - grep() requires a regular one.
-				// (Is this "if" check necessary, or useful?)
-				if ( typeof array === 'object' ) {
-					// Unfortunately, Object.values() is
-					// not supported on all browsers.
-					array = Object.keys(array).map(function(key) {
-						return array[key];
-					});
+					matcher = new RegExp("\\b" + $.ui.autocomplete.escapeRegex(term), "i" );
 				}
 				return $.grep( array, function(value) {
 					return matcher.test( value.label || value.value || value );
@@ -159,21 +143,14 @@ $.fn.attachAutocomplete = function() {
 			} else {
 				// Autocomplete for a single value
 				$(this).autocomplete({
-					// Unfortunately, Object.values() is
-					// not supported on all browsers.
-					source: ( typeof values === 'object' ) ? Object.keys(values).map(function(key) { return values[key]; }) : values
+					source:values
 				});
 			}
 		} else {
 			// Remote autocompletion.
 			var myServer = mw.util.wikiScript( 'api' );
-			var autocomplete_type = $(this).attr("autocompletedatatype");
-			if ( autocomplete_type === 'cargo field' ) {
-				var table_and_field = data_source.split('|');
-				myServer += "?action=pfautocomplete&format=json&cargo_table=" + table_and_field[0] + "&cargo_field=" + table_and_field[1];
-			} else {
-				myServer += "?action=pfautocomplete&format=json&" + autocomplete_type + "=" + data_source;
-			}
+			var data_type = $(this).attr("autocompletedatatype");
+			myServer += "?action=pfautocomplete&format=json&" + data_type + "=" + data_source;
 
 			if (delimiter !== null && delimiter !== undefined) {
 				$(this).autocomplete({
@@ -240,15 +217,6 @@ $.fn.attachAutocomplete = function() {
 			}
 		}
 	});
-	} catch ( error ) {
-		// Autocompletion (and specifically, the call to
-		// this.menu.element in line 195 of jquery.ui.autocomplete.js)
-		// for some reason sometimes fails when doing a preview of the
-		// form definition. It's not that importatnt, so, in lieu of
-		// showing it to the user (or debugging it), we'll just catch
-		// the error and log it in the console.
-		window.console.log("Error setting autocompletion: " + error);
-	}
 };
 
 
@@ -335,12 +303,8 @@ $.fn.PageForms_registerInputInit = function( initFunction, param, noexecute ) {
 	// and if not forbidden
 	if ( this.closest(".multipleTemplateStarter").length === 0 && !noexecute) {
 		var input = this;
-		// ensure initFunction is only executed after doc structure is complete
-		$(function() {
-			if ( initFunction !== undefined )  {
-				initFunction ( input.attr("id"), param );
-			}
-		});
+		// ensure initFunction is only exectued after doc structure is complete
+		$(function() {initFunction ( input.attr("id"), param );});
 	}
 
 	return this;
@@ -379,8 +343,7 @@ $.fn.PageForms_unregisterInputInit = function() {
  */
 
 // Display a div that would otherwise be hidden by "show on select".
-function showDiv( div_id, instanceWrapperDiv, initPage ) {
-	var speed = initPage ? 0 : 'fast';
+function showDiv(div_id, instanceWrapperDiv, speed) {
 	var elem;
 	if ( instanceWrapperDiv !== null ) {
 		elem = $('[data-origID="' + div_id + '"]', instanceWrapperDiv);
@@ -389,14 +352,11 @@ function showDiv( div_id, instanceWrapperDiv, initPage ) {
 	}
 
 	elem
-	.addClass('shownByPF')
-
 	.find(".hiddenByPF")
 	.removeClass('hiddenByPF')
-	.addClass('shownByPF')
 
 	.find(".disabledByPF")
-	.prop('disabled', false)
+	.removeAttr('disabled')
 	.removeClass('disabledByPF');
 
 	elem.each( function() {
@@ -429,9 +389,9 @@ function showDiv( div_id, instanceWrapperDiv, initPage ) {
 				var options = showOnSelectVals[i][0];
 				var div_id2 = showOnSelectVals[i][1];
 				if ( uncoveredInput.hasClass( 'pfShowIfSelected' ) ) {
-					showDivIfSelected( options, div_id2, inputVal, instanceWrapperDiv, initPage );
+					showDivIfSelected( options, div_id2, inputVal, instanceWrapperDiv, false );
 				} else {
-					uncoveredInput.showDivIfChecked( options, div_id2, instanceWrapperDiv, initPage );
+					uncoveredInput.showDivIfChecked( options, div_id2, instanceWrapperDiv, false );
 				}
 			}
 		}
@@ -440,8 +400,7 @@ function showDiv( div_id, instanceWrapperDiv, initPage ) {
 
 // Hide a div due to "show on select". The CSS class is there so that PF can
 // ignore the div's contents when the form is submitted.
-function hideDiv( div_id, instanceWrapperDiv, initPage ) {
-	var speed = initPage ? 0 : 'fast';
+function hideDiv(div_id, instanceWrapperDiv, speed) {
 	var elem;
 	// IDs can't contain spaces, and jQuery won't work with such IDs - if
 	// this one has a space, display an alert.
@@ -456,13 +415,6 @@ function hideDiv( div_id, instanceWrapperDiv, initPage ) {
 	} else {
 		elem = $('#' + div_id);
 	}
-
-	// If we're just setting up the page, and this element has already
-	// been marked to be shown by some other input, don't hide it.
-	if ( initPage && elem.hasClass('shownByPF') ) {
-		return;
-	}
-
 	elem.find("span, div").addClass('hiddenByPF');
 
 	elem.each( function() {
@@ -473,9 +425,9 @@ function hideDiv( div_id, instanceWrapperDiv, initPage ) {
 			if ( $(this).is(':hidden') ) {
 				$(this).hide();
 			} else {
-				$(this).fadeTo(speed, 0, function() {
-					$(this).slideUp(speed);
-				});
+			$(this).fadeTo(speed, 0, function() {
+				$(this).slideUp(speed);
+			});
 			}
 		}
 	});
@@ -495,7 +447,7 @@ function hideDiv( div_id, instanceWrapperDiv, initPage ) {
 			for ( var i = 0; i < showOnSelectVals.length; i++ ) {
 				//var options = showOnSelectVals[i][0];
 				var div_id2 = showOnSelectVals[i][1];
-				hideDiv( div_id2, instanceWrapperDiv, initPage );
+				hideDiv(div_id2, instanceWrapperDiv, 'fast' );
 			}
 		}
 	});
@@ -509,26 +461,25 @@ function showDivIfSelected(options, div_id, inputVal, instanceWrapperDiv, initPa
 		// value, it'll be an array - handle either case.
 		if (($.isArray(inputVal) && $.inArray(options[i], inputVal) >= 0) ||
 			(!$.isArray(inputVal) && (inputVal === options[i]))) {
-			showDiv( div_id, instanceWrapperDiv, initPage );
+			showDiv( div_id, instanceWrapperDiv, initPage ? 0 : 'fast' );
 			return;
 		}
 	}
-	hideDiv( div_id, instanceWrapperDiv, initPage );
+	hideDiv(div_id, instanceWrapperDiv, initPage ? 0 : 'fast' );
 }
 
 // Used for handling 'show on select' for the 'dropdown' and 'listbox' inputs.
-$.fn.showIfSelected = function(partOfMultiple, initPage) {
+$.fn.showIfSelected = function(initPage) {
 	var inputVal = this.val(),
 		wgPageFormsShowOnSelect = mw.config.get( 'wgPageFormsShowOnSelect' ),
 		showOnSelectVals,
-		instanceWrapperDiv;
-
-	if ( partOfMultiple ) {
-		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("data-origID")];
 		instanceWrapperDiv = this.closest('.multipleTemplateInstance');
-	} else {
-		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("id")];
+
+	if ( instanceWrapperDiv.length === 0 ) {
 		instanceWrapperDiv = null;
+		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("id")];
+	} else {
+		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("data-origID")];
 	}
 
 	if ( showOnSelectVals !== undefined ) {
@@ -547,36 +498,35 @@ $.fn.showIfSelected = function(partOfMultiple, initPage) {
 $.fn.showDivIfChecked = function(options, div_id, instanceWrapperDiv, initPage ) {
 	for ( var i = 0; i < options.length; i++ ) {
 		if ($(this).find('[value="' + options[i] + '"]').is(":checked")) {
-			showDiv( div_id, instanceWrapperDiv, initPage );
+			showDiv(div_id, instanceWrapperDiv, initPage ? 0 : 'fast' );
 			return this;
 		}
 	}
-	hideDiv( div_id, instanceWrapperDiv, initPage );
+	hideDiv(div_id, instanceWrapperDiv, initPage ? 0 : 'fast' );
 
 	return this;
 };
 
 // Used for handling 'show on select' for the 'checkboxes' and 'radiobutton'
 // inputs.
-$.fn.showIfChecked = function(partOfMultiple, initPage) {
+$.fn.showIfChecked = function(initPage) {
 	var wgPageFormsShowOnSelect = mw.config.get( 'wgPageFormsShowOnSelect' ),
 		showOnSelectVals,
-		instanceWrapperDiv,
 		i;
 
-	if ( partOfMultiple ) {
-		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("data-origID")];
-		instanceWrapperDiv = this.closest('.multipleTemplateInstance');
-	} else {
-		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("id")];
+	var instanceWrapperDiv = this.closest('.multipleTemplateInstance');
+	if ( instanceWrapperDiv.length === 0 ) {
 		instanceWrapperDiv = null;
+		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("id")];
+	} else {
+		showOnSelectVals = wgPageFormsShowOnSelect[this.attr("data-origID")];
 	}
 
 	if ( showOnSelectVals !== undefined ) {
 		for ( i = 0; i < showOnSelectVals.length; i++ ) {
 			var options = showOnSelectVals[i][0];
 			var div_id = showOnSelectVals[i][1];
-			this.showDivIfChecked( options, div_id, instanceWrapperDiv, initPage );
+			this.showDivIfChecked(options, div_id, instanceWrapperDiv, initPage );
 		}
 	}
 
@@ -601,9 +551,9 @@ $.fn.showIfCheckedCheckbox = function( partOfMultiple, initPage ) {
 	for ( i = 0; i < divIDs.length; i++ ) {
 		var divID = divIDs[i];
 		if ($(this).is(":checked")) {
-			showDiv( divID, instanceWrapperDiv, initPage );
+			showDiv(divID, instanceWrapperDiv, initPage ? 0 : 'fast' );
 		} else {
-			hideDiv( divID, instanceWrapperDiv, initPage );
+			hideDiv(divID, instanceWrapperDiv, initPage ? 0 : 'fast' );
 		}
 	}
 
@@ -625,9 +575,6 @@ $.fn.addErrorMessage = function(msg, val) {
 	this.find('input').addClass('inputError');
 	this.find('select2-container').addClass('inputError');
 	this.append($('<div>').addClass( 'errorMessage' ).text( mw.msg( msg, val ) ));
-	// If this is part of a minimized multiple-template instance, add a
-	// red border around the instance rectangle to make it easier to find.
-	this.parents( '.multipleTemplateInstance.minimized' ).css( 'border', '1px solid red' );
 };
 
 $.fn.isAtMaxInstances = function() {
@@ -779,10 +726,10 @@ $.fn.validateUniqueField = function() {
 			if (namespace.replace(/\s+/, '') !== '') {
 				var ns = mw.config.get('wgNamespaceIds')[namespace.toLowerCase()];
 				if (typeof ns !== UNDEFINED) {
-					query += ns;
+					query +=  ns;
 				}
 			} else {
-				query += "0";
+				query +=  "0";
 			}
 		}
 
@@ -814,8 +761,8 @@ $.fn.validateUniqueField = function() {
 };
 
 $.fn.validateMandatoryComboBox = function() {
-	var combobox = this.find('.mandatoryField');
-	if (combobox.val() === null) {
+	var combobox = this.find( "input.pfComboBox" );
+	if (combobox.val() === '') {
 		this.addErrorMessage( 'pf_blank_error' );
 		return false;
 	} else {
@@ -834,9 +781,10 @@ $.fn.validateMandatoryDateField = function() {
 	}
 };
 
+// Special handling for radiobuttons, because what's being checked
+// is the first radiobutton, which has an empty value.
 $.fn.validateMandatoryRadioButton = function() {
-	var checkedValue = this.find("input:checked").val();
-	if ( !checkedValue || checkedValue == '' ) {
+	if (this.find("[value='']").is(':checked')) {
 		this.addErrorMessage( 'pf_blank_error' );
 		return false;
 	} else {
@@ -862,12 +810,8 @@ $.fn.validateMandatoryCheckboxes = function() {
 
 $.fn.validateURLField = function() {
 	var fieldVal = this.find("input").val();
-	var url_protocol = mw.config.get( 'wgUrlProtocols' );
-	//removing backslash before colon from url_protocol string
-	url_protocol = url_protocol.replace( /\\:/, ':' );
-	//removing '//' from wgUrlProtocols as this causes to match any protocol in regexp
-	url_protocol = url_protocol.replace( /\|\\\/\\\//, '' );
-	var url_regexp = new RegExp( '(' + url_protocol + ')' + '(\\w+:{0,1}\\w*@)?(\\S+)(:[0-9]+)?(\/|\/([\\w#!:.?+=&%@!\\-\/]))?' );
+	// code borrowed from http://snippets.dzone.com/posts/show/452
+	var url_regexp = /(ftp|http|https|rtsp|news):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
 	if (fieldVal === "" || url_regexp.test(fieldVal)) {
 		return true;
 	} else {
@@ -897,16 +841,6 @@ $.fn.validateNumberField = function() {
 		return true;
 	} else {
 		this.addErrorMessage( 'pf_bad_number_error' );
-		return false;
-	}
-};
-
-$.fn.validateIntegerField = function() {
-	var fieldVal = this.find("input").val();
-	if ( fieldVal === '' || fieldVal == parseInt( fieldVal, 10 ) ) {
-		return true;
-	} else {
-		this.addErrorMessage( 'pf_bad_integer_error' );
 		return false;
 	}
 };
@@ -943,35 +877,6 @@ $.fn.checkForPipes = function() {
 		return true;
 	}
 
-	// Also allow pipes within special tags, like <pre> or <syntaxhighlight>.
-	// Code copied, more or less, from PFTemplateInForm::escapeNonTemplatePipes().
-	var startAndEndTags = [
-		[ '<pre', 'pre>' ],
-		[ '<syntaxhighlight', 'syntaxhighlight>' ],
-		[ '<source', 'source>' ],
-		[ '<ref', 'ref>' ]
-	];
-
-	for ( var i in startAndEndTags ) {
-		var startTag = startAndEndTags[i][0];
-		var endTag = startAndEndTags[i][1];
-		var pattern = RegExp( "(" + startTag + "[^]*?)\\|([^]*?" + endTag + ")", 'i' );
-		var matches;
-		while ( ( matches = fieldVal.match( pattern ) ) !== null ) {
-			// Special handling, to avoid escaping pipes
-			// within a string that looks like:
-			// startTag ... endTag | startTag ... endTag
-			if ( matches[1].includes( endTag ) &&
-				matches[2].includes( startTag ) ) {
-				fieldVal = fieldVal.replace( pattern, "$1" + "\2" + "$2");
-			} else {
-				fieldVal = fieldVal.replace( pattern, "$1" + "\1" + "$2" );
-			}
-		}
-	}
-	fieldVal = fieldVal.replace( "\2", '|' );
-
-	// Now check for pipes outside of brackets.
 	var nextPipe,
 		nextDoubleBracketsStart,
 		nextDoubleBracketsEnd;
@@ -1070,17 +975,6 @@ window.validateAll = function () {
 			num_errors += 1;
 		}
 	});
-	$("div.pfTreeInput.mandatory").not(".hiddenByPF").each( function() {
-		// @HACK - handle both the options for tree, checkboxes and
-		// radiobuttons, at the same time, regardless of which one is
-		// being used. This seems to work fine, though.
-		if (! $(this).validateMandatoryCheckboxes() ) {
-			num_errors += 1;
-		}
-		if (! $(this).validateMandatoryRadioButton() ) {
-			num_errors += 1;
-		}
-	});
 	$("span.inputSpan.uniqueFieldSpan").not(".hiddenByPF").each( function() {
 		if (! $(this).validateUniqueField() ) {
 			num_errors += 1;
@@ -1106,20 +1000,10 @@ window.validateAll = function () {
 			num_errors += 1;
 		}
 	});
-	$("span.integerInput").not(".hiddenByPF").each( function() {
-		if (! $(this).validateIntegerField() ) {
-			num_errors += 1;
-		}
-	});
 	$("span.dateInput").not(".hiddenByPF").each( function() {
 		if (! $(this).validateDateField() ) {
 			num_errors += 1;
 		}
-	});
-	$("input.modifiedInput").not(".hiddenByPF").each( function() {
-		// No separate function needed.
-		$(this).parent().addErrorMessage( 'pf_modified_input_error' );
-		num_errors += 1;
 	});
 
 	// call registered validation functions
@@ -1169,83 +1053,13 @@ window.validateAll = function () {
 	return (num_errors === 0);
 };
 
-/**
- * Minimize all instances if the total height of all the instances
- * is over 800 pixels - to allow for easier navigation and sorting.
- */
-$.fn.possiblyMinimizeAllOpenInstances = function() {
-	if ( ! this.hasClass( 'minimizeAll' ) ) {
-		return;
-	}
-
-	var displayedFieldsWhenMinimized = this.attr('data-displayed-fields-when-minimized');
-	var allDisplayedFields = null;
-	if ( displayedFieldsWhenMinimized ) {
-		allDisplayedFields = displayedFieldsWhenMinimized.split(',').map(function(item) {
-			return item.trim().toLowerCase();
-		});
-	}
-
-	this.find('.multipleTemplateInstance').not('.minimized').each( function() {
-		var instance = $(this);
-		instance.addClass('minimized');
-		var valuesStr = '';
-		instance.find( "input[type != 'hidden'][type != 'button'], select, textarea, div.ve-ce-surface" ).each( function() {
-			// If the set of fields to be displayed was specified in
-			// the form definition, check against that list.
-			if ( allDisplayedFields !== null ) {
-				var fieldFullName = $(this).attr('name');
-				if ( !fieldFullName ) {
-					return;
-				}
-				var matches = fieldFullName.match(/.*\[.*\]\[(.*)\]/);
-				var fieldRealName = matches[1].toLowerCase();
-				if ( !allDisplayedFields.includes( fieldRealName ) ) {
-					return;
-				}
-			}
-
-			var curVal = $(this).val();
-			if ( $(this).hasClass('ve-ce-surface') ) {
-				// Special handling for VisualEditor/VEForAll textareas.
-				curVal = $(this).text();
-			}
-			if ( typeof curVal !== 'string' || curVal === '' ) {
-				return;
-			}
-			var inputType = $(this).attr('type');
-			if ( inputType === 'checkbox' || inputType === 'radio' ) {
-				if ( ! $(this).is(':checked') ) {
-					return;
-				}
-			}
-			if ( curVal.length > 70 ) {
-				curVal = curVal.substring(0, 70) + "...";
-			}
-			if ( valuesStr !== '' ) {
-				valuesStr += ' &middot; ';
-			}
-			valuesStr += curVal;
-		});
-		if ( valuesStr === '' ) {
-			valuesStr = '<em>No data</em>';
-		}
-		instance.find('.instanceMain').fadeOut( "medium", function() {
-			instance.find('.instanceRearranger').after('<td class="fieldValuesDisplay">' + valuesStr + '</td>');
-		});
-	});
-};
-
 var num_elements = 0;
 
 /**
  * Functions for multiple-instance templates.
- *
- * @param addAboveCurInstance
  */
 $.fn.addInstance = function( addAboveCurInstance ) {
 	var wgPageFormsShowOnSelect = mw.config.get( 'wgPageFormsShowOnSelect' );
-	var wgPageFormsHeightForMinimizingInstances = mw.config.get( 'wgPageFormsHeightForMinimizingInstances' );
 	var wrapper = this.closest(".multipleTemplateWrapper");
 	var multipleTemplateList = wrapper.find('.multipleTemplateList');
 
@@ -1253,18 +1067,6 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 	// exit here.
 	if ( multipleTemplateList.isAtMaxInstances() ) {
 		return false;
-	}
-
-	if ( wgPageFormsHeightForMinimizingInstances >= 0 ) {
-		if ( ! multipleTemplateList.hasClass('minimizeAll') &&
-			multipleTemplateList.height() >= wgPageFormsHeightForMinimizingInstances ) {
-			multipleTemplateList.addClass('minimizeAll');
-		}
-		if ( multipleTemplateList.hasClass('minimizeAll') ) {
-			multipleTemplateList
-				.addClass('currentFocus')
-				.possiblyMinimizeAllOpenInstances();
-		}
 	}
 
 	// Global variable.
@@ -1295,7 +1097,7 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 	.removeClass('hiddenByPF')
 
 	.find('.disabledByPF')
-	.prop('disabled', false)
+	.removeAttr('disabled')
 	.removeClass('disabledByPF');
 
 	// Make internal ID unique for the relevant form elements, and replace
@@ -1317,7 +1119,7 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 				this.id = this.id.replace(/input_/g, 'input_' + num_elements + '_');
 
 				// TODO: Data in wgPageFormsShowOnSelect should probably be stored in
-				// $("#pfForm").data('PageForms')
+				//  $("#pfForm").data('PageForms')
 				if ( wgPageFormsShowOnSelect[ old_id ] ) {
 					wgPageFormsShowOnSelect[ this.id ] = wgPageFormsShowOnSelect[ old_id ];
 				}
@@ -1369,6 +1171,10 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 		return this.id.replace(/span_/g, 'span_' + num_elements + '_');
 	});
 
+	new_div.find('label').attr('for', function() {
+		return this.htmlFor.replace(/input_/g, 'input_' + num_elements + '_');
+	});
+
 	// Add the new instance.
 	if ( addAboveCurInstance ) {
 		new_div.insertBefore(this.closest(".multipleTemplateInstance"));
@@ -1397,24 +1203,10 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 						// Call every initialization method
 						// for this input
 						for ( var i = 0; i < thatData.length; i++ ) {
-							var initFunction = thatData[i].initFunction;
-							if ( initFunction === undefined ) {
-								continue;
-							}
-							// If the code attempted to store
-							// this function before it was
-							// defined, only its name was stored.
-							// In that case, get the function now.
-							// @TODO - move getFunctionFromName()
-							// so that it can be called from here,
-							// which would be better than window[].
-							if ( typeof initFunction === 'string' ) {
-								initFunction = window[initFunction];
-							}
-							initFunction(
+							thatData[i].initFunction(
 								this.id,
 								thatData[i].parameters
-							);
+								);
 						}
 					}
 				}
@@ -1485,8 +1277,6 @@ $.fn.setDependentAutocompletion = function( dependentField, baseField, baseValue
 /**
  * Called on a 'base' field (e.g., for a country) - sets the autocompletion
  * for its 'dependent' field (e.g., for a city).
- *
- * @param partOfMultiple
  */
 $.fn.setAutocompleteForDependentField = function( partOfMultiple ) {
 	var curValue = $(this).val();
@@ -1502,8 +1292,6 @@ $.fn.setAutocompleteForDependentField = function( partOfMultiple ) {
 			dependent_on_me.push(dependentFieldPair[1]);
 		}
 	}
-	// @TODO - change to $.uniqueSort() once support for MW 1.28 is
-	// removed (and jQuery >= 3 is thus guaranteed).
 	dependent_on_me = $.unique(dependent_on_me);
 
 	var self = this;
@@ -1537,41 +1325,25 @@ $.fn.setAutocompleteForDependentField = function( partOfMultiple ) {
  * Initialize all the JS-using elements contained within this block - can be
  * called for either the entire HTML body, or for a div representing an
  * instance of a multiple-instance template.
- *
- * @param partOfMultiple
  */
 $.fn.initializeJSElements = function( partOfMultiple ) {
-	var fancyBoxSettings;
-
 	this.find(".pfShowIfSelected").each( function() {
-		// Avoid duplicate calls on any one element.
-		if ( !partOfMultiple && $(this).parents('.multipleTemplateWrapper').length > 0 ) {
-			return;
-		}
 		$(this)
-		.showIfSelected(partOfMultiple, true)
+		.showIfSelected(true)
 		.change( function() {
-			$(this).showIfSelected(partOfMultiple, false);
+			$(this).showIfSelected(false);
 		});
 	});
 
 	this.find(".pfShowIfChecked").each( function() {
-		// Avoid duplicate calls on any one element.
-		if ( !partOfMultiple && $(this).parents('.multipleTemplateWrapper').length > 0 ) {
-			return;
-		}
 		$(this)
-		.showIfChecked(partOfMultiple, true)
+		.showIfChecked(true)
 		.click( function() {
-			$(this).showIfChecked(partOfMultiple, false);
+			$(this).showIfChecked(false);
 		});
 	});
 
 	this.find(".pfShowIfCheckedCheckbox").each( function() {
-		// Avoid duplicate calls on any one element.
-		if ( !partOfMultiple && $(this).parents('.multipleTemplateWrapper').length > 0 ) {
-			return;
-		}
 		$(this)
 		.showIfCheckedCheckbox(partOfMultiple, true)
 		.click( function() {
@@ -1579,34 +1351,36 @@ $.fn.initializeJSElements = function( partOfMultiple ) {
 		});
 	});
 
-	if ( partOfMultiple ) {
-		// Enable the new remove button
-		this.find(".removeButton").click( function() {
+	// Enable the new remove button
+	this.find(".removeButton").click( function() {
 
-			// Unregister initialization and validation for deleted inputs
-			$(this).parentsUntil( '.multipleTemplateInstance' ).last().parent().find("input, select, textarea").each(
+		// Unregister initialization and validation for deleted inputs
+		$(this).parentsUntil( '.multipleTemplateInstance' ).last().parent().find("input, select, textarea").each(
 			function() {
 				$(this).PageForms_unregisterInputInit();
 				$(this).PageForms_unregisterInputValidation();
 			}
 		);
 
-			// Remove the encompassing div for this instance.
-			$(this).closest(".multipleTemplateInstance")
-			.fadeTo('fast', 0, function() {
-				$(this).slideUp('fast', function() {
-					$(this).remove();
-				});
+		// Remove the encompassing div for this instance.
+		$(this).closest(".multipleTemplateInstance")
+		.fadeTo('fast', 0, function() {
+			$(this).slideUp('fast', function() {
+				$(this).remove();
 			});
-			return false;
 		});
+		return false;
+	});
 
-		// ...and the new adder
+	// ...and the new adder
+	if ( partOfMultiple ) {
 		this.find('.addAboveButton').click( function() {
 			$(this).addInstance( true );
 			return false; // needed to disable <a> behavior
 		});
 	}
+
+	this.find('.autocompleteInput').attachAutocomplete();
 
 	var combobox = new pf.select2.combobox();
 	this.find('.pfComboBox').not('#semantic_property_starter, .multipleTemplateStarter .pfComboBox, .select2-container').each( function() {
@@ -1618,57 +1392,17 @@ $.fn.initializeJSElements = function( partOfMultiple ) {
 		tokens.apply($(this));
 	});
 
-	// We use a different version of FancyBox depending on the version
-	// of jQuery (1 vs. 3) (which in turn depends on the version of
-	// MediaWiki (<= 1.29 vs. >= 1.30)).
-	if ( parseInt($().jquery) >= 3 ) {
-		fancyBoxSettings = {
-			toolbar : false,
-			smallBtn : true,
-			iframe : {
-				preload : false,
-				css : {
-					width : '75%',
-					height : '75%'
-				}
-			},
-			animationEffect : false
-		};
-	} else {
-		fancyBoxSettings = {
-			'width'         : '75%',
-			'height'        : '75%',
-			'autoScale'     : false,
-			'transitionIn'  : 'none',
-			'transitionOut' : 'none',
-			'type'          : 'iframe',
-			'overlayColor'  : '#222',
-			'overlayOpacity' : '0.8'
-		};
-	}
-
-	// Only defined if $wgPageFormsSimpleUpload == true.
-	if ( typeof this.initializeSimpleUpload === 'function' ) {
-		this.initializeSimpleUpload();
-	}
-
-	if ( partOfMultiple ) {
-		this.find('.pfFancyBox').fancybox(fancyBoxSettings);
-		this.find('.autocompleteInput').attachAutocomplete();
-		this.find('.autoGrow').autoGrow();
-		this.find(".pfRating").applyRatingInput();
-		this.find(".pfTreeInput").each( function() {
-			$(this).applyFancytree();
-		});
-	} else {
-		this.find('.pfFancyBox').not('multipleTemplateWrapper .pfFancyBox').fancybox(fancyBoxSettings);
-		this.find('.autocompleteInput').not('.multipleTemplateWrapper .autocompleteInput').attachAutocomplete();
-		this.find('.autoGrow').not('.multipleTemplateWrapper .autoGrow').autoGrow();
-		this.find(".pfRating").not(".multipleTemplateWrapper .pfRating").applyRatingInput();
-		this.find(".pfTreeInput").not(".multipleTemplateWrapper .pfTreeInput").each( function() {
-			$(this).applyFancytree();
-		});
-	}
+	this.find('.autoGrow').autoGrow();
+	this.find('.pfFancyBox').fancybox({
+		'width'         : '75%',
+		'height'        : '75%',
+		'autoScale'     : false,
+		'transitionIn'  : 'none',
+		'transitionOut' : 'none',
+		'type'          : 'iframe',
+		'overlayColor'  : '#222',
+		'overlayOpacity' : '0.8'
+	});
 
 	// @TODO - this should ideally be called only for inputs that have
 	// a dependent field - which might involve changing the storage of
@@ -1690,47 +1424,9 @@ $.fn.initializeJSElements = function( partOfMultiple ) {
 			$(this).setAutocompleteForDependentField( partOfMultiple );
 		});
 
-	var myThis = this;
-	if ( $.fn.applyVisualEditor ) {
-		if ( partOfMultiple ) {
-			myThis.find(".visualeditor").applyVisualEditor();
-		} else {
-			myThis.find(".visualeditor").not(".multipleTemplateWrapper .visualeditor").applyVisualEditor();
-		}
-	} else {
-		$(document).on('VEForAllLoaded', function(e) {
-			if ( partOfMultiple ) {
-				myThis.find(".visualeditor").applyVisualEditor();
-			} else {
-				myThis.find(".visualeditor").not(".multipleTemplateWrapper .visualeditor").applyVisualEditor();
-			}
-		});
-	}
-
-	// @TODO - this should be in the TinyMCE extension, and use a hook.
-	if ( typeof( mwTinyMCEInit ) === 'function' ) {
-		if ( partOfMultiple ) {
-			myThis.find(".tinymce").each( function() {
-				mwTinyMCEInit( '#' + $(this).attr('id') );
-			});
-		} else {
-			myThis.find(".tinymce").not(".multipleTemplateWrapper .tinymce").each( function() {
-				mwTinyMCEInit( '#' + $(this).attr('id') );
-			});
-		}
-	} else {
-		$(document).on('TinyMCELoaded', function(e) {
-			if ( partOfMultiple ) {
-				myThis.find(".tinymce").each( function() {
-					mwTinyMCEInit( '#' + $(this).attr('id') );
-				});
-			} else {
-				myThis.find(".tinymce").not(".multipleTemplateWrapper .tinymce").each( function() {
-					mwTinyMCEInit( '#' + $(this).attr('id') );
-				});
-			}
-		});
-	}
+	this.find(".pfTreeInput").not(".multipleTemplateStarter .pfTreeInput").each( function() {
+		$(this).applyDynatree();
+	});
 
 };
 
@@ -1746,11 +1442,6 @@ $(document).ready( function() {
 		for ( var i = 0; i < namespaces.length; i++ ) {
 			func = func[ namespaces[ i ] ];
 		}
-		// If this gets called before the function is defined, just
-		// store the function name instead, for later lookup.
-		if ( func === null ) {
-			return functionName;
-		}
 		return func;
 	}
 
@@ -1764,123 +1455,40 @@ $(document).ready( function() {
 		return;
 	}
 
-	// jQuery's .ready() function is being called before the resource was actually loaded.
-	// This is a workaround for https://phabricator.wikimedia.org/T216805.
-	setTimeout( function(){
-		// "Mask" to prevent users from clicking while form is still loading.
-		$('#loadingMask').css({'width': $(document).width(),'height': $(document).height()});
-
-		// register init functions
-		var initFunctionData = mw.config.get( 'ext.pf.initFunctionData' );
-		for ( inputID in initFunctionData ) {
-			for ( i in initFunctionData[inputID] ) {
-				/*jshint -W069 */
-				$( '#' + inputID ).PageForms_registerInputInit( getFunctionFromName( initFunctionData[ inputID ][ i ][ 'name' ] ), initFunctionData[ inputID ][ i ][ 'param' ] );
-				/*jshint +W069 */
-			}
+	// register init functions
+	var initFunctionData = mw.config.get( 'ext.pf.initFunctionData' );
+	for ( inputID in initFunctionData ) {
+		for ( i in initFunctionData[inputID] ) {
+			/*jshint -W069 */
+			$( '#' + inputID ).PageForms_registerInputInit( getFunctionFromName( initFunctionData[ inputID ][ i ][ 'name' ] ), initFunctionData[ inputID ][ i ][ 'param' ] );
+			/*jshint +W069 */
 		}
+	}
 
-		// register validation functions
-		validationFunctionData = mw.config.get( 'ext.pf.validationFunctionData' );
-		for ( inputID in validationFunctionData ) {
-			for ( i in validationFunctionData[inputID] ) {
-				/*jshint -W069 */
-				$( '#' + inputID ).PageForms_registerInputValidation( getFunctionFromName( validationFunctionData[ inputID ][ i ][ 'name' ] ), validationFunctionData[ inputID ][ i ][ 'param' ] );
-				/*jshint +W069 */
-			}
+	// register validation functions
+	validationFunctionData = mw.config.get( 'ext.pf.validationFunctionData' );
+	for ( inputID in validationFunctionData ) {
+		for ( i in validationFunctionData[inputID] ) {
+			/*jshint -W069 */
+			$( '#' + inputID ).PageForms_registerInputValidation( getFunctionFromName( validationFunctionData[ inputID ][ i ][ 'name' ] ), validationFunctionData[ inputID ][ i ][ 'param' ] );
+			/*jshint +W069 */
 		}
+	}
 
-		$( 'body' ).initializeJSElements(false);
+	$( 'body' ).initializeJSElements(false);
 
-		$('.multipleTemplateInstance').initializeJSElements(true);
-		$('.multipleTemplateAdder').click( function() {
-			$(this).addInstance( false );
-		});
-		var wgPageFormsHeightForMinimizingInstances = mw.config.get( 'wgPageFormsHeightForMinimizingInstances' );
-		if ( wgPageFormsHeightForMinimizingInstances >= 0) {
-			$('.multipleTemplateList').each( function() {
-				if ( $(this).height() > wgPageFormsHeightForMinimizingInstances ) {
-					$(this).addClass('minimizeAll');
-					$(this).possiblyMinimizeAllOpenInstances();
-				}
-			});
-		}
-		$('.multipleTemplateList').each( function() {
-			var list = $(this);
-			var sortable = Sortable.create(list[0], {
-				handle: '.instanceRearranger',
-				onStart: function (/**Event*/evt) {
-					list.possiblyMinimizeAllOpenInstances();
-				}
-			});
-		});
+	$('.multipleTemplateInstance').initializeJSElements(true);
+	$('.multipleTemplateAdder').click( function() {
+		$(this).addInstance( false );
+	});
+	$('.multipleTemplateList').sortable({
+		axis: 'y',
+		handle: '.instanceRearranger'
+	});
 
-		// If the form is submitted, validate everything!
-		$('#pfForm').submit( function() {
-			return validateAll();
-		} );
-
-		// We are all done - remove the loading spinner.
-		$('.loadingImage').remove();
-	}, 0 );
-
-	mw.hook('pf.formSetupAfter').fire();
+	// If the form is submitted, validate everything!
+	$('#pfForm').submit( function() {
+		return validateAll();
+	} );
 });
-
-// If some part of the form is clicked, minimize any multiple-instance
-// template instances that need minimizing, and move the "focus" to the current
-// instance list, if one is being clicked and it's different from the
-// previous one.
-// We make only the form itself clickable, instead of the whole screen, to
-// try to avoid a click on a popup, like the "Upload file" window, minimizing
-// the current open instance.
-$('form#pfForm').click( function(e) {
-	var target = $(e.target);
-	// Ignore the "add instance" buttons - those get handling of their own.
-	if ( target.hasClass('multipleTemplateAdder') || target.hasClass('addAboveButton') ) {
-		return;
-	}
-
-	var instance = target.closest('.multipleTemplateInstance');
-	if ( instance === null ) {
-		$('.multipleTemplateList.currentFocus')
-			.removeClass('currentFocus')
-			.possiblyMinimizeAllOpenInstances();
-		return;
-	}
-
-	var instancesList = instance.closest('.multipleTemplateList');
-	if ( !instancesList.hasClass('currentFocus') ) {
-		$('.multipleTemplateList.currentFocus')
-			.removeClass('currentFocus')
-			.possiblyMinimizeAllOpenInstances();
-		if ( instancesList.hasClass('minimizeAll') ) {
-			instancesList.addClass('currentFocus');
-		}
-	}
-
-	if ( instance.hasClass('minimized') ) {
-		instancesList.possiblyMinimizeAllOpenInstances();
-		instance.removeClass('minimized');
-		instance.find('.fieldValuesDisplay').html('');
-		instance.find('.instanceMain').fadeIn();
-		instance.find('.fieldValuesDisplay').remove();
-	}
-});
-
-$('#pf-expand-all a').click(function( event ) {
-	event.preventDefault();
-
-	// Page Forms minimized template instances.
-	$('.minimized').each( function() {
-		$(this).removeClass('minimized');
-		$(this).find('.fieldValuesDisplay').html('');
-		$(this).find('.instanceMain').fadeIn();
-		$(this).find('.fieldValuesDisplay').remove();
-        });
-
-	// Standard MediaWiki "collapsible" sections.
-	$('div.mw-collapsed a.mw-collapsible-text').click();
-});
-
 }( jQuery, mediaWiki ) );

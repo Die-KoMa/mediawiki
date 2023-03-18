@@ -3,10 +3,10 @@
 		"authors": [
 			"EugeneZelenko",
 			"Jim-by",
-			"Kareyac",
 			"Red Winged Duck",
+			"Wizardist",
 			"Renessaince",
-			"Wizardist"
+			"Kareyac"
 		]
 	},
 	"pageforms-desc": "Формы для стварэньня і рэдагаваньня вікістаронак",
@@ -117,7 +117,7 @@
 	"pf_editsource": "Рэдагаваць крыніцу",
 	"pf_formedit_edittitle": "Рэдагаваньне $1: $2",
 	"pf_formedit_morethanoneform": "Увага: для гэтай старонкі вызначана па змоўчваньні больш за адну форму.",
-	"pf_formedit_formwarning": "Увага: старонка [[$1|ўжо існуе]], але яна не выкарыстоўвае гэтую форму.",
+	"pf_formedit_formwarning": "Увага: старонка <a href=\"$1\">ужо існуе</a>, але яна не выкарыстоўвае гэтую форму.",
 	"pf_formedit_remove": "Выдаліць гэтую існасьць",
 	"pf_formedit_addanother": "Дадаць іншую",
 	"pf_formedit_none": "Нічога",
@@ -142,7 +142,6 @@
 	"pf_bad_url_error": "павінна мець слушны фармат URL, пачынацца з 'http'",
 	"pf_bad_email_error": "павінна мець слушны фармат адрасу электроннай пошты",
 	"pf_bad_number_error": "павінна быць слушным лікам",
-	"pf_bad_integer_error": "павінна быць цэлым лікам",
 	"pf_bad_date_error": "павінна быць слушнай датай",
 	"uploadwindow": "Акно загрузкі",
 	"pf_deletionlog": "Журнал выдаленьняў",
@@ -158,7 +157,7 @@
 	"pf_blank_namespace": "Галоўная",
 	"right-viewedittab": "Прагляд закладкі «{{int:edit}}» для старонак, якія можна рэдагаваць праз форму",
 	"right-editrestrictedfields": "рэдагаваньне абмежаваных палёў форм",
-	"right-createclass": "Стварэньне новых «клясаў» старонак",
+	"right-createclass": "стварэньне новых сэмантычных клясаў",
 	"pf-datepicker-close": "Закрыць",
 	"pf-datepicker-prev": "Папярэдняе",
 	"pf-datepicker-next": "Наступнае",

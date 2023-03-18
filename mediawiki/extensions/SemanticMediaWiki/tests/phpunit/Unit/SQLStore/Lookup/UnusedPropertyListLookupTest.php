@@ -109,8 +109,9 @@ class UnusedPropertyListLookupTest extends \PHPUnit_Framework_TestCase {
 
 	public function testfetchListForValidProperty() {
 
-		$idTable = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\EntityIdManager' )
+		$idTable = $this->getMockBuilder( '\stdClass' )
 			->disableOriginalConstructor()
+			->setMethods( [ 'getIdTable' ] )
 			->getMock();
 
 		$row = new \stdClass;
@@ -157,8 +158,9 @@ class UnusedPropertyListLookupTest extends \PHPUnit_Framework_TestCase {
 
 	public function testfetchListForInvalidProperty() {
 
-		$idTable = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\EntityIdManager' )
+		$idTable = $this->getMockBuilder( '\stdClass' )
 			->disableOriginalConstructor()
+			->setMethods( [ 'getIdTable' ] )
 			->getMock();
 
 		$row = new \stdClass;

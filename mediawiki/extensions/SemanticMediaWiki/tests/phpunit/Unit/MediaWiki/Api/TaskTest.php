@@ -90,7 +90,7 @@ class TaskTest extends \PHPUnit_Framework_TestCase {
 		$cache->expects( $this->once() )
 			->method( 'save' );
 
-		$entityTable = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\EntityIdManager' )
+		$entityTable = $this->getMockBuilder( '\SMWSql3SmwIds' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -113,8 +113,8 @@ class TaskTest extends \PHPUnit_Framework_TestCase {
 			$this->apiFactory->newApiMain(
 				[
 					'action'   => 'smwtask',
-					'task'     => 'duplicate-lookup',
-					'params'   => json_encode( [] ),
+					'task'     => 'duplookup',
+					'params'   => [],
 					'token'    => 'foo'
 				]
 			),
@@ -151,7 +151,7 @@ class TaskTest extends \PHPUnit_Framework_TestCase {
 			$this->apiFactory->newApiMain(
 				[
 					'action'   => 'smwtask',
-					'task'     => 'insert-job',
+					'task'     => 'job',
 					'params'   => json_encode(
 						[
 							'subject' => 'Foo#0##',

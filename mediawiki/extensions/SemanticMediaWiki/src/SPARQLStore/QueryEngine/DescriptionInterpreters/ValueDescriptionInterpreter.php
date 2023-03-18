@@ -113,10 +113,10 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 
 	private function createConditionForEqualityComparator( $dataItem, $property, $joinVariable, $orderByProperty ) {
 
-		$expElement = $this->exporter->newAuxiliaryExpElement( $dataItem );
+		$expElement = $this->exporter->getDataItemHelperExpElement( $dataItem );
 
 		if ( $expElement === null ) {
-			$expElement = $this->exporter->newExpElement( $dataItem );
+			$expElement = $this->exporter->getDataItemExpElement( $dataItem );
 		}
 
 		if ( $expElement === null || !$expElement instanceof ExpElement ) {
@@ -214,11 +214,11 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 		$orderByVariable = '?' . $result->orderByVariable;
 
 		if ( $dataItem instanceof DIWikiPage ) {
-			$expElement = $this->exporter->newExpElement( new DIBlob( $dataItem->getSortKey() ) );
+			$expElement = $this->exporter->getDataItemExpElement( new DIBlob( $dataItem->getSortKey() ) );
 		} else {
-			$expElement = $this->exporter->newAuxiliaryExpElement( $dataItem );
+			$expElement = $this->exporter->getDataItemHelperExpElement( $dataItem );
 			if ( is_null( $expElement ) ) {
-				$expElement = $this->exporter->newExpElement( $dataItem );
+				$expElement = $this->exporter->getDataItemExpElement( $dataItem );
 			}
 		}
 
@@ -252,7 +252,7 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 		// literal and not on it's resource
 		$skeyExpElement = Exporter::getInstance()->getSpecialPropertyResource( '_SKEY' );
 
-		$expElement = $this->exporter->newExpElement( $dataItem->getSortKeyDataItem() );
+		$expElement = $this->exporter->getDataItemExpElement( $dataItem->getSortKeyDataItem() );
 		$condition = new SingletonCondition( $expElement );
 
 		$filterVariable = $this->conditionBuilder->getNextVariable();

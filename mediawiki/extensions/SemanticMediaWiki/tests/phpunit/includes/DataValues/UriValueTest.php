@@ -121,7 +121,9 @@ class UriValueTest extends \PHPUnit_Framework_TestCase {
 	public function uriProvider() {
 
 		$linker = smwfGetLinker();
-		$noFollowAttribute = ' rel="nofollow"';
+
+		// FIXME MW 1.19*
+		$noFollowAttribute = version_compare( $GLOBALS['wgVersion'], '1.20', '<' ) ? '' : ' rel="nofollow"';
 
 		// https://github.com/lanthaler/IRI/blob/master/Test/IriTest.php
 		$provider[] = [

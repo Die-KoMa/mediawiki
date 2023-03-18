@@ -26,11 +26,11 @@ class ImporterServiceFactoryTest extends \PHPUnit_Framework_TestCase {
 
 		$this->containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
 
-		$titleFactory = $this->getMockBuilder( '\SMW\MediaWiki\TitleFactory' )
+		$pageCreator = $this->getMockBuilder( '\SMW\MediaWiki\PageCreator' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->containerBuilder->registerObject( 'TitleFactory', $titleFactory );
+		$this->containerBuilder->registerObject( 'PageCreator', $pageCreator );
 
 		$importStringSource = $this->getMockBuilder( '\ImportStringSource' )
 			->disableOriginalConstructor()
@@ -63,7 +63,7 @@ class ImporterServiceFactoryTest extends \PHPUnit_Framework_TestCase {
 			'smwgImportFileDirs' => 'foo'
 		] ) );
 
-		$this->containerBuilder->registerFromFile( $GLOBALS['smwgServicesFileDir'] . '/' . 'importer.php' );
+		$this->containerBuilder->registerFromFile( $GLOBALS['smwgServicesFileDir'] . '/' . 'ImporterServices.php' );
 	}
 
 	public function testCanConstruct() {

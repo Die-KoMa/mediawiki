@@ -12,8 +12,6 @@ use SMW\SQLStore\ChangeOp\ChangeDiff;
 use SMW\SQLStore\ChangeOp\ChangeOp;
 use SMW\Store;
 use SMW\Utils\CharArmor;
-use SMW\MediaWiki\RevisionGuard;
-use SMW\MediaWiki\Collator;
 use SMWDIBlob as DIBlob;
 use Title;
 use Revision;
@@ -154,10 +152,13 @@ class Indexer {
 			$this->store->getConnection( 'elastic' )
 		);
 
-		return [
-			$rollover->update( ElasticClient::TYPE_DATA ),
-			$rollover->update( ElasticClient::TYPE_LOOKUP )
-		];
+		$rollover->update(
+			ElasticClient::TYPE_DATA
+		);
+
+		$rollover->update(
+			ElasticClient::TYPE_LOOKUP
+		);
 	}
 
 	/**
@@ -170,10 +171,13 @@ class Indexer {
 			$this->store->getConnection( 'elastic' )
 		);
 
-		return [
-			$rollover->delete( ElasticClient::TYPE_DATA ),
-			$rollover->delete( ElasticClient::TYPE_LOOKUP )
-		];
+		$rollover->delete(
+			ElasticClient::TYPE_DATA
+		);
+
+		$rollover->delete(
+			ElasticClient::TYPE_LOOKUP
+		);
 	}
 
 	/**
@@ -235,7 +239,7 @@ class Indexer {
 		];
 
 		if ( $this->isSafe( $title, $params ) === false ) {
-			return $this->pushRecoveryJob( $title, $params );
+			return $this->planRecoveryJob( $title, $params );
 		}
 
 		$index = $this->getIndexName(
@@ -299,11 +303,7 @@ class Indexer {
 		];
 
 		if ( $this->isSafe() === false ) {
-			return $this->pushRecoveryJob( $title, $params );
-		}
-
-		if ( $dataItem->getId() == 0 ) {
-			$dataItem->setId( $this->getId( $dataItem ) );
+			return $this->planRecoveryJob( $title, $params );
 		}
 
 		if ( $dataItem->getId() == 0 ) {
@@ -318,7 +318,14 @@ class Indexer {
 			'id'    => $dataItem->getId()
 		];
 
-		$data['subject'] = $this->makeSubject( $dataItem );
+		$data['subject'] = [
+			'title' => str_replace( '_', ' ', $dataItem->getDBKey() ),
+			'subobject' => $dataItem->getSubobjectName(),
+			'namespace' => $dataItem->getNamespace(),
+			'interwiki' => $dataItem->getInterwiki(),
+			'sortkey'   => mb_convert_encoding( $dataItem->getSortKey(), 'UTF-8', 'UTF-8' )
+		];
+
 		$response = $connection->index( $params + [ 'body' => $data ] );
 
 		$this->logger->info(
@@ -353,7 +360,7 @@ class Indexer {
 		];
 
 		if ( $this->isSafe() === false ) {
-			return $this->pushRecoveryJob( $subject->getTitle(), $params ) ;
+			return $this->planRecoveryJob( $subject->getTitle(), $params ) ;
 		}
 
 		$this->index( $changeDiff, $text );
@@ -373,7 +380,7 @@ class Indexer {
 		}
 
 		if ( $id instanceof Title ) {
-			$id = RevisionGuard::getLatestRevID( $id );
+			$id = $id->getLatestRevID( \Title::GAID_FOR_UPDATE );
 		}
 
 		if ( $id == 0 ) {
@@ -412,13 +419,6 @@ class Indexer {
 		$this->map_data( $bulk, $changeDiff );
 		$this->map_text( $bulk, $subject, $text );
 
-		// On occasions where the change didn't contain any data but the subject
-		// has been recognized to exists, create a subject body as reference
-		// point
-		if ( $bulk->isEmpty() ) {
-			$this->map_empty( $bulk, $subject );
-		}
-
 		$response = $bulk->execute();
 
 		// We always index (not upsert) since we want to have a complete state of
@@ -440,7 +440,7 @@ class Indexer {
 		// Of course, this will cause a delay for the file content being searchable
 		// but that should be acceptable to avoid blocking any online transaction.
 		if ( !$this->isRebuild && $subject->getNamespace() === NS_FILE ) {
-			$this->getFileIndexer()->pushIngestJob( $subject->getTitle() );
+			$this->getFileIndexer()->planIngestJob( $subject->getTitle() );
 		}
 
 		$this->logger->info(
@@ -471,19 +471,17 @@ class Indexer {
 	 */
 	public function removeLinks( $text ) {
 
-		// [[Has foo::Bar]]
-		$text = \SMW\Parser\LinksEncoder::removeAnnotation( $text );
-
 		// {{DEFAULTSORT: ... }}
 		$text = preg_replace( "/\\{\\{([^|]+?)\\}\\}/", "", $text );
-
-		// Removed too much ...
-		//	$text = preg_replace( '/\\[\\[[\s\S]+?::/', '[[', $text );
+		$text = preg_replace( '/\\[\\[[\s\S]+?::/', '[[', $text );
 
 		// [[:foo|bar]]
 		$text = preg_replace( '/\\[\\[:[^|]+?\\|/', '[[', $text );
 		$text = preg_replace( "/\\{\\{([^|]+\\|)(.*?)\\}\\}/", "\\2", $text );
 		$text = preg_replace( "/\\[\\[([^|]+?)\\]\\]/", "\\1", $text );
+
+		// [[Has foo::Bar]]
+		//	$text = \SMW\Parser\LinksEncoder::removeAnnotation( $text );
 
 		return $text;
 	}
@@ -500,7 +498,7 @@ class Indexer {
 		return false;
 	}
 
-	private function pushRecoveryJob( $title, array $params ) {
+	private function planRecoveryJob( $title, array $params ) {
 
 		$indexerRecoveryJob = new IndexerRecoveryJob(
 			$title,
@@ -510,25 +508,16 @@ class Indexer {
 		$indexerRecoveryJob->insert();
 
 		$this->logger->info(
-			[ 'Indexer', 'Insert IndexerRecoveryJob: {subject}' ],
-			[ 'method' => __METHOD__, 'role' => 'user', 'origin' => $this->origin, 'subject' => $title->getPrefixedDBKey() ]
-		);
-	}
-
-	private function map_empty( $bulk, $subject ) {
-
-		if ( $subject->getId() == 0 ) {
-			$subject->setId( $this->getId( $subject ) );
-		}
-
-		$data = [];
-		$data['subject'] = $this->makeSubject( $subject );
-
-		$bulk->index(
 			[
-				'_id' => $subject->getId()
+				'Indexer',
+				'Insert IndexerRecoveryJob: {subject}',
 			],
-			$data
+			[
+				'method' => __METHOD__,
+				'role' => 'user',
+				'origin' => $this->origin,
+				'subject' => $title->getPrefixedDBKey()
+			]
 		);
 	}
 
@@ -564,10 +553,11 @@ class Indexer {
 
 	private function map_data( $bulk, $changeDiff ) {
 
+		$dbType = $this->store->getInfo( 'db' );
+		$unescape_bytea = isset( $dbType['postgres'] );
+
 		$inserts = [];
 		$inverted = [];
-		$rev = $changeDiff->getAssociatedRev();
-		$propertyList = $changeDiff->getPropertyList( 'id' );
 
 		// In the event that a _SOBJ (or hereafter any inherited object)
 		// is deleted, remove the reference directly from the index since
@@ -580,14 +570,11 @@ class Indexer {
 					continue;
 				}
 
-				if (
-					$fieldChangeOp->has( 'p_id' ) &&
-					isset( $propertyList[$fieldChangeOp->has( 'p_id' )] ) &&
-					$propertyList[$fieldChangeOp->has( 'p_id' )]['_type'] === '__sob' ) {
-					$bulk->delete( [ '_id' => $fieldChangeOp->get( 'o_id' ) ] );
-				}
+				$bulk->delete( [ '_id' => $fieldChangeOp->get( 'o_id' ) ] );
 			}
 		}
+
+		$propertyList = $changeDiff->getPropertyList( 'id' );
 
 		foreach ( $changeDiff->getDataOps() as $tableChangeOp ) {
 			foreach ( $tableChangeOp->getFieldChangeOps() as $fieldChangeOp ) {
@@ -596,7 +583,7 @@ class Indexer {
 					continue;
 				}
 
-				$this->mapRows( $fieldChangeOp, $propertyList, $inserts, $inverted, $rev );
+				$this->mapRows( $fieldChangeOp, $propertyList, $inserts, $inverted, $unescape_bytea );
 			}
 		}
 
@@ -609,7 +596,7 @@ class Indexer {
 		}
 	}
 
-	private function mapRows( $fieldChangeOp, $propertyList, &$insertRows, &$invertedRows, $rev ) {
+	private function mapRows( $fieldChangeOp, $propertyList, &$insertRows, &$invertedRows, $unescape_bytea ) {
 
 		// The structure to be expected in ES:
 		//
@@ -641,7 +628,6 @@ class Indexer {
 		// (proleptic Julian calendar)
 
 		$sid = $fieldChangeOp->get( 's_id' );
-		$connection = $this->store->getConnection( 'mw.db' );
 
 		if ( !isset( $insertRows[$sid] ) ) {
 			$insertRows[$sid] = [];
@@ -649,14 +635,25 @@ class Indexer {
 
 		if ( !isset( $insertRows[$sid]['subject'] ) ) {
 			$dataItem = $this->store->getObjectIds()->getDataItemById( $sid );
+			$sort = $dataItem->getSortKey();
 
-			$subject = $this->makeSubject( $dataItem );
-
-			if ( $rev != 0 && $subject['subobject'] === '' ) {
-				$subject['rev_id'] = $rev;
+			// Use collated sort field if available
+			if ( $dataItem->getOption( 'sort', '' ) !== '' ) {
+				$sort = $dataItem->getOption( 'sort' );
 			}
 
-			$insertRows[$sid]['subject'] = $subject;
+			// Avoid issue with the Ealstic serializer
+			$sort = CharArmor::removeSpecialChars(
+				CharArmor::removeControlChars( $sort )
+			);
+
+			$insertRows[$sid]['subject'] = [
+				'title' => str_replace( '_', ' ', $dataItem->getDBKey() ),
+				'subobject' => $dataItem->getSubobjectName(),
+				'namespace' => $dataItem->getNamespace(),
+				'interwiki' => $dataItem->getInterwiki(),
+				'sortkey'   => $sort
+			];
 		}
 
 		// Avoid issues where the p_id is unknown as in case of an empty
@@ -678,13 +675,13 @@ class Indexer {
 
 		if ( $fieldChangeOp->has( 'o_blob' ) && $fieldChangeOp->has( 'o_hash' ) ) {
 			$type = 'txtField';
-			$val = $ins['o_hash'];
+			$val = $ins['o_blob'] === null ? $ins['o_hash'] : $ins['o_blob'];
 
 			// Postgres requires special handling of blobs otherwise escaped
 			// text elements are used as index input
 			// Tests: P9010, Q0704, Q1206, and Q0103
-			if ( $ins['o_blob'] !== null ) {
-				$val = $connection->unescape_bytea( $ins['o_blob'] );
+			if ( $unescape_bytea && $ins['o_blob'] !== null ) {
+				$val = pg_unescape_bytea( $val );
 			}
 
 			// #3020, 3035
@@ -698,10 +695,10 @@ class Indexer {
 			$val = $this->removeLinks( mb_convert_encoding( $val, 'UTF-8', 'UTF-8' ) );
 		} elseif ( $fieldChangeOp->has( 'o_serialized' ) && $fieldChangeOp->has( 'o_blob' ) ) {
 			$type = 'uriField';
-			$val = $ins['o_serialized'];
+			$val = $ins['o_blob'] === null ? $ins['o_serialized'] : $ins['o_blob'];
 
-			if ( $ins['o_blob'] !== null ) {
-				$val = $connection->unescape_bytea( $ins['o_blob'] );
+			if ( $unescape_bytea && $ins['o_blob'] !== null ) {
+				$val = pg_unescape_bytea( $val );
 			}
 
 		} elseif ( $fieldChangeOp->has( 'o_serialized' ) && $fieldChangeOp->has( 'o_sortkey' ) ) {
@@ -741,7 +738,15 @@ class Indexer {
 
 				// Ensure we have something to sort on
 				// See also Q0105#8
-				$invertedRows[$val] = [ 'subject' => $this->makeSubject( $dataItem ) ];
+				$subject = [
+					'title' => str_replace( '_', ' ', $dataItem->getDBKey() ),
+					'subobject' => $dataItem->getSubobjectName(),
+					'namespace' => $dataItem->getNamespace(),
+					'interwiki' => $dataItem->getInterwiki(),
+					'sortkey'   => mb_convert_encoding( $dataItem->getSortKey(), 'UTF-8', 'UTF-8' )
+				];
+
+				$invertedRows[$val] = [ 'subject' => $subject ];
 			}
 
 			// A null, [] (an empty array), and [null] are all equivalent, they
@@ -767,39 +772,6 @@ class Indexer {
 
 			$insertRows[$sid][$pid]["dat_raw"][] = $ins['o_serialized'];
 		}
-	}
-
-	private function makeSubject( DIWikiPage $subject ) {
-
-		$title = $subject->getDBKey();
-
-		if ( $subject->getNamespace() !== SMW_NS_PROPERTY || $title[0] !== '_' ) {
-			$title = str_replace( '_', ' ', $title );
-		}
-
-		$sort = $subject->getSortKey();
-		$sort = Collator::singleton()->getSortKey( $sort );
-
-		// Use collated sort field if available
-		if ( $subject->getOption( 'sort', '' ) !== '' ) {
-			$sort = $subject->getOption( 'sort' );
-		}
-
-		// This may loose some non valif UTF-8 characters as it is required by ES
-		// to be strict UTF-8 otherwise the ES indexer will fail with a serialization
-		// error because ES only allows UTF-8 but when the collator applies something
-		// like `uca-default-u-kn` it can produce characters not valid for/by
-		// ES hence the sorting compared to the SQLStore will be different (given
-		// the DB stores the byte representation)
-		$sort = mb_convert_encoding( $sort, 'UTF-8', 'UTF-8' );
-
-		return [
-			'title'     => $title,
-			'subobject' => $subject->getSubobjectName(),
-			'namespace' => $subject->getNamespace(),
-			'interwiki' => $subject->getInterwiki(),
-			'sortkey'   => $sort
-		];
 	}
 
 }

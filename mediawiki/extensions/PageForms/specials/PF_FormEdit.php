@@ -17,6 +17,9 @@ class PFFormEdit extends UnlistedSpecialPage {
 	public $mForm;
 	public $mError;
 
+	/**
+	 * Constructor
+	 */
 	function __construct() {
 		parent::__construct( 'FormEdit' );
 	}
@@ -42,40 +45,25 @@ class PFFormEdit extends UnlistedSpecialPage {
 
 	function printAltFormsList( $alt_forms, $target_name ) {
 		$text = "";
-		$fe = PFUtils::getSpecialPage( 'FormEdit' );
-		$fe_url = $fe->getPageTitle()->getFullURL();
+		$fe = SpecialPageFactory::getPage( 'FormEdit' );
+		$fe_url = $fe->getTitle()->getFullURL();
 		$i = 0;
 		foreach ( $alt_forms as $alt_form ) {
 			if ( $i++ > 0 ) {
 				$text .= ', ';
 			}
-			$altFormURL = $fe_url . '/' . $alt_form . '/' . $target_name;
+			$altFormURL = $fe_url . '/' . rawurlencode( $alt_form ) . '/' . rawurlencode( $target_name );
 			$text .= Html::element( 'a',
-				[ 'href' => $altFormURL ],
+				array( 'href' => $altFormURL ),
 				str_replace( '_', ' ', $alt_form )
 			);
 		}
 		return $text;
 	}
 
-	function printForm( $form_name, $targetName, $alt_forms = [] ) {
-		global $wgPageFormsTargetName;
-
-		// For use by the VEForAll extension.
-		if ( $targetName != '' ) {
-			$wgPageFormsTargetName = $targetName;
-		} else {
-			// Needed for "one-step process" - VE/VEForAll
-			// require the presence of a page name.
-			$wgPageFormsTargetName = 'Dummy title';
-		}
-
+	function printForm( $form_name, $targetName, $alt_forms = array( ) ) {
 		$out = $this->getOutput();
 		$req = $this->getRequest();
-
-		// If this call is lower down, it doesn't take effect in
-		// "show changes" mode for some MW versions, for some reason.
-		PFUtils::addFormRLModules();
 
 		$module = new PFAutoeditAPI( new ApiMain(), 'pfautoedit' );
 		$module->setOption( 'form', $form_name );
@@ -90,11 +78,11 @@ class PFFormEdit extends UnlistedSpecialPage {
 			} else {
 				$module->setOption( 'preload', false );
 			}
-		} elseif ( !empty( $targetName ) && Title::newFromText( $targetName )->exists() ) {
+		} else if ( !empty( $targetName ) && Title::newFromText( $targetName )->exists ( ) ) {
 			// If target page exists, do not overwrite it with
 			// preload data; just preload the page's data.
 			$module->setOption( 'preload', true );
-		} elseif ( $req->getCheck( 'preload' ) ) {
+		} else if ( $req->getCheck( 'preload' ) ) {
 			// if page does not exist and preload parameter is set, pass that on
 			$module->setOption( 'preload', $req->getText( 'preload' ) );
 		} else {
@@ -105,27 +93,29 @@ class PFFormEdit extends UnlistedSpecialPage {
 
 		$text = '';
 
-		// If action was successful and action was a save, return.
+		// if action was successful and action was a Save, return
 		if ( $module->getStatus() === 200 ) {
 			if ( $module->getAction() === PFAutoeditAPI::ACTION_SAVE ) {
 				return;
 			}
 		} else {
+
 			if ( defined( 'ApiResult::META_CONTENT' ) ) {
-				$resultData = $module->getResult()->getResultData( null, [
-					'BC' => [],
-					'Types' => [],
+				$resultData = $module->getResult()->getResultData( null, array(
+					'BC' => array(),
+					'Types' => array(),
 					'Strip' => 'all',
-				] );
+				) );
 			} else {
 				$resultData = $module->getResultData();
 			}
 
 			if ( array_key_exists( 'errors', $resultData ) ) {
-				foreach ( $resultData['errors'] as $error ) {
+
+				foreach ($resultData['errors'] as $error) {
 					// FIXME: This should probably not be hard-coded to WARNING but put into a setting
 					if ( $error[ 'level' ] <= PFAutoeditAPI::WARNING ) {
-						$text .= Html::rawElement( 'p', [ 'class' => 'error' ], $error[ 'message' ] ) . "\n";
+						$text .= Html::rawElement( 'p', array( 'class' => 'error' ), $error[ 'message' ] ) . "\n";
 					}
 				}
 			}
@@ -136,48 +126,49 @@ class PFFormEdit extends UnlistedSpecialPage {
 		$result = $module->getOptions();
 		$targetTitle = Title::newFromText( $result[ 'target' ] );
 
+
 		// Set page title depending on whether an explicit title was
-		// specified in the form definition, and whether this is a
-		// new or existing page being edited.
+		// specified in the form definition.
 		if ( array_key_exists( 'formtitle', $result ) ) {
-			$pageTitle = $result[ 'formtitle' ];
+
+			// set page title depending on whether the target page exists
 			if ( empty( $targetName ) ) {
-				// This is a new page - we're done.
-			} elseif ( strpos( $pageTitle, '&lt;page name&gt;' ) !== false ) {
-				$pageTitle = str_replace( '&lt;page name&gt;', $targetName, $pageTitle );
+				$pageTitle = $result[ 'formtitle' ];
 			} else {
 				$pageTitle = $result[ 'formtitle' ] . ': ' . $targetName;
 			}
 		} elseif ( $result[ 'form' ] !== '' ) {
+			// Set page title depending on whether the target page
+			// exists.
 			if ( empty( $targetName ) ) {
-				$pageTitle = $this->msg( 'pf_formedit_createtitlenotarget', $result[ 'form' ] )->text();
+				$pageTitle = wfMessage( 'pf_formedit_createtitlenotarget', $result[ 'form' ] )->text();
 			} elseif ( $targetTitle->exists() ) {
-				$pageTitle = $this->msg( 'pf_formedit_edittitle', $result[ 'form' ], $targetName )->text();
+				$pageTitle = wfMessage( 'pf_formedit_edittitle', $result[ 'form' ], $targetName )->text();
 			} else {
-				$pageTitle = $this->msg( 'pf_formedit_createtitle', $result[ 'form' ], $targetName )->text();
+				$pageTitle = wfMessage( 'pf_formedit_createtitle', $result[ 'form' ], $targetName )->text();
 			}
-		} elseif ( $alt_forms ) {
+		} elseif ( count( $alt_forms ) > 0 ) {
 			// We use the 'creating' message here, instead of
 			// 'pf_formedit_createtitlenotarget', to differentiate
 			// between a page with no (default) form, and one with
 			// no target; in English they'll show up as
 			// "Creating ..." and "Create ...", respectively.
 			// Does this make any difference? Who knows.
-			$pageTitle = $this->msg( 'creating', $targetName )->text();
-		} elseif ( $result[ 'form' ] == '' ) { // FIXME: This looks weird; a simple else should be enough, right?
+			$pageTitle = wfMessage( 'creating', $targetName )->text();
+		} elseif ( $result[ 'form' ] == '' ) {  //FIXME: This looks weird; a simple else should be enough, right?
 			// display error message if the form is not specified in the URL
-			$pageTitle = $this->msg( 'formedit' )->text();
-			$text .= Html::element( 'p', [ 'class' => 'error' ], $this->msg( 'pf_formedit_badurl' )->text() ) . "\n";
+			$pageTitle = wfMessage( 'formedit' )->text();
+			$text .= Html::element( 'p', array( 'class' => 'error' ), wfMessage( 'pf_formedit_badurl' )->text() ) . "\n";
 			$out->addHTML( $text );
 		}
 
 		$out->setPageTitle( $pageTitle );
-		if ( $alt_forms ) {
+		if ( count( $alt_forms ) > 0 ) {
 			$text .= '<div class="infoMessage">';
 			if ( $result[ 'form' ] != '' ) {
-				$text .= $this->msg( 'pf_formedit_altforms' )->escaped();
+				$text .= wfMessage( 'pf_formedit_altforms' )->escaped();
 			} else {
-				$text .= $this->msg( 'pf_formedit_altformsonly' )->escaped();
+				$text .= wfMessage( 'pf_formedit_altformsonly' )->escaped();
 			}
 			$text .= ' ' . $this->printAltFormsList( $alt_forms, $targetName );
 			$text .= "</div>\n";
@@ -185,37 +176,17 @@ class PFFormEdit extends UnlistedSpecialPage {
 
 		$text .= '<form name="createbox" id="pfForm" method="post" class="createbox">';
 		$pre_form_html = '';
-		Hooks::run( 'PageForms::HTMLBeforeForm', [ &$targetTitle, &$pre_form_html ] );
+		Hooks::run( 'PageForms::HTMLBeforeForm', array( &$targetTitle, &$pre_form_html ) );
 		$text .= $pre_form_html;
+		if ( isset( $result[ 'formHTML' ] ) ) {
+			$text .= $result[ 'formHTML' ];
+		}
+
+		PFUtils::addFormRLModules();
 
 		$out->addHTML( $text );
-		$this->showCaptcha( $targetTitle ); // Should be before the closing </form> tag from $result
-
-		if ( isset( $result[ 'formHTML' ] ) ) {
-			$out->addHTML( $result[ 'formHTML' ] );
-		}
 
 		return null;
-	}
-
-	/**
-	 * Show captcha from Extension:ConfirmEdit, if any.
-	 * @param Title $targetTitle
-	 */
-	protected function showCaptcha( $targetTitle ) {
-		if ( !method_exists( 'ConfirmEditHooks', 'getInstance' ) ) {
-			return; // No Extension:ConfirmEdit
-		}
-
-		if ( !$targetTitle ) {
-			return; // Not an edit form (target page is not yet selected)
-		}
-
-		$article = new Article( $targetTitle );
-		$fakeEditPage = new EditPage( $article );
-
-		$captcha = ConfirmEditHooks::getInstance();
-		$captcha->editShowCaptcha( $fakeEditPage );
 	}
 
 	protected function getGroupName() {

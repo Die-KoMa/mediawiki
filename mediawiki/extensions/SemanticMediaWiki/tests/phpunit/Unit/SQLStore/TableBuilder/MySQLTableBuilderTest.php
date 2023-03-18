@@ -4,7 +4,6 @@ namespace SMW\Tests\SQLStore\TableBuilder;
 
 use SMW\SQLStore\TableBuilder\MySQLTableBuilder;
 use SMW\SQLStore\TableBuilder\Table;
-use SMW\Tests\PHPUnitCompat;
 
 /**
  * @covers \SMW\SQLStore\TableBuilder\MySQLTableBuilder
@@ -16,8 +15,6 @@ use SMW\Tests\PHPUnitCompat;
  * @author mwjames
  */
 class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
-
-	use PHPUnitCompat;
 
 	private $connection;
 
@@ -49,23 +46,9 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testFactoryWithWrongTypeThrowsException() {
-
-		$connection = $this->getMockBuilder( '\DatabaseBase' )
-			->disableOriginalConstructor()
-			->getMockForAbstractClass();
-
-		$connection->expects( $this->any() )
-			->method( 'getType' )
-			->will( $this->returnValue( 'sqlite' ) );
-
-		$this->setExpectedException( '\RuntimeException' );
-		MySQLTableBuilder::factory( $connection );
-	}
-
 	public function testCreateNewTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -87,8 +70,8 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 			->with( $this->equalTo( 'CREATE TABLE `xyz`."foo" (bar TEXT) tableoptions_foobar' ) );
 
 		$instance = MySQLTableBuilder::factory( $connection );
-		$instance->setConfig( 'wgDBname', 'xyz' );
-		$instance->setConfig( 'wgDBTableOptions', 'tableoptions_foobar' );
+		$instance->addConfig( 'wgDBname', 'xyz' );
+		$instance->addConfig( 'wgDBTableOptions', 'tableoptions_foobar' );
 
 		$table = new Table( 'foo' );
 		$table->addColumn( 'bar', 'text' );
@@ -98,7 +81,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateNewTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -108,11 +91,10 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 		$this->connection->expects( $this->once() )
 			->method( 'query' )
-			->with( $this->equalTo( 'CREATE TABLE `xyz`."foo" (bar TEXT) tableoptions_foobar' ) );
+			->with( $this->stringContains( 'CREATE TABLE `xyz`."foo"' ) );
 
 		$instance = MySQLTableBuilder::factory( $this->connection );
-		$instance->setConfig( 'wgDBname', 'xyz' );
-		$instance->setConfig( 'wgDBTableOptions', 'tableoptions_foobar' );
+		$instance->addConfig( 'wgDBname', 'xyz' );
 
 		$table = new Table( 'foo' );
 		$table->addColumn( 'bar', 'text' );
@@ -122,7 +104,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateExistingTableWithNewField() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -158,7 +140,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateExistingTableWithNewField_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -185,7 +167,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateExistingTableWithNewFieldAndDefault() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -222,7 +204,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testUpdateExistingTableWithNewFieldAndDefault_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -250,7 +232,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateIndex() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -287,7 +269,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCreateIndex_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -315,7 +297,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDropTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -344,7 +326,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testDropTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -364,7 +346,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testOptimizeTable() {
 
-		if ( version_compare( MW_VERSION, '1.32', '>=' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '>=' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 
@@ -393,7 +375,7 @@ class MySQLTableBuilderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testOptimizeTable_132() {
 
-		if ( version_compare( MW_VERSION, '1.32', '<' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.32', '<' ) ) {
 			$this->markTestSkipped( 'MediaWiki changed the Database signature!' );
 		}
 

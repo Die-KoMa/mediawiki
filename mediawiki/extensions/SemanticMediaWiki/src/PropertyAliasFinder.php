@@ -45,11 +45,6 @@ class PropertyAliasFinder {
 	private $canonicalPropertyAliases = [];
 
 	/**
-	 * @var string
-	 */
-	private $contentLanguageCode = 'en';
-
-	/**
 	 * @since 2.4
 	 *
 	 * @param Cache $cache
@@ -63,15 +58,6 @@ class PropertyAliasFinder {
 		foreach ( $propertyAliases as $alias => $id ) {
 			$this->registerAliasByFixedLabel( $id, $alias );
 		}
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param string $contentLanguageCode
-	 */
-	public function setContentLanguageCode( $contentLanguageCode ) {
-		$this->contentLanguageCode = $contentLanguageCode;
 	}
 
 	/**
@@ -140,7 +126,7 @@ class PropertyAliasFinder {
 		}
 
 		// Indicates an untranslated MW message key
-		if ( $label !== '' && $label[0] === '<' ) {
+		if ( $label !== '' && $label{0} === '<' ) {
 			return null;
 		}
 
@@ -158,13 +144,6 @@ class PropertyAliasFinder {
 	 */
 	public function registerAliasByMsgKey( $id, $msgKey ) {
 		$this->propertyAliasesByMsgKey[$msgKey] = $id;
-
-		// Make sure the label is resolved and registered immediately
-		// for the content language
-		$this->registerAliasByFixedLabel(
-			$id,
-			Message::get( $msgKey, Message::TEXT, $this->contentLanguageCode )
-		);
 	}
 
 	/**

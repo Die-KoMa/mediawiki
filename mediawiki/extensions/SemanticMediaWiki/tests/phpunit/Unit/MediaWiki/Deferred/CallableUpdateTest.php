@@ -4,7 +4,6 @@ namespace SMW\Tests\MediaWiki\Deferred;
 
 use SMW\MediaWiki\Deferred\CallableUpdate;
 use SMW\Tests\TestEnvironment;
-use SMW\Tests\PHPUnitCompat;
 
 /**
  * @covers \SMW\MediaWiki\Deferred\CallableUpdate
@@ -16,8 +15,6 @@ use SMW\Tests\PHPUnitCompat;
  * @author mwjames
  */
 class CallableUpdateTest extends \PHPUnit_Framework_TestCase {
-
-	use PHPUnitCompat;
 
 	private $testEnvironment;
 	private $spyLogger;
@@ -68,28 +65,6 @@ class CallableUpdateTest extends \PHPUnit_Framework_TestCase {
 		$instance->pushUpdate();
 
 		$this->testEnvironment->executePendingDeferredUpdates();
-	}
-
-	public function testUpdateThatThrowsExceptionToLogAndRethrow() {
-
-		$callback = function() {
-			throw new \Exception("Error Processing Request", 1);
-		};
-
-		$instance = new CallableUpdate(
-			$callback
-		);
-
-		$instance->catchExceptionAndRethrow( true );
-		$instance->setLogger( $this->spyLogger );
-
-		$this->setExpectedException( '\Exception' );
-		$instance->doUpdate();
-
-		$this->assertContains(
-			'failed',
-			$this->spyLogger->getMessagesAsString()
-		);
 	}
 
 	public function testUpdateOnEmptyCallback() {

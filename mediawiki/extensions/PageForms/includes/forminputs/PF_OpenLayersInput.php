@@ -1,10 +1,14 @@
 <?php
 /**
+ * File holding the PFOpenLayersInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFOpenLayersInput class.
+ *
  * @ingroup PFFormInput
  */
 class PFOpenLayersInput extends PFFormInput {
@@ -13,11 +17,11 @@ class PFOpenLayersInput extends PFFormInput {
 	}
 
 	public static function getDefaultPropTypes() {
-		return [];
+		return array();
 	}
 
 	public static function getDefaultCargoTypes() {
-		return [ 'Coordinates' => [] ];
+		return array( 'Coordinates' => array() );
 	}
 
 	public static function getHeight( $other_args ) {
@@ -46,95 +50,77 @@ class PFOpenLayersInput extends PFFormInput {
 		return $width;
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
-		global $wgPageFormsFieldNum, $wgPageFormsTabIndex;
-		global $wgOut, $wgPageFormsMapsWithFeeders;
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
+		global $wgPageFormsFieldNum;
+		global $wgOut;
 
-		if ( ExtensionRegistry::getInstance()->isLoaded( 'OpenLayers' ) ) {
-			$wgOut->addModuleStyles( 'ext.openlayers.main' );
-			$wgOut->addModuleScripts( 'ext.openlayers.main' );
-		} else {
-			$scripts = [
-				"https://openlayers.org/api/OpenLayers.js"
-			];
+		if ( !ExtensionRegistry::getInstance()->isLoaded( 'OpenLayers' ) ) {
+			$scripts = array(
+				"http://www.openlayers.org/api/OpenLayers.js"
+			);
 			$scriptsHTML = '';
 			foreach ( $scripts as $script ) {
 				$scriptsHTML .= Html::linkedScript( $script );
 			}
 			$wgOut->addHeadItem( $scriptsHTML, $scriptsHTML );
 		}
-
 		$wgOut->addModules( 'ext.pageforms.maps' );
 
-		// The address input box is not necessary if we are using other form inputs for the address.
-		if ( array_key_exists( $input_name, $wgPageFormsMapsWithFeeders ) ) {
-			$addressLookupInput = '';
-		} else {
-			$addressLookupInputAttrs = [
-				'type' => 'text',
-				'tabindex' => $wgPageFormsTabIndex++,
-				'class' => 'pfAddressInput',
-				'size' => 40,
-				'placeholder' => wfMessage( 'pf-maps-enteraddress' )->parse()
-			];
-			$addressLookupInput = Html::element( 'input', $addressLookupInputAttrs, null );
-		}
-		$addressLookupButtonAttrs = [
-			'type' => 'button',
-			'tabindex' => $wgPageFormsTabIndex++,
-			'class' => 'pfLookUpAddress',
-			'value' => wfMessage( 'pf-maps-lookupcoordinates' )->parse()
-		];
-		$addressLookupButton = Html::element( 'input', $addressLookupButtonAttrs, null );
+		$parsedCurValue = self::parseCoordinatesString( $cur_value );
 
-		$coordsInputAttrs = [
-			'type' => 'text',
-			'tabindex' => $wgPageFormsTabIndex++,
-			'class' => 'pfCoordsInput',
-			'name' => $input_name,
-			'value' => self::parseCoordinatesString( $cur_value ),
-			'size' => 40
-		];
-		$coordsInput = Html::element( 'input', $coordsInputAttrs );
-
+		$coordsInput = Html::element( 'input', array( 'type' => 'text', 'class' => 'pfCoordsInput', 'name' => $input_name, 'value' => $parsedCurValue, 'size' => 40 ) );
+		$mapUpdateButton = Html::element( 'input', array( 'type' => 'button', 'class' => 'pfUpdateMap', 'value' => wfMessage( 'pf-maps-setmarker' )->parse() ), null );
+		// For OpenLayers, doing an address lookup, i.e. a geocode,
+		// will require a separate geocoding address, which may
+		// require a server-side reader to access that API.
+		// For now, let's just not do this, since the Google Maps
+		// input is much more widely used anyway.
+		// @TODO - add this in.
+		//$addressLookupInput = Html::element( 'input', array( 'type' => 'text', 'class' => 'pfAddressInput', 'size' => 40, 'placeholder' => wfMessage( 'pf-maps-enteraddress' )->parse() ), null );
+		//$addressLookupButton = Html::element( 'input', array( 'type' => 'button', 'class' => 'pfLookUpAddress', 'value' => wfMessage( 'pf-maps-lookupcoordinates' )->parse() ), null );
 		$height = self::getHeight( $other_args );
 		$width = self::getWidth( $other_args );
-		$mapCanvas = Html::element( 'div', [ 'class' => 'pfMapCanvas', 'id' => 'pfMapCanvas' . $wgPageFormsFieldNum, 'style' => "height: $height; width: $width;" ], null );
+		$mapCanvas = Html::element( 'div', array( 'class' => 'pfMapCanvas', 'id' => 'pfMapCanvas' . $wgPageFormsFieldNum, 'style' => "height: $height; width: $width;" ), null );
 
+		$fullInputHTML = <<<END
+<div style="padding-bottom: 10px;">
+$coordsInput
+$mapUpdateButton
+</div>
+
+END;
+/*
 		$fullInputHTML = <<<END
 <div style="padding-bottom: 10px;">
 $addressLookupInput
 $addressLookupButton
 </div>
-<div style="padding-bottom: 10px;">
-$coordsInput
-</div>
 
 END;
+*/
 		$fullInputHTML .= "$mapCanvas\n";
-		$text = Html::rawElement( 'div', [ 'class' => 'pfOpenLayersInput' ], $fullInputHTML );
+		$text = Html::rawElement( 'div', array( 'class' => 'pfOpenLayersInput' ), $fullInputHTML );
 
 		return $text;
 	}
 
 	public static function getParameters() {
 		$params = parent::getParameters();
-		$params[] = [
+		$params[] = array(
 			'name' => 'height',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_height' )->text()
-		];
-		$params[] = [
+		);
+		$params[] = array(
 			'name' => 'width',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_width' )->text()
-		];
+		);
 		return $params;
 	}
 
 	/**
 	 * Returns the HTML code to be included in the output page for this input.
-	 * @return string
 	 */
 	public function getHtmlText() {
 		return self::getHTML(
@@ -151,14 +137,11 @@ END;
 	 *
 	 * Copied from CargoStore::coordinatePartToNumber() in the Cargo
 	 * extension.
-	 * @param string $coordinateStr
-	 * @return int
-	 * @throws MWException
 	 */
 	public static function coordinatePartToNumber( $coordinateStr ) {
-		$degreesSymbols = [ "\x{00B0}", "d" ];
-		$minutesSymbols = [ "'", "\x{2032}", "\x{00B4}" ];
-		$secondsSymbols = [ '"', "\x{2033}", "\x{00B4}\x{00B4}" ];
+		$degreesSymbols = array( "\x{00B0}", "d" );
+		$minutesSymbols = array( "'", "\x{2032}", "\x{00B4}" );
+		$secondsSymbols = array( '"', "\x{2033}", "\x{00B4}\x{00B4}" );
 
 		$numDegrees = null;
 		$numMinutes = null;
@@ -209,17 +192,15 @@ END;
 	 *
 	 * Copied from CargoStore::parseCoordinateString() in the Cargo
 	 * extension.
-	 * @param string $coordinatesString
-	 * @return string|null
 	 */
 	public static function parseCoordinatesString( $coordinatesString ) {
 		$coordinatesString = trim( $coordinatesString );
-		if ( $coordinatesString === '' ) {
-			return null;
+		if ( $coordinatesString == null ) {
+			return;
 		}
 
 		// This is safe to do, right?
-		$coordinatesString = str_replace( [ '[', ']' ], '', $coordinatesString );
+		$coordinatesString = str_replace( array( '[', ']' ), '', $coordinatesString );
 		// See if they're separated by commas.
 		if ( strpos( $coordinatesString, ',' ) > 0 ) {
 			$latAndLonStrings = explode( ',', $coordinatesString );
@@ -227,7 +208,7 @@ END;
 			// If there are no commas, the first half, for the
 			// latitude, should end with either 'N' or 'S', so do a
 			// little hack to split up the two halves.
-			$coordinatesString = str_replace( [ 'N', 'S' ], [ 'N,', 'S,' ], $coordinatesString );
+			$coordinatesString = str_replace( array( 'N', 'S' ), array( 'N,', 'S,' ), $coordinatesString );
 			$latAndLonStrings = explode( ',', $coordinatesString );
 		}
 
@@ -241,7 +222,7 @@ END;
 		if ( strpos( $latString, 'S' ) > 0 ) {
 			$latIsNegative = true;
 		}
-		$latString = str_replace( [ 'N', 'S' ], '', $latString );
+		$latString = str_replace( array( 'N', 'S' ), '', $latString );
 		if ( is_numeric( $latString ) ) {
 			$latNum = floatval( $latString );
 		} else {
@@ -255,7 +236,7 @@ END;
 		if ( strpos( $lonString, 'W' ) > 0 ) {
 			$lonIsNegative = true;
 		}
-		$lonString = str_replace( [ 'E', 'W' ], '', $lonString );
+		$lonString = str_replace( array( 'E', 'W' ), '', $lonString );
 		if ( is_numeric( $lonString ) ) {
 			$lonNum = floatval( $lonString );
 		} else {

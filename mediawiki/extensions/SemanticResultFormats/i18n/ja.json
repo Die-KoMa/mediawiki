@@ -5,21 +5,22 @@
 			"Hosiryuhosi",
 			"JtFuruhata",
 			"Naohiro19",
-			"Nemo bis",
-			"Ochaochaocha3",
-			"Omotecho",
-			"Otokoume",
-			"Rxy",
 			"Schu",
 			"Shirayuki",
+			"Whym",
+			"青子守歌",
+			"Rxy",
 			"SkyDaisy9",
 			"Sujiniku",
-			"Suyama",
-			"Whym",
-			"青子守歌"
+			"Otokoume",
+			"Ochaochaocha3",
+			"Omotecho",
+			"Nemo bis",
+			"Suyama"
 		]
 	},
 	"srf-desc": "Semantic MediaWiki のクエリのための追加的な結果の形式",
+	"srf-name": "意味的結果の形式",
 	"prefs-srf": "意味的結果の形式",
 	"prefs-srf-eventcalendar-options": "イベントカレンダーオプション",
 	"srf-prefs-eventcalendar-options-update-default": "ページ更新中のカレンダーイベントの[https://www.semantic-mediawiki.org/wiki/Help:User_preferences#Automatic_updates 自動更新]を有効にする",
@@ -226,5 +227,6 @@
 	"srf-ui-mediaplayer-label-repeat-off": "連続再生解除",
 	"srf-ui-mediaplayer-label-full-screen": "全画面表示",
 	"srf-ui-mediaplayer-label-restore-screen": "全画面表示解除",
+	"srf-excel-link": "Excel",
 	"srf-paramdesc-icalendar-timezone": "タイムゾーンのカンマ区切りリスト"
 }

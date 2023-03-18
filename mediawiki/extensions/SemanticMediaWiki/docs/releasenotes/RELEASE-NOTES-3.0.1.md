@@ -34,3 +34,6 @@ Released on January 25, 2019.
 * [a5a4a0d](https://github.com/SemanticMediaWiki/SemanticMediaWiki/commit/a5a4a0d1b05eb622749fe59a1d2be4be699aaed4) as `bea16a5`: Fixed "PHP Notice: Uncommitted DB writes (transaction from ...)"
 * [8bc4443](https://github.com/SemanticMediaWiki/SemanticMediaWiki/commit/8bc4443a6a48682e74e94a014adfcd91cb6104a5) as `5a729d4`:  Fixed `get_headers` can return `false`
 * [8ca1ec0](https://github.com/SemanticMediaWiki/SemanticMediaWiki/commit/8ca1ec05ef56144b1991c0381696a52687e39ed4) as `93cf100`: Made "PHP Warning: Class '`SMW\CategoryResultPrinter`' not found in ... Aliases.php" be avoided
+
+## See also
+* [RELEASE NOTES](https://github.com/SemanticMediaWiki/SemanticMediaWiki/blob/3.0.x/docs/releasenotes/RELEASE-NOTES-3.0.0.md) for Semantic MediaWiki 3.0.0

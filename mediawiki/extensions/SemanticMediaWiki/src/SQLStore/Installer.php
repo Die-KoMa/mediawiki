@@ -9,12 +9,10 @@ use Onoi\MessageReporter\MessageReporterFactory;
 use SMW\CompatibilityMode;
 use SMW\MediaWiki\Jobs\EntityIdDisposerJob;
 use SMW\MediaWiki\Jobs\PropertyStatisticsRebuildJob;
-use SMW\SQLStore\TableBuilder\TableSchemaManager;
-use SMW\SQLStore\TableBuilder\TableBuildExaminer;
 use SMW\Options;
 use SMW\Site;
-use SMW\TypesRegistry;
-use SMW\SetupFile;
+use SMW\Utils\File;
+use SMW\Exception\FileNotWritableException;
 
 /**
  * @private
@@ -44,6 +42,11 @@ class Installer implements MessageReporter {
 	const OPT_IMPORT = 'installer.import';
 
 	/**
+	 * Related to ExtensionSchemaUpdates
+	 */
+	const OPT_SCHEMA_UPDATE = 'installer.schema.update';
+
+	/**
 	 * `smw_hash` field population
 	 */
 	const POPULATE_HASH_FIELD_COMPLETE = 'populate.smw_hash_field_complete';
@@ -59,9 +62,9 @@ class Installer implements MessageReporter {
 	private $tableBuilder;
 
 	/**
-	 * @var TableBuildExaminer
+	 * @var TableIntegrityExaminer
 	 */
-	private $tableBuildExaminer;
+	private $tableIntegrityExaminer;
 
 	/**
 	 * @var Options
@@ -69,23 +72,22 @@ class Installer implements MessageReporter {
 	private $options;
 
 	/**
-	 * @var SetupFile
+	 * @var File
 	 */
-	private $setupFile;
+	private $file;
 
 	/**
 	 * @since 2.5
 	 *
 	 * @param TableSchemaManager $tableSchemaManager
 	 * @param TableBuilder $tableBuilder
-	 * @param TableBuildExaminer $tableBuildExaminer
+	 * @param TableIntegrityExaminer $tableIntegrityExaminer
 	 */
-	public function __construct( TableSchemaManager $tableSchemaManager, TableBuilder $tableBuilder, TableBuildExaminer $tableBuildExaminer ) {
+	public function __construct( TableSchemaManager $tableSchemaManager, TableBuilder $tableBuilder, TableIntegrityExaminer $tableIntegrityExaminer ) {
 		$this->tableSchemaManager = $tableSchemaManager;
 		$this->tableBuilder = $tableBuilder;
-		$this->tableBuildExaminer = $tableBuildExaminer;
+		$this->tableIntegrityExaminer = $tableIntegrityExaminer;
 		$this->options = new Options();
-		$this->setupFile = new SetupFile();
 	}
 
 	/**
@@ -103,12 +105,12 @@ class Installer implements MessageReporter {
 	}
 
 	/**
-	 * @since 3.1
+	 * @since 3.0
 	 *
-	 * @param SetupFile $setupFile
+	 * @param File $file
 	 */
-	public function setSetupFile( SetupFile $setupFile ) {
-		$this->setupFile = $setupFile;
+	public function setFile( File $file ) {
+		$this->file = $file;
 	}
 
 	/**
@@ -118,10 +120,6 @@ class Installer implements MessageReporter {
 	 */
 	public function install( $verbose = true ) {
 
-		if ( $verbose instanceof Options ) {
-			$this->options = $verbose;
-		}
-
 		// If for some reason the enableSemantics was not yet enabled
 		// still allow to run the tables create in order for the
 		// setup to be completed
@@ -129,59 +127,33 @@ class Installer implements MessageReporter {
 			CompatibilityMode::enableTemporaryCliUpdateMode();
 		}
 
-		$executionTimes = [];
-		$startTime = microtime( true );
+		$messageReporter = $this->newMessageReporter( $verbose );
 
-		$this->setupFile->setMaintenanceMode( true );
-
-		$messageReporter = $this->newMessageReporter(
-			$this->options->has( 'verbose' ) && $this->options->get( 'verbose' )
-		);
-
-		$messageReporter->reportMessage( "\nStorage engine: \"SMWSQLStore3\" (or an extension thereof)\n" );
-		$messageReporter->reportMessage( "\nSetting up the database tables ...\n\n" );
+		$messageReporter->reportMessage( "\nSelected storage engine: \"SMWSQLStore3\" (or an extension thereof)\n" );
+		$messageReporter->reportMessage( "\nSetting up standard database configuration for SMW ...\n\n" );
 
 		$this->tableBuilder->setMessageReporter(
 			$messageReporter
 		);
 
-		$this->tableBuildExaminer->setMessageReporter(
+		$this->tableIntegrityExaminer->setMessageReporter(
 			$messageReporter
 		);
 
-		// #3559
-		$tables = $this->tableSchemaManager->getTables();
-		$this->setupFile->setMaintenanceMode( [ 'create-tables' => 20 ] );
-
-		Hooks::run(
-			'SMW::SQLStore::Installer::BeforeCreateTablesComplete',
-			[
-				$tables,
-				$messageReporter
-			]
-		);
-
-		foreach ( $tables as $table ) {
+		foreach ( $this->tableSchemaManager->getTables() as $table ) {
 			$this->tableBuilder->create( $table );
 		}
 
-		$executionTimes['create-tables'] = microtime( true );
-		$messageReporter->reportMessage( "\nPost-creation examination tasks ...\n\n" );
+		$this->tableIntegrityExaminer->checkOnPostCreation( $this->tableBuilder );
 
-		$this->setupFile->setMaintenanceMode( [ 'post-creation' => 40 ] );
-		$this->tableBuildExaminer->checkOnPostCreation( $this->tableBuilder );
-		$executionTimes['post-creation-check'] = microtime( true );
+		$messageReporter->reportMessage( "\nDatabase initialized completed.\n" );
 
-		$this->setupFile->setMaintenanceMode( [ 'table-optimization' => 60 ] );
-		$this->runTableOptimization( $messageReporter );
-		$executionTimes['table-optimization'] = microtime( true );
+		$this->table_optimization( $messageReporter );
+		$this->supplement_jobs( $messageReporter );
 
-		$this->setupFile->setMaintenanceMode( [ 'supplement-jobs' => 80 ] );
-		$this->addSupplementJobs( $messageReporter );
-		$executionTimes['supplement-jobs'] = microtime( true );
+		$file = $this->file !== null ? $this->file : new File();
 
-		$this->setupFile->finalize();
-		$this->options->set( 'hook-execution', [] );
+		self::setUpgradeKey( $GLOBALS, $messageReporter, $file );
 
 		Hooks::run(
 			'SMW::SQLStore::Installer::AfterCreateTablesComplete',
@@ -192,19 +164,7 @@ class Installer implements MessageReporter {
 			]
 		);
 
-		if ( ( $hook = $this->options->get( 'hook-execution' ) ) !== [] ) {
-			$executionTimes['hook-execution (' . implode( ',', $hook ) . ')'] = microtime( true );
-		} else {
-			$executionTimes['hook-execution'] = microtime( true );
-		}
-
-		$messageReporter->reportMessage( "\nDatabase and table setup completed ...\n" );
-		$this->outputReport( $messageReporter, $startTime, $executionTimes );
-
-		$messageReporter->reportMessage( "   ... done.\n" );
-
-		// Add an extra space when executed as part of the `update.php`
-		if ( defined( 'MW_UPDATER' ) ) {
+		if ( $this->options->has( self::OPT_SCHEMA_UPDATE ) ) {
 			$messageReporter->reportMessage( "\n" );
 		}
 
@@ -220,8 +180,8 @@ class Installer implements MessageReporter {
 
 		$messageReporter = $this->newMessageReporter( $verbose );
 
-		$messageReporter->reportMessage( "\nStorage engine: \"SMWSQLStore3\" (or an extension thereof)\n" );
-		$messageReporter->reportMessage( "\nDeleting database tables (generated by SMW) ...\n" );
+		$messageReporter->reportMessage( "\nSelected storage engine: \"SMWSQLStore3\" (or an extension thereof)\n" );
+		$messageReporter->reportMessage( "\nDeleting all database content and tables generated by SMW ...\n\n" );
 
 		$this->tableBuilder->setMessageReporter(
 			$messageReporter
@@ -231,8 +191,7 @@ class Installer implements MessageReporter {
 			$this->tableBuilder->drop( $table );
 		}
 
-		$messageReporter->reportMessage( "   ... done.\n" );
-		$this->tableBuildExaminer->checkOnPostDestruction( $this->tableBuilder );
+		$this->tableIntegrityExaminer->checkOnPostDestruction( $this->tableBuilder );
 
 		Hooks::run(
 			'SMW::SQLStore::Installer::AfterDropTablesComplete',
@@ -246,9 +205,183 @@ class Installer implements MessageReporter {
 		$messageReporter->reportMessage( "\nStandard and auxiliary tables with all corresponding data\n" );
 		$messageReporter->reportMessage( "have been removed successfully.\n" );
 
-		$this->setupFile->reset();
-
 		return true;
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param array $vars
+	 */
+	public static function loadSchema( &$vars ) {
+
+		// @see #3506
+		$file = File::dir( $vars['smwgConfigFileDir'] . '/.smw.json' );
+
+		// Doesn't exist? The `Setup::init` will take care of it by trying to create
+		// a new file and if it fails or unable to do so wail raise an exception
+		// as we expect to have access to it.
+		if ( is_readable( $file ) ) {
+			$vars['smw.json'] = json_decode( file_get_contents( $file ), true );
+		}
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param boolean $isCli
+	 *
+	 * @return boolean
+	 */
+	public static function isGoodSchema( $isCli = false ) {
+
+		if ( $isCli && defined( 'MW_PHPUNIT_TEST' ) ) {
+			return true;
+		}
+
+		if ( $isCli === false && ( PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg' ) ) {
+			return true;
+		}
+
+		// #3563, Use the specific wiki-id as identifier for the instance in use
+		$id = Site::id();
+
+		if ( !isset( $GLOBALS['smw.json'][$id]['upgrade_key'] ) ) {
+			return false;
+		}
+
+		return self::makeUpgradeKey( $GLOBALS ) === $GLOBALS['smw.json'][$id]['upgrade_key'];
+	}
+
+	/**
+	 * @since 3.1
+	 *
+	 * @param array $vars
+	 *
+	 * @return []
+	 */
+	public static function incompleteTasks( $vars ) {
+
+		$id = Site::id();
+		$tasks = [];
+
+		// Key field => [ value that constitutes the `INCOMPLETE` state, error msg ]
+		$checks = [
+			self::POPULATE_HASH_FIELD_COMPLETE => [ false, 'smw-install-incomplete-populate-hash-field' ]
+		];
+
+		foreach ( $checks as $key => $value ) {
+			if ( isset( $vars['smw.json'][$id][$key] ) && $vars['smw.json'][$id][$key] === $value[0] ) {
+				$tasks[] = $value[1];
+			}
+		}
+
+		return $tasks;
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param array $vars
+	 *
+	 * @return string
+	 */
+	public static function makeUpgradeKey( $vars ) {
+
+		// The following settings influence the "shape" of the tables required
+		// therefore use the content to compute a key that reflects any
+		// changes to them
+
+		// Only recognize those properties that require a fixed table
+		$pageSpecialProperties = array_intersect(
+			$vars['smwgPageSpecialProperties'],
+			PropertyTableInfoFetcher::getFixedSpecialPropertyList()
+		);
+
+		// Sort to ensure the key contains the same order
+		sort( $vars['smwgFixedProperties'] );
+		sort( $pageSpecialProperties );
+
+		return sha1(
+			json_encode(
+				[
+					$vars['smwgUpgradeKey'],
+					$vars['smwgFixedProperties'],
+					$pageSpecialProperties
+				]
+			)
+		);
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param array $vars
+	 * @param MessageReporter $messageReporter|null
+	 * @param File $file|null
+	 */
+	public static function setUpgradeKey( $vars, MessageReporter $messageReporter = null, File $file = null ) {
+
+		// #3563, Use the specific wiki-id as identifier for the instance in use
+		$key = self::makeUpgradeKey( $vars );
+		$id = Site::id();
+
+		if (
+			isset( $vars['smw.json'][$id]['upgrade_key'] ) &&
+			$key === $vars['smw.json'][$id]['upgrade_key'] ) {
+			return false;
+		}
+
+		if ( $messageReporter !== null ) {
+			$messageReporter->reportMessage( "\nSetting $id upgrade key ..." );
+		}
+
+		self::setUpgradeFile( $vars, [ 'upgrade_key' => $key ], $file );
+
+		if ( $messageReporter !== null ) {
+			$messageReporter->reportMessage( "\n   ... done.\n" );
+		}
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param File $file
+	 * @param array $vars
+	 */
+	public static function setUpgradeFile( $vars, $args = [], File $file = null ) {
+
+		$configFile = $vars['smwgConfigFileDir'] . '/.smw.json';
+
+		if ( $file === null ) {
+			$file = new File();
+		}
+
+		$id = Site::id();
+
+		if ( !isset( $vars['smw.json'] ) ) {
+			$vars['smw.json'] = [];
+		}
+
+		foreach ( $args as $key => $value ) {
+			$vars['smw.json'][$id][$key] = $value;
+		}
+
+		try {
+			$file->write(
+				$configFile,
+				json_encode( $vars['smw.json'], JSON_PRETTY_PRINT )
+			);
+		} catch( FileNotWritableException $e ) {
+			// Users may not have `wgShowExceptionDetails` enabled and would
+			// therefore not see the exception error message hence we fail hard
+			// and die
+			die(
+				"\n\nERROR: " . $e->getMessage() . "\n" .
+				"\n       The \"smwgConfigFileDir\" setting should point to a" .
+				"\n       directory that is persistent and writable!\n"
+			);
+		}
 	}
 
 	/**
@@ -266,7 +399,7 @@ class Installer implements MessageReporter {
 
 	private function newMessageReporter( $verbose = true ) {
 
-		if ( $this->messageReporter !== null ) {
+		if ( $this->messageReporter !== null && !$this->options->safeGet( self::OPT_SCHEMA_UPDATE, false ) ) {
 			return $this->messageReporter;
 		}
 
@@ -282,15 +415,13 @@ class Installer implements MessageReporter {
 		return $messageReporter;
 	}
 
-	private function runTableOptimization( $messageReporter ) {
-
-		$messageReporter->reportMessage( "\nTable optimization task ...\n" );
+	private function table_optimization( $messageReporter ) {
 
 		if ( !$this->options->safeGet( self::OPT_TABLE_OPTIMIZE, false ) ) {
-			return $messageReporter->reportMessage( "   ... skipping the table optimization\n" );
+			return $messageReporter->reportMessage( "\nSkipping the table optimization.\n" );
 		}
 
-		$messageReporter->reportMessage( "\n" );
+		$messageReporter->reportMessage( "\nRunning table optimization (this may take a moment) ...\n\n" );
 
 		foreach ( $this->tableSchemaManager->getTables() as $table ) {
 			$this->tableBuilder->optimize( $table );
@@ -299,14 +430,13 @@ class Installer implements MessageReporter {
 		$messageReporter->reportMessage( "\nOptimization completed.\n" );
 	}
 
-	private function addSupplementJobs( $messageReporter ) {
+	private function supplement_jobs( $messageReporter ) {
 
 		if ( !$this->options->safeGet( self::OPT_SUPPLEMENT_JOBS, false ) ) {
 			return $messageReporter->reportMessage( "\nSkipping supplement job creation.\n" );
 		}
 
-		$messageReporter->reportMessage( "\nAdding supplement jobs ...\n" );
-		$messageReporter->reportMessage( "   ... property statistics rebuild job ...\n" );
+		$messageReporter->reportMessage( "\nAdding property statistics rebuild job ...\n" );
 
 		$title = \Title::newFromText( 'SMW\SQLStore\Installer' );
 
@@ -317,7 +447,8 @@ class Installer implements MessageReporter {
 
 		$job->insert();
 
-		$messageReporter->reportMessage( "   ... entity disposer job ...\n" );
+		$messageReporter->reportMessage( "   ... done.\n" );
+		$messageReporter->reportMessage( "\nAdding entity disposer job ...\n" );
 
 		$job = new EntityIdDisposerJob(
 			$title,
@@ -327,44 +458,6 @@ class Installer implements MessageReporter {
 		$job->insert();
 
 		$messageReporter->reportMessage( "   ... done.\n" );
-	}
-
-	private function outputReport( $messageReporter, $startTime, $executionTimes ) {
-
-		$len = 67 - strlen( MW_VERSION );
-
-		$messageReporter->reportMessage(
-			sprintf( "%-{$len}s%s\n", "   ... MediaWiki", MW_VERSION )
-		);
-
-		$len = 67 - strlen( SMW_VERSION );
-
-		$messageReporter->reportMessage(
-			sprintf( "%-{$len}s%s\n", "   ... Semantic MediaWiki", SMW_VERSION )
-		);
-
-		$messageReporter->reportMessage( "   ... Execution report ...\n" );
-
-		foreach ( $executionTimes as $key => $time ) {
-			$t = $time - $startTime;
-
-			if ( $t > 60 ) {
-				$t = sprintf( "%.2f", $t / 60 );
-				$unit = 'min';
-			} else {
-				$t = sprintf( "%.2f", $t );
-				$unit = 'sec';
-			}
-
-			$len = 48 - strlen( $t );
-			$placeholderLen = $len - strlen( $key );
-
-			$messageReporter->reportMessage(
-				sprintf( "%-{$len}s%s\n", "       ... $key " . sprintf( "%'.{$placeholderLen}s", ' ' ), $t . " ($unit.)" )
-			);
-
-			$startTime = $time;
-		}
 	}
 
 }

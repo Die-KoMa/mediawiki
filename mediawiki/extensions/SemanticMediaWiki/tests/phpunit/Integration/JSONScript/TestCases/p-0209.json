@@ -108,9 +108,6 @@
 			"type": "parser",
 			"about": "#2 #ask quantity standard output",
 			"subject": "Example/P0209/1/1",
-			"store": {
-				"clear-cache": true
-			},
 			"assert-output": {
 				"to-contain": [
 					"data-sort-value=\"77.700077700078\"",

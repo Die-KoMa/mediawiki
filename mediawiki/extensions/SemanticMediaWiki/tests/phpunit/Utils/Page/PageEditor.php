@@ -6,7 +6,6 @@ use Revision;
 use RuntimeException;
 use Title;
 use WikiPage;
-use SMW\MediaWiki\EditInfo;
 
 /**
  * @group SMW
@@ -20,7 +19,7 @@ class PageEditor {
 	/**
 	 * @var WikiPage|null
 	 */
-	private $page;
+	private $page = null;
 
 	/**
 	 * @since 2.1
@@ -59,12 +58,17 @@ class PageEditor {
 	 */
 	public function doEdit( $pageContent = '', $editMessage = '' ) {
 
-		$content = new \WikitextContent( $pageContent );
+		if ( class_exists( 'WikitextContent' ) ) {
+			$content = new \WikitextContent( $pageContent );
 
-		$this->getPage()->doEditContent(
-			$content,
-			$editMessage
-		);
+			$this->getPage()->doEditContent(
+				$content,
+				$editMessage
+			);
+
+		} else {
+			$this->getPage()->doEdit( $pageContent, $editMessage );
+		}
 
 		return $this;
 	}
@@ -74,11 +78,29 @@ class PageEditor {
 	 */
 	public function getEditInfo() {
 
-		$editInfo = new EditInfo(
-			$this->getPage()
-		);
+		if ( class_exists( 'WikitextContent' ) ) {
 
-		return $editInfo->fetchEditInfo();
+			$content = $this->getPage()->getRevision()->getContent();
+			$format  = $content->getContentHandler()->getDefaultFormat();
+
+			return $this->getPage()->prepareContentForEdit(
+				$content,
+				null,
+				null,
+				$format
+			);
+		}
+
+		if ( method_exists( $this->getPage()->getRevision(), 'getContent' ) ) {
+			$text = $this->getPage()->getRevision()->getContent( Revision::RAW );
+		} else {
+			$text = $this->getPage()->getRevision()->getRawText();
+		}
+		return $this->getPage()->prepareTextForEdit(
+			$text,
+			null,
+			null
+		);
 	}
 
 }

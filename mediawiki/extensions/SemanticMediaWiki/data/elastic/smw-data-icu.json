@@ -195,7 +195,7 @@
 						"path_match": "P:*.geoField",
 						"match_mapping_type": "string",
 						"mapping": {
-							"type": "keyword",
+							"type": "text",
 							"fields": {
 								"point": {
 									"type": "geo_point"
@@ -276,9 +276,6 @@
 							"analyzer": "nfkc_cf_normalized_lowercase"
 						}
 					}
-				},
-				"subject.rev_id": {
-					"type": "integer"
 				}
 			}
 		}

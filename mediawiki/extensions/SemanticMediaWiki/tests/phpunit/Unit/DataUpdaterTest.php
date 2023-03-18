@@ -24,7 +24,6 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 	private $semanticDataFactory;
 	private $spyLogger;
 	private $store;
-	private $changePropagationNotifier;
 
 	protected function setUp() {
 		parent::setUp();
@@ -32,44 +31,33 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 		$this->testEnvironment = new TestEnvironment( [
 			'smwgPageSpecialProperties'       => [],
 			'smwgEnableUpdateJobs'            => false,
-			'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true, SMW_NS_SCHEMA => true ]
+			'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ]
 		] );
 
 		$this->spyLogger = $this->testEnvironment->newSpyLogger();
-
-		$this->changePropagationNotifier = $this->getMockBuilder( '\SMW\Property\ChangePropagationNotifier' )
-			->disableOriginalConstructor()
-			->getMock();
 
 		$idTable = $this->getMockBuilder( '\stdClass' )
 			->setMethods( [ 'exists' ] )
 			->getMock();
 
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
 		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
 			->disableOriginalConstructor()
-			->setMethods( [ 'getObjectIds', 'getConnection' ] )
+			->setMethods( [ 'getObjectIds' ] )
 			->getMock();
 
 		$this->store->expects( $this->any() )
 			->method( 'getObjectIds' )
 			->will( $this->returnValue( $idTable ) );
 
-		$this->store->expects( $this->any() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
 		$this->store->setLogger( $this->spyLogger );
 
-		$jobQueue = $this->getMockBuilder( '\SMW\MediaWiki\JobQueue' )
+		$this->testEnvironment->registerObject( 'Store', $this->store );
+
+		$this->transactionalCallableUpdate = $this->getMockBuilder( '\SMW\MediaWiki\Deferred\TransactionalCallableUpdate' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->testEnvironment->registerObject( 'JobQueue', $jobQueue );
-		$this->testEnvironment->registerObject( 'Store', $this->store );
+		$this->testEnvironment->registerObject( 'DeferredTransactionalCallableUpdate', $this->transactionalCallableUpdate );
 
 		$this->semanticDataFactory = $this->testEnvironment->getUtilityFactory()->newSemanticDataFactory();
 	}
@@ -87,7 +75,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			DataUpdater::class,
-			new DataUpdater( $this->store, $semanticData, $this->changePropagationNotifier )
+			new DataUpdater( $this->store, $semanticData )
 		);
 	}
 
@@ -97,8 +85,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$this->store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$this->assertTrue(
@@ -108,22 +95,18 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 	public function testDeferredUpdate() {
 
+		$this->transactionalCallableUpdate->expects( $this->once() )
+			->method( 'pushUpdate' );
+
 		$semanticData = $this->semanticDataFactory->newEmptySemanticData( __METHOD__ );
 
 		$instance = new DataUpdater(
 			$this->store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
-		$instance->setLogger( $this->spyLogger );
 		$instance->isDeferrableUpdate( true );
 		$instance->doUpdate();
-
-		$this->assertContains(
-			'DeferrableUpdate',
-			$this->spyLogger->getMessagesAsString()
-		);
 	}
 
 	/**
@@ -173,8 +156,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$instance->canCreateUpdateJob(
@@ -230,8 +212,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$instance->canCreateUpdateJob(
@@ -255,8 +236,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$this->store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$this->assertInternalType(
@@ -277,82 +257,10 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$this->store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$this->assertFalse(
-			$instance->doUpdate()
-		);
-	}
-
-	public function testDoUpdateForSchema() {
-
-		$wikiPage = new DIWikiPage(
-			'Foo',
-			SMW_NS_SCHEMA,
-			''
-		);
-
-		$semanticData = $this->semanticDataFactory->setSubject( $wikiPage )->newEmptySemanticData();
-
-		$idTable = $this->getMockBuilder( '\stdClass' )
-			->setMethods( [ 'exists' ] )
-			->getMock();
-
-		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->setMethods( [ 'updateData' ] )
-			->getMock();
-
-		$store->expects( $this->once() )
-			->method( 'updateData' );
-
-		$wikiPage = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$revision = $this->getMockBuilder( '\Revision' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$content = $this->getMockBuilder( '\Content' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$wikiPage = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$wikiPage->expects( $this->atLeastOnce() )
-			->method( 'getContent' )
-			->will( $this->returnValue( $content ) );
-
-		$wikiPage->expects( $this->atLeastOnce() )
-			->method( 'getRevision' )
-			->will( $this->returnValue( $revision ) );
-
-		$pageCreator = $this->getMockBuilder( '\SMW\MediaWiki\PageCreator' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$pageCreator->expects( $this->atLeastOnce() )
-			->method( 'createPage' )
-			->will( $this->returnValue( $wikiPage ) );
-
-		$this->testEnvironment->registerObject( 'PageCreator', $pageCreator );
-
-		$instance = new DataUpdater(
-			$store,
-			$semanticData,
-			$this->changePropagationNotifier
-		);
-
-		$instance->canCreateUpdateJob(
-			true
-		);
-
-		$this->assertTrue(
 			$instance->doUpdate()
 		);
 	}
@@ -424,8 +332,7 @@ class DataUpdaterTest  extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DataUpdater(
 			$store,
-			$semanticData,
-			$this->changePropagationNotifier
+			$semanticData
 		);
 
 		$instance->canCreateUpdateJob( true );

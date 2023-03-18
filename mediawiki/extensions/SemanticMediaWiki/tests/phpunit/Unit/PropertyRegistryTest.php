@@ -7,7 +7,6 @@ use SMW\DIProperty;
 use SMW\PropertyAliasFinder;
 use SMW\PropertyLabelFinder;
 use SMW\PropertyRegistry;
-use SMW\Tests\PHPUnitCompat;
 
 /**
  * @covers \SMW\PropertyRegistry
@@ -19,8 +18,6 @@ use SMW\Tests\PHPUnitCompat;
  * @author mwjames
  */
 class PropertyRegistryTest extends \PHPUnit_Framework_TestCase {
-
-	use PHPUnitCompat;
 
 	private $cache;
 	private $store;
@@ -154,12 +151,11 @@ class PropertyRegistryTest extends \PHPUnit_Framework_TestCase {
 			DIProperty::TYPE_HAS_TYPE,
 			'__typ',
 			'Has type',
-			true,
 			true
 		);
 
 		$this->assertEquals(
-			[ '_TYPE' => [ '__typ', true, true, false ] ],
+			[ '_TYPE' => [ '__typ', true, true ] ],
 			$instance->getPropertyList()
 		);
 
@@ -174,40 +170,6 @@ class PropertyRegistryTest extends \PHPUnit_Framework_TestCase {
 		$this->assertTrue(
 			$instance->isRegistered( '_TYPE' )
 		);
-	}
-
-	public function testRegisterProperty_DifferentSignatureThrowsException() {
-
-		$datatypeRegistry = $this->getMockBuilder( '\SMW\DataTypeRegistry' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$datatypeRegistry->expects( $this->once() )
-			->method( 'getKnownTypeLabels' )
-			->will( $this->returnValue( [] ) );
-
-		$datatypeRegistry->expects( $this->once() )
-			->method( 'getKnownTypeAliases' )
-			->will( $this->returnValue( [] ) );
-
-		$propertyLabelFinder = $this->getMockBuilder( '\SMW\PropertyLabelFinder' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$propertyAliases = new PropertyAliasFinder(
-			$this->cache
-		);
-
-		$instance = new PropertyRegistry(
-			$datatypeRegistry,
-			$propertyLabelFinder,
-			$propertyAliases
-		);
-
-		$instance->registerProperty( '_TYPE', '__typ', 'Has type', true, true );
-
-		$this->setExpectedException( '\RuntimeException' );
-		$instance->registerProperty( '_TYPE', '__typ', 'Has type', true, false );
 	}
 
 	public function testUnregisterProperty() {

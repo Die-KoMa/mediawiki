@@ -57,7 +57,7 @@
 	"pf_formedit_altformsonly": "Va tanoya vlevefa erurateza goloplekuna ko batu bu vay rebal :",
 	"pf_editsource": "Klitabetara",
 	"pf_formedit_edittitle": "Betara va $1 : $2",
-	"pf_formedit_formwarning": "Obral ! Batu bu ([[$1|) ixam tir]], vexe va bata erurateza me faver.",
+	"pf_formedit_formwarning": "Obral ! Batu bu (<a href=\"$1\">) ixam tir</a>, vexe va bata erurateza me faver.",
 	"pf_formedit_remove": "Dimplekura",
 	"pf_formedit_addanother": "Loplekura va arcoba",
 	"pf_blank_error": "Me rotir vlardaf",

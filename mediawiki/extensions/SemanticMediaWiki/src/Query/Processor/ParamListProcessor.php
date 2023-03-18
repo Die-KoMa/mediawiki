@@ -148,16 +148,9 @@ class ParamListProcessor {
 			// otherwise labels will be empty and not be accessible in a template
 			$showMode = $paramList['templateArgs'] ? false : $paramList['showMode'];
 
-			// #3548
-			// Use a canonical label when referenced as part of a template to ensure
-			// that labels (such as a preferred label) don't change with a language
-			// setting
-			$asCanonicalLabel = $paramList['templateArgs'];
-
 			$printRequest = $this->printRequestFactory->newFromText(
 				$request['label'],
-				$showMode,
-				$asCanonicalLabel
+				$showMode
 			);
 
 			if ( $printRequest === null ) {

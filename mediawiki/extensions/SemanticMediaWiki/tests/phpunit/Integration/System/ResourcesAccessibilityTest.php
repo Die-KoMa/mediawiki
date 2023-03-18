@@ -2,7 +2,6 @@
 
 namespace SMW\Tests\System;
 
-use SMW\ApplicationFactory;
 use ResourceLoader;
 use ResourceLoaderContext;
 use ResourceLoaderModule;
@@ -23,11 +22,9 @@ class ResourcesAccessibilityTest extends \PHPUnit_Framework_TestCase {
 	public function testModulesScriptsFilesAreAccessible( $modules, ResourceLoader $resourceLoader, $context ) {
 
 		foreach ( array_keys( $modules ) as $name ) {
-			$resourceLoaderModule = $resourceLoader->getModule( $name );
-
 			$this->assertInternalType(
 				'string',
-				$resourceLoaderModule->getScript( $context )
+				$resourceLoader->getModule( $name )->getScript( $context )
 			);
 		}
 	}
@@ -38,8 +35,8 @@ class ResourcesAccessibilityTest extends \PHPUnit_Framework_TestCase {
 	public function testModulesStylesFilesAreAccessible( $modules, ResourceLoader $resourceLoader, $context ) {
 
 		foreach ( array_keys( $modules ) as $name ) {
-			$resourceLoaderModule = $resourceLoader->getModule( $name );
-			$styles = $resourceLoaderModule->getStyles( $context );
+
+			$styles = $resourceLoader->getModule( $name )->getStyles( $context );
 
 			foreach ( $styles as $style ) {
 				$this->assertInternalType( 'string', $style );
@@ -49,16 +46,18 @@ class ResourcesAccessibilityTest extends \PHPUnit_Framework_TestCase {
 
 	public function moduleDataProvider() {
 
-		$resourceLoader = ApplicationFactory::getInstance()->create( 'ResourceLoader' );
+		$resourceLoader = new ResourceLoader();
 		$context = ResourceLoaderContext::newDummyContext();
 
 		foreach ( $GLOBALS['smwgResourceLoaderDefFiles'] as $key => $file ) {
-			yield [
+			$providers[] = [
 				include $file,
 				$resourceLoader,
 				$context
 			];
 		}
+
+		return $providers;
 	}
 
 }

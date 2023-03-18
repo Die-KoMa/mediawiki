@@ -53,21 +53,11 @@ class SpecialUnusedProperties extends SpecialPage {
 		SMWOutputs::commitToOutputPage( $out );
 	}
 
-	/**
-	 * @see SpecialPage::getGroupName
-	 */
-	protected function getGroupName() {
-
-		if ( version_compare( MW_VERSION, '1.33', '<' ) ) {
-			return 'smw_group';
-		}
-
-		// #3711, MW 1.33+
-		return 'smw_group/properties-concepts-types';
-	}
-
 	private function getLimitOffset() {
 		return $this->getRequest()->getLimitOffset();
 	}
 
+	protected function getGroupName() {
+		return 'maintenance';
+	}
 }

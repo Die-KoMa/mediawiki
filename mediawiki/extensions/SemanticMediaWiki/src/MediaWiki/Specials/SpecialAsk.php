@@ -14,12 +14,12 @@ use SMW\MediaWiki\Specials\Ask\ParametersProcessor;
 use SMW\MediaWiki\Specials\Ask\ParametersWidget;
 use SMW\MediaWiki\Specials\Ask\QueryInputWidget;
 use SMW\MediaWiki\Specials\Ask\SortWidget;
+use SMW\MediaWiki\Specials\Ask\UrlArgs;
 use SMW\MediaWiki\Specials\Ask\HtmlForm;
 use SMW\Query\PrintRequest;
 use SMW\Query\QueryLinker;
 use SMW\Query\RemoteRequest;
 use SMW\Query\Result\StringResult;
-use SMW\Query\ResultPrinterDependency;
 use SMW\Utils\HtmlModal;
 use SMWInfolink as Infolink;
 use SMWOutputs;
@@ -27,7 +27,6 @@ use SMWQuery;
 use SMWQueryProcessor as QueryProcessor;
 use SMWQueryResult as QueryResult;
 use SpecialPage;
-use SMW\Utils\UrlArgs;
 use SMW\Utils\HtmlTabs;
 use SMW\Message;
 
@@ -171,14 +170,7 @@ class SpecialAsk extends SpecialPage {
 		}
 
 		$out->addHTML( HelpWidget::html() );
-
-		if ( $request->getCheck( 'bHelp' ) ) {
-			$helpLink = wfMessage( $request->getVal( 'bHelp' ) )->escaped();
-		} else {
-			$helpLink = wfMessage( 'smw_ask_doculink' )->escaped();
-		}
-
-		$this->addHelpLink( $helpLink, true );
+		$this->addHelpLink( wfMessage( 'smw_ask_doculink' )->escaped(), true );
 
 		// make sure locally collected output data is pushed to the output!
 		SMWOutputs::commitToOutputPage( $out );
@@ -188,13 +180,7 @@ class SpecialAsk extends SpecialPage {
 	 * @see SpecialPage::getGroupName
 	 */
 	protected function getGroupName() {
-
-		if ( version_compare( MW_VERSION, '1.33', '<' ) ) {
-			return 'smw_group';
-		}
-
-		// #3711, MW 1.33+
-		return 'smw_group/search';
+		return 'smw_group';
 	}
 
 	private function init() {
@@ -365,7 +351,7 @@ class SpecialAsk extends SpecialPage {
 			$error = $res;
 		}
 
-		$queryLog = $this->getQueryLog(
+		$infoText = $this->getInfoText(
 			$duration,
 			$isFromCache
 		);
@@ -380,6 +366,9 @@ class SpecialAsk extends SpecialPage {
 
 		$htmlForm->setCallbacks(
 			[
+				'borrowed_msg_handler' => function( &$html, &$searchInfoText ) {
+					return $this->print_borrowed_msg( $html, $searchInfoText );
+				},
 				'code_handler' => function() {
 					return $this->print_code();
 				}
@@ -393,18 +382,11 @@ class SpecialAsk extends SpecialPage {
 		$htmlForm->isEditMode( $this->isEditMode );
 		$htmlForm->isBorrowedMode( $this->isBorrowedMode );
 
-		$preFrom = '';
-
 		$form = $htmlForm->getForm(
 			$urlArgs,
 			$res,
-			$queryLog
+			$infoText
 		);
-
-		if ( $this->isBorrowedMode ) {
-			$info = '';
-			$this->print_borrowed_msg( $preFrom, $info );
-		}
 
 		// The overall form is "soft-disabled" so that when JS is fully
 		// loaded, the ask module will remove this class and releases the form
@@ -415,7 +397,7 @@ class SpecialAsk extends SpecialPage {
 				'id' => 'ask',
 				"class" => ( $this->isBorrowedMode ? '' : 'is-disabled' )
 			],
-			$preFrom . $form . $error . $result
+			$form . $error . $result
 		);
 
 		$this->getOutput()->addHTML(
@@ -425,30 +407,11 @@ class SpecialAsk extends SpecialPage {
 
 	private function fetchResults( &$printer, &$queryobj, &$urlArgs ) {
 
-		// Copy the printout to retain the original state while in case of no
-		// specific subject (THIS) request extend the query with a
-		// `PrintRequest::PRINT_THIS` column
-		QueryProcessor::addThisPrintout( $this->printouts, $this->parameters );
-
-		$params = QueryProcessor::getProcessedParams(
-			$this->parameters,
-			$this->printouts
-		);
-
-		$this->parameters['format'] = $params['format']->getValue();
-		$this->params = $params;
+		list( $res, $debug, $duration, $queryobj, $native_result ) = $this->getQueryResult();
 
 		$printer = QueryProcessor::getResultPrinter(
 			$this->parameters['format'],
 			QueryProcessor::SPECIAL_PAGE
-		);
-
-		if ( $printer instanceof ResultPrinterDependency && $printer->hasMissingDependency() ) {
-			return [ $printer->getDependencyError(), null, 0 ];
-		}
-
-		list( $res, $debug, $duration, $queryobj, $native_result ) = $this->fetchQueryResult(
-			$params
 		);
 
 		$printer->setShowErrors( false );
@@ -464,33 +427,28 @@ class SpecialAsk extends SpecialPage {
 		if ( !$printer->isExportFormat() ) {
 			if ( $request_type !== '' ) {
 				$this->getOutput()->disable();
-				$output = '';
+				$query_result = '';
 
-				if ( ( $count = $res->getCount() ) > 0 ) {
-					$further = $res->hasFurtherResults();
+				if ( $res->getCount() > 0 ) {
 
 					if ( $request_type === 'raw' ) {
-						$output = $printer->getResult( $res, $this->params, SMW_OUTPUT_RAW );
+						$query_result = $printer->getResult( $res, $this->params, SMW_OUTPUT_RAW );
 					} else {
-						$output = $printer->getResult( $res, $this->params, SMW_OUTPUT_HTML );
+						$query_result = $printer->getResult( $res, $this->params, SMW_OUTPUT_HTML );
 					}
 
-					// The `RemoteRequest` class will use the following information
-					// when creating a `StringResult` instance
-					$output .= "<!--COUNT:$count-->";
-					$output .= "<!--FURTHERRESULTS:$further-->";
 				} elseif ( $res->getCountValue() > 0 ) {
-					$output = $res->getCountValue();
+					$query_result = $res->getCountValue();
 				}
 
 				// Don't send an ID for a raw type but for all others add one
 				// so that the `RemoteRequest` can respond appropriately and
 				// filter those back-ends that don't send a clean output.
 				if ( $request_type !== 'raw' ) {
-					$output .= RemoteRequest::REQUEST_ID;
+					$query_result .= RemoteRequest::REQUEST_ID;
 				}
 
-				return print $output;
+				return print $query_result;
 			} elseif ( ( $res instanceof QueryResult && $res->getCount() > 0 ) || $res instanceof StringResult ) {
 				if ( $this->isEditMode ) {
 					$urlArgs->set( 'eq', 'yes' );
@@ -527,7 +485,7 @@ class SpecialAsk extends SpecialPage {
 		return [ $result, $res, $duration ];
 	}
 
-	private function getQueryLog( $duration, $isFromCache = false ) {
+	private function getInfoText( $duration, $isFromCache = false ) {
 
 		$infoText = '';
 		$source = null;
@@ -544,12 +502,15 @@ class SpecialAsk extends SpecialPage {
 			$source
 		);
 
-		return [
-			'query_string' => $this->queryString,
-			'query_source' => str_replace( '"', '', $querySource ),
-			'query_time' => $duration,
-			'from_cache' => $isFromCache
-		];
+		if ( $duration > 0 ) {
+			$infoText = Message::get(
+				[ 'smw-ask-query-search-info', $this->queryString, $querySource, $isFromCache, $duration],
+				Message::PARSE,
+				$this->getLanguage()
+			);
+		}
+
+		return $infoText;
 	}
 
 	private function print_code() {
@@ -592,13 +553,7 @@ class SpecialAsk extends SpecialPage {
 		$searchInfoText = '';
 
 		if ( $borrowedMessage !== null && wfMessage( $borrowedMessage )->exists() ) {
-			$html = html::rawElement(
-				'p',
-				[
-					'class' => 'plainlinks'
-				],
-				wfMessage( $borrowedMessage, $this->queryString )->parse()
-			);
+			$html = wfMessage( $borrowedMessage, $this->queryString )->parse();
 		}
 
 		$borrowedTitle = $this->getRequest()->getVal( 'bTitle' );
@@ -662,13 +617,27 @@ class SpecialAsk extends SpecialPage {
 		return $urlArgs;
 	}
 
-	private function fetchQueryResult( $params ) {
+	private function getQueryResult() {
 
 		$res = null;
 		$debug = '';
 		$duration = 0;
 		$queryobj = null;
 		$native_result = '';
+
+		// Copy the printout to retain the original state while in case of no
+		// specific subject (THIS) request extend the query with a
+		// `PrintRequest::PRINT_THIS` column
+
+		QueryProcessor::addThisPrintout( $this->printouts, $this->parameters );
+
+		$params = QueryProcessor::getProcessedParams(
+			$this->parameters,
+			$this->printouts
+		);
+
+		$this->parameters['format'] = $params['format']->getValue();
+		$this->params = $params;
 
 		$queryobj = QueryProcessor::createQuery(
 			$this->queryString,

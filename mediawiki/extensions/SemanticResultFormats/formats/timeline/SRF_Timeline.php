@@ -341,7 +341,7 @@ class SRFTimeline extends SMWResultPrinter {
 
 				if ( $pr->getMode() == SMWPrintRequest::PRINT_THIS ) {
 					$curarticle = $object->getLongText( $outputmode, $l );
-					$cururl = $object->getDataItem()->getTitle()->getFullUrl();
+					$cururl = $object->getTitle()->getFullUrl();
 				}
 
 				// NOTE: type Title of $object implied

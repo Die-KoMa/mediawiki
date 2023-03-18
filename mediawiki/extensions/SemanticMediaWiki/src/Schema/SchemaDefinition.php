@@ -10,7 +10,7 @@ use JsonSerializable;
  *
  * @author mwjames
  */
-class SchemaDefinition extends Compartment implements Schema {
+class SchemaDefinition implements Schema, JsonSerializable {
 
 	/**
 	 * @var string
@@ -20,34 +20,34 @@ class SchemaDefinition extends Compartment implements Schema {
 	/**
 	 * @var array
 	 */
-	private $info = [];
+	protected $definition = [];
+
+	/**
+	 * @var string|null
+	 */
+	private $validation_schema;
 
 	/**
 	 * @since 3.0
 	 *
 	 * @param string $name
 	 * @param array $definition
-	 * @param array $info
+	 * @param string|null $validation_schema
 	 */
-	public function __construct( $name, array $definition, array $info = [] ) {
-		parent::__construct( $definition );
+	public function __construct( $name, array $definition, $validation_schema = null ) {
 		$this->name = $name;
-		$this->info = $info;
+		$this->definition = $definition;
+		$this->validation_schema = $validation_schema;
 	}
 
 	/**
-	 * @see Schema::info
+	 * @see Schema::get
 	 * @since 3.0
 	 *
-	 * @return string|null
+	 * @return mixed|null
 	 */
-	public function info( $key, $default = null ) {
-
-		if ( isset( $this->info[$key] ) ) {
-			return $this->info[$key];
-		}
-
-		return $default;
+	public function get( $key, $default = null ) {
+		return $this->digDeep( $this->definition, $key, $default );
 	}
 
 	/**
@@ -61,12 +61,50 @@ class SchemaDefinition extends Compartment implements Schema {
 	}
 
 	/**
-	 * @since 3.1
+	 * @see Schema::getValidationSchema
+	 * @since 3.0
 	 *
-	 * @return []
+	 * @return string|null
 	 */
-	 public function toArray() {
-		return $this->data;
+	public function getValidationSchema() {
+		return $this->validation_schema;
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @return string
+	 */
+	 public function jsonSerialize() {
+		return json_encode( $this->definition );
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @return string
+	 */
+	 public function __toString() {
+		return $this->jsonSerialize();
+	}
+
+	private function digDeep( $array, $key, $default ) {
+
+		if ( strpos( $key, '.' ) !== false ) {
+			$list = explode( '.', $key, 2 );
+
+			foreach ( $list as $k => $v ) {
+				if ( isset( $array[$v] ) ) {
+					return $this->digDeep( $array[$v], $list[$k+1], $default );
+				}
+			}
+		}
+
+		if ( isset( $array[$key] ) ) {
+			return $array[$key];
+		}
+
+		return $default;
 	}
 
 }

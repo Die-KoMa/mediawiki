@@ -149,41 +149,54 @@ class IdEntityFinder {
 			return $dataItem;
 		}
 
-		$row = $this->fetchFromTable(
+		$rows = $this->fetchFromTable(
 			[ 'smw_id' => $id ],
-			true
+			[ 'LIMIT' => 1 ]
 		);
 
-		if ( $row === false ) {
+		if ( $rows === false ) {
 			return false;
 		}
 
-		$dataItem = $this->newFromRow( $row );
+		foreach ( $rows as $row ) {
+
+			if ( !isset( $row->smw_title ) ) {
+				continue;
+			}
+
+			if ( $row->smw_title !== '' && $row->smw_title{0} === '_' && (int)$row->smw_namespace === SMW_NS_PROPERTY ) {
+			//	$row->smw_title = str_replace( ' ', '_', PropertyRegistry::getInstance()->findPropertyLabelById( $row->smw_title ) );
+			}
+
+			$row->smw_id = $id;
+			$dataItem = $this->newFromRow( $row );
+		}
+
 		$cache->save( $id, $dataItem );
 
 		return $dataItem;
 	}
 
-	private function fetchFromTable( $conditions, $selectRow = false ) {
+	private function fetchFromTable( $conditions, $options = [] ) {
 
 		$connection = $this->store->getConnection( 'mw.db' );
 
-		$fields = [
-			'smw_id',
-			'smw_title',
-			'smw_namespace',
-			'smw_iw',
-			'smw_subobject',
-			'smw_sortkey',
-			'smw_sort',
-			'smw_hash'
-		];
-
-		if ( $selectRow ) {
-			return $connection->selectRow( SQLStore::ID_TABLE, $fields, $conditions, __METHOD__ );
-		}
-
-		return $connection->select( SQLStore::ID_TABLE, $fields, $conditions, __METHOD__ );
+		return $connection->select(
+			SQLStore::ID_TABLE,
+			[
+				'smw_id',
+				'smw_title',
+				'smw_namespace',
+				'smw_iw',
+				'smw_subobject',
+				'smw_sortkey',
+				'smw_sort',
+				'smw_hash'
+			],
+			$conditions,
+			__METHOD__,
+			$options
+		);
 	}
 
 }

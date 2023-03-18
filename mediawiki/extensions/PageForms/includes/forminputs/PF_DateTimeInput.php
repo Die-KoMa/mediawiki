@@ -1,10 +1,14 @@
 <?php
 /**
+ * File holding the PFDateTimeInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFDateTimeInput class.
+ *
  * @ingroup PFFormInput
  */
 class PFDateTimeInput extends PFDateInput {
@@ -13,22 +17,18 @@ class PFDateTimeInput extends PFDateInput {
 	}
 
 	public static function getDefaultPropTypes() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherPropTypesHandled() {
-		return [ '_dat' ];
+		return array( '_dat' );
 	}
 
 	public static function getDefaultCargoTypes() {
-		return [
-			'Datetime' => [],
-			'Start datetime' => [],
-			'End datetime' => []
-		];
+		return array( 'Datetime' => array() );
 	}
 
-	public static function getHTML( $datetime, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
+	public static function getHTML( $datetime, $input_name, $is_mandatory, $is_disabled, $other_args ) {
 		global $wgPageFormsTabIndex, $wgPageForms24HourTime;
 
 		$include_timezone = array_key_exists( 'include timezone', $other_args );
@@ -64,25 +64,31 @@ class PFDateTimeInput extends PFDateInput {
 				// Handle 'default=now'.
 				if ( $datetime == 'now' ) {
 					global $wgLocaltimezone;
-					if ( $wgLocaltimezone == null ) {
-						$dateTimeObject = new DateTime( 'now' );
-					} else {
-						$dateTimeObject = new DateTime( 'now', new DateTimeZone( $wgLocaltimezone ) );
+					if ( isset( $wgLocaltimezone ) ) {
+						$serverTimezone = date_default_timezone_get();
+						date_default_timezone_set( $wgLocaltimezone );
 					}
+					$actual_date = time();
 				} else {
-					$dateTimeObject = new DateTime( $datetime );
+					$actual_date = strtotime( $datetime );
 				}
 				if ( $wgPageForms24HourTime ) {
-					$hour = $dateTimeObject->format( 'G' );
+					$hour = date( 'G', $actual_date );
 				} else {
-					$hour = $dateTimeObject->format( 'g' );
+					$hour = date( 'g', $actual_date );
 				}
-				$minute = $dateTimeObject->format( 'i' );
-				$second = $dateTimeObject->format( 's' );
+				$minute = date( 'i', $actual_date );
+				$second = date( 's', $actual_date );
 				if ( !$wgPageForms24HourTime ) {
-					$ampm24h = $dateTimeObject->format( 'A' );
+					$ampm24h = date( 'A', $actual_date );
 				}
-				$timezone = $dateTimeObject->format( 'T' );
+				$timezone = date( 'T', $actual_date );
+				// Restore back to the server's timezone.
+				if ( $datetime == 'now' ) {
+					if ( isset( $wgLocaltimezone ) ) {
+						date_default_timezone_set( $serverTimezone );
+					}
+				}
 			}
 		} else {
 			$hour = null;
@@ -103,12 +109,10 @@ class PFDateTimeInput extends PFDateInput {
 		if ( !$wgPageForms24HourTime ) {
 			$wgPageFormsTabIndex++;
 			$text .= '	 <select tabindex="' . $wgPageFormsTabIndex . '" name="' . $input_name . "[ampm24h]\" class=\"ampmInput\" $disabled_text>\n";
-			$ampm24h_options = [ '', 'AM', 'PM' ];
+			$ampm24h_options = array( '', 'AM', 'PM' );
 			foreach ( $ampm24h_options as $value ) {
 				$text .= "				<option value=\"$value\"";
-				if ( $value == $ampm24h ) {
-					$text .= " selected=\"selected\"";
-				}
+				if ( $value == $ampm24h ) { $text .= " selected=\"selected\""; }
 				$text .= ">$value</option>\n";
 			}
 			$text .= "	</select>\n";
@@ -124,17 +128,16 @@ class PFDateTimeInput extends PFDateInput {
 
 	public static function getParameters() {
 		$params = parent::getParameters();
-		$params[] = [
+		$params[] = array(
 			'name' => 'include timezone',
 			'type' => 'boolean',
 			'description' => wfMessage( 'pf_forminputs_includetimezone' )->text()
-		];
+		);
 		return $params;
 	}
 
 	/**
 	 * Returns the HTML code to be included in the output page for this input.
-	 * @return string
 	 */
 	public function getHtmlText() {
 		return self::getHTML(

@@ -4,7 +4,6 @@ namespace SMW\Tests\DataValues\ValueValidators;
 
 use SMW\DataValues\ValueValidators\CompoundConstraintValueValidator;
 use SMW\Tests\PHPUnitCompat;
-use SMW\Tests\TestEnvironment;
 
 /**
  * @covers \SMW\DataValues\ValueValidators\CompoundConstraintValueValidator
@@ -19,22 +18,11 @@ class CompoundConstraintValueValidatorTest extends \PHPUnit_Framework_TestCase {
 
 	use PHPUnitCompat;
 
-	private $spyLogger;
-
-	protected function setUp() {
-		parent::setUp();
-
-		$this->spyLogger = TestEnvironment::getUtilityFactory()->newSpyLogger();
-	}
-
 	public function testCanConstruct() {
 
-		$instance = new CompoundConstraintValueValidator();
-		$instance->setLogger( $this->spyLogger );
-
 		$this->assertInstanceOf(
-			CompoundConstraintValueValidator::class,
-			$instance
+			'\SMW\DataValues\ValueValidators\CompoundConstraintValueValidator',
+			new CompoundConstraintValueValidator()
 		);
 	}
 
@@ -53,8 +41,6 @@ class CompoundConstraintValueValidatorTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( true ) );
 
 		$instance = new CompoundConstraintValueValidator();
-		$instance->setLogger( $this->spyLogger );
-
 		$instance->registerConstraintValueValidator( $constraintValueValidator );
 
 		$instance->validate( 'Foo' );
@@ -67,7 +53,6 @@ class CompoundConstraintValueValidatorTest extends \PHPUnit_Framework_TestCase {
 	public function testMissingConstraintValueValidatorRegThrowsException() {
 
 		$instance = new CompoundConstraintValueValidator();
-		$instance->setLogger( $this->spyLogger );
 
 		$this->setExpectedException( '\RuntimeException' );
 		$instance->validate( 'Foo' );

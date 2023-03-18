@@ -111,7 +111,7 @@ class SRFjqPlotSeries extends SMWResultPrinter {
 						$label = $object->getWikiValue();
 					}
 				}
-				// Only for array's with numbers
+				// Only for array's with numbers 
 				if ( count( $rowNumbers ) > 0 ) {
 
 					// For cases where mainlabel=- we assume that the subject should not be
@@ -208,8 +208,7 @@ class SRFjqPlotSeries extends SMWResultPrinter {
 			'datalabels' => $this->params['datalabels'],
 			'stackseries' => $this->params['stackseries'],
 			'grid' => $this->params['theme'] === 'vector' ? [ 'borderColor' => '#a7d7f9' ] : ( $this->params['theme'] === 'simple' ? [ 'borderColor' => '#ddd' ] : null ),
-			'seriescolors' => $seriescolors,
-			'hideZeroes' => $this->params['hidezeroes']
+			'seriescolors' => $seriescolors
 		];
 
 		return [
@@ -328,7 +327,7 @@ class SRFjqPlotSeries extends SMWResultPrinter {
 
 		// Encoding
 		$requireHeadItem = [ $chartID => FormatJson::encode( $data ) ];
-		SMWOutputs::requireHeadItem( $chartID, SRFUtils::makeVariablesScript( $requireHeadItem ) );
+		SMWOutputs::requireHeadItem( $chartID, Skin::makeVariablesScript( $requireHeadItem ) );
 
 		// Add RL resources
 		$this->addResources();
@@ -421,12 +420,6 @@ class SRFjqPlotSeries extends SMWResultPrinter {
 			'message' => 'srf-paramdesc-gridview',
 			'default' => 'none',
 			'values' => [ 'none', 'tabs' ],
-		];
-
-		$params['hidezeroes'] = [
-			'type' => 'boolean',
-			'message' => 'srf-paramdesc-hidezeroes',
-			'default' => false,
 		];
 
 		return $params;

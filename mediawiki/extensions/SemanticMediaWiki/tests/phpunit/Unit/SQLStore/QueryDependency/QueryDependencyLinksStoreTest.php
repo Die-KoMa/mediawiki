@@ -21,7 +21,6 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 	private $store;
 	private $spyLogger;
 	private $jobFactory;
-	private $subject;
 	private $testEnvironment;
 
 	protected function setUp() {
@@ -49,26 +48,6 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 		$this->jobFactory = $this->getMockBuilder( '\SMW\MediaWiki\JobFactory' )
 			->disableOriginalConstructor()
 			->getMock();
-
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
-
-		$this->subject = $this->getMockBuilder( '\SMW\DIWikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->subject->expects( $this->any() )
-			->method( 'getNamespace' )
-			->will( $this->returnValue( NS_MAIN ) );
-
-		$this->subject->expects( $this->any() )
-			->method( 'getTitle' )
-			->will( $this->returnValue( $title ) );
 
 		$this->testEnvironment->registerObject( 'JobFactory', $this->jobFactory );
 		$this->testEnvironment->registerObject( 'NamespaceExaminer', $namespaceExaminer );
@@ -122,7 +101,7 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 
 		$changeOp->expects( $this->once() )
 			->method( 'getSubject' )
-			->will( $this->returnValue( $this->subject ) );
+			->will( $this->returnValue( DIWikiPage::newFromText( 'Foo' ) ) );
 
 		$changeOp->expects( $this->once() )
 			->method( 'getTableChangeOps' )
@@ -172,10 +151,6 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$changeOp->expects( $this->any() )
-			->method( 'getSubject' )
-			->will( $this->returnValue( $this->subject ) );
-
 		$dependencyLinksTableUpdater = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\DependencyLinksTableUpdater' )
 			->disableOriginalConstructor()
 			->getMock();
@@ -198,6 +173,134 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 		$this->assertNull(
 			$instance->pruneOutdatedTargetLinks( $changeOp )
 		);
+	}
+
+	public function testParserCachePurgeJobParametersOnBlacklistedProperty() {
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
+		$dependencyLinksTableUpdater = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\DependencyLinksTableUpdater' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$dependencyLinksTableUpdater->expects( $this->any() )
+			->method( 'getStore' )
+			->will( $this->returnValue( $store ) );
+
+		$entityIdListRelevanceDetectionFilter = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\EntityIdListRelevanceDetectionFilter' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$entityIdListRelevanceDetectionFilter->expects( $this->once() )
+			->method( 'getSubject' )
+			->will( $this->returnValue( DIWikiPage::newFromText( __METHOD__ ) ) );
+
+		$entityIdListRelevanceDetectionFilter->expects( $this->once() )
+			->method( 'getFilteredIdList' )
+			->will( $this->returnValue( [ 1 ] ) );
+
+		$queryResultDependencyListResolver = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\QueryResultDependencyListResolver' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$expected = [
+			'idlist' => [ 1 ],
+			'exec.mode' => 'exec.journal'
+		];
+
+		$nullJob = $this->getMockBuilder( '\SMW\MediaWiki\Jobs\NullJob' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->jobFactory->expects( $this->once() )
+			->method( 'newParserCachePurgeJob' )
+			->with(
+				$this->anything(),
+				$this->equalTo( $expected ) )
+			->will( $this->returnValue( $nullJob ) );
+
+		$instance = new QueryDependencyLinksStore(
+			$queryResultDependencyListResolver,
+			$dependencyLinksTableUpdater
+		);
+
+		$instance->pushParserCachePurgeJob( $entityIdListRelevanceDetectionFilter );
+	}
+
+	public function testParserCachePurgeJobParametersBeingDisabled() {
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$dependencyLinksTableUpdater = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\DependencyLinksTableUpdater' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$dependencyLinksTableUpdater->expects( $this->any() )
+			->method( 'getStore' )
+			->will( $this->returnValue( $store ) );
+
+		$entityIdListRelevanceDetectionFilter = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\EntityIdListRelevanceDetectionFilter' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$queryResultDependencyListResolver = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\QueryResultDependencyListResolver' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->jobFactory->expects( $this->never() )
+			->method( 'newParserCachePurgeJob' );
+
+		$instance = new QueryDependencyLinksStore(
+			$queryResultDependencyListResolver,
+			$dependencyLinksTableUpdater
+		);
+
+		$instance->setEnabled( false );
+
+		$instance->pushParserCachePurgeJob( $entityIdListRelevanceDetectionFilter );
+	}
+
+	public function testParserCachePurgeJobParametersOnEmptyList() {
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$dependencyLinksTableUpdater = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\DependencyLinksTableUpdater' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$dependencyLinksTableUpdater->expects( $this->any() )
+			->method( 'getStore' )
+			->will( $this->returnValue( $store ) );
+
+		$entityIdListRelevanceDetectionFilter = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\EntityIdListRelevanceDetectionFilter' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$entityIdListRelevanceDetectionFilter->expects( $this->once() )
+			->method( 'getFilteredIdList' )
+			->will( $this->returnValue( [] ) );
+
+		$queryResultDependencyListResolver = $this->getMockBuilder( '\SMW\SQLStore\QueryDependency\QueryResultDependencyListResolver' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->jobFactory->expects( $this->never() )
+			->method( 'newParserCachePurgeJob' );
+
+		$instance = new QueryDependencyLinksStore(
+			$queryResultDependencyListResolver,
+			$dependencyLinksTableUpdater
+		);
+
+		$instance->setEnabled( true );
+
+		$instance->pushParserCachePurgeJob( $entityIdListRelevanceDetectionFilter );
 	}
 
 	public function testFindEmbeddedQueryTargetLinksHashListFrom() {
@@ -540,7 +643,7 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 
 		$query->expects( $this->any() )
 			->method( 'getContextPage' )
-			->will( $this->returnValue( $this->subject ) );
+			->will( $this->returnValue( DIWikiPage::newFromText( __METHOD__ ) ) );
 
 		$query->expects( $this->any() )
 			->method( 'getLimit' )
@@ -606,7 +709,7 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 
 		$query->expects( $this->any() )
 			->method( 'getContextPage' )
-			->will( $this->returnValue( $this->subject ) );
+			->will( $this->returnValue( DIWikiPage::newFromText( __METHOD__ ) ) );
 
 		$queryResult = $this->getMockBuilder( '\SMWQueryResult' )
 			->disableOriginalConstructor()
@@ -624,10 +727,6 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 		$title = $this->getMockBuilder( '\Title' )
 			->disableOriginalConstructor()
 			->getMock();
-
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
 
 		$title->expects( $this->once() )
 			->method( 'getTouched' )
@@ -791,7 +890,7 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 
 		$query->expects( $this->any() )
 			->method( 'getContextPage' )
-			->will( $this->returnValue( $this->subject ) );
+			->will( $this->returnValue( DIWikiPage::newFromText( __METHOD__ ) ) );
 
 		$query->expects( $this->any() )
 			->method( 'getLimit' )
@@ -823,7 +922,7 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getHash' )
 			->will( $this->returnValue( 'Foo###' ) );
 
-		$subject->expects( $this->any() )
+		$subject->expects( $this->once() )
 			->method( 'getTitle' )
 			->will( $this->returnValue( $title ) );
 
@@ -903,10 +1002,6 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
-
 		$title->expects( $this->once() )
 			->method( 'getTouched' )
 			->will( $this->returnValue( wfTimestamp( TS_MW ) + 60 ) );
@@ -919,18 +1014,18 @@ class QueryDependencyLinksStoreTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$title->expects( $this->any() )
-			->method( 'exists' )
-			->will( $this->returnValue( true ) );
-
 		// This should be a `once` but it failed on PHP: hhvm-3.18 DB=sqlite; MW=master; PHPUNIT=5.7.*
-		// with "Method was expected to be called 1 times, actually called 0 times."
+		// with "Method was expected to be called 1 times, actually called 0 times." 
 		$title->expects( $this->any() )
 			->method( 'getTouched' )
 			->will( $this->returnValue( '2017-06-15 08:36:55+00' ) );
 
 		$provider[] = [
 			$title
+		];
+
+		$provider[] = [
+			null
 		];
 
 		return $provider;

@@ -18,7 +18,7 @@ class ImporterServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 	private $callbackContainerFactory;
 	private $connectionManager;
 	private $servicesFileDir;
-	private $titleFactory;
+	private $pageCreator;
 
 	protected function setUp() {
 		parent::setUp();
@@ -27,7 +27,7 @@ class ImporterServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->titleFactory = $this->getMockBuilder( '\SMW\MediaWiki\TitleFactory' )
+		$this->pageCreator = $this->getMockBuilder( '\SMW\MediaWiki\PageCreator' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -52,7 +52,7 @@ class ImporterServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 
 		$containerBuilder = $this->callbackContainerFactory->newCallbackContainerBuilder();
 
-		$containerBuilder->registerObject( 'TitleFactory', $this->titleFactory );
+		$containerBuilder->registerObject( 'PageCreator', $this->pageCreator );
 		$containerBuilder->registerObject( 'ConnectionManager', $this->connectionManager );
 
 		$containerBuilder->registerObject( 'Settings', new Settings( [
@@ -60,7 +60,7 @@ class ImporterServicesContainerBuildTest extends \PHPUnit_Framework_TestCase {
 			'smwgImportFileDirs' => [ 'foo' ]
 		] ) );
 
-		$containerBuilder->registerFromFile( $this->servicesFileDir . '/' . 'importer.php' );
+		$containerBuilder->registerFromFile( $this->servicesFileDir . '/' . 'ImporterServices.php' );
 
 		$this->assertInstanceOf(
 			$expected,

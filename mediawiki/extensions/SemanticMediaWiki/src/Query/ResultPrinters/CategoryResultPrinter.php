@@ -7,7 +7,6 @@ use SMWDataItem as DataItem;
 use SMWQueryResult as QueryResult;
 use SMW\Utils\HtmlColumns;
 use SMW\ApplicationFactory;
-use SMW\Localizer;
 
 /**
  * Print query results in alphabetic groups displayed in columns, a la the
@@ -83,7 +82,7 @@ class CategoryResultPrinter extends ResultPrinter {
 			'name' => 'columns',
 			'type' => 'integer',
 			'message' => 'smw-paramdesc-columns',
-			'lowerbound' => 0,
+			'negatives' => false,
 			'default' => 3,
 		];
 
@@ -154,19 +153,16 @@ class CategoryResultPrinter extends ResultPrinter {
 			return $res->addErrors( [ 'smw-qp-empty-data' ] );
 		}
 
-		$language = Localizer::getInstance()->getUserLanguage();
-
 		$this->htmlColumns->setContinueAbbrev( wfMessage( 'listingcontinuesabbrev' )->text() );
 		$this->htmlColumns->setColumns( $this->numColumns );
-		$this->htmlColumns->isRTL( $language->isRTL() );
 
 		// 0 indicates to use responsive columns
-		$this->htmlColumns->setResponsiveCols(
-			$this->params['columns'] == 0
-		);
+		if ( $this->params['columns'] == 0 ) {
+			$this->htmlColumns->setColumnClass( 'smw-column-responsive' );
+			$this->htmlColumns->setColumns( 1 );
+		}
 
-		$this->htmlColumns->setResponsiveColsThreshold( 5 );
-		$this->htmlColumns->addContents( $contents, HtmlColumns::INDEXED_LIST );
+		$this->htmlColumns->addContents( $contents, HtmlColumns::INDX_CONTENT );
 
 		return $this->htmlColumns->getHtml();
 	}

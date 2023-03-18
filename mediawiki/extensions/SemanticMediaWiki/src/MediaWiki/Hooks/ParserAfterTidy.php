@@ -7,14 +7,12 @@ use SMW\ApplicationFactory;
 use SMW\MediaWiki\MediaWiki;
 use SMW\ParserData;
 use SMW\SemanticData;
-use Onoi\Cache\Cache;
-use SMW\NamespaceExaminer;
 
 /**
  * Hook: ParserAfterTidy to add some final processing to the
  * fully-rendered page output
  *
- * @see https://www.mediawiki.org/wiki/Manual:Hooks/ParserAfterTidy
+ * @see http://www.mediawiki.org/wiki/Manual:Hooks/ParserAfterTidy
  *
  * @license GNU GPL v2+
  * @since 1.9
@@ -22,8 +20,6 @@ use SMW\NamespaceExaminer;
  * @author mwjames
  */
 class ParserAfterTidy extends HookHandler {
-
-	const CACHE_NAMESPACE = 'smw:parseraftertidy';
 
 	/**
 	 * @var Parser
@@ -34,11 +30,6 @@ class ParserAfterTidy extends HookHandler {
 	 * @var NamespaceExaminer
 	 */
 	private $namespaceExaminer;
-
-	/**
-	 * @var Cache
-	 */
-	private $cache;
 
 	/**
 	 * @var boolean
@@ -54,13 +45,10 @@ class ParserAfterTidy extends HookHandler {
 	 * @since  1.9
 	 *
 	 * @param Parser $parser
-	 * @param NamespaceExaminer $NamespaceExaminer
-	 * @param Cache $cache
 	 */
-	public function __construct( Parser &$parser, NamespaceExaminer $namespaceExaminer, Cache $cache ) {
+	public function __construct( Parser &$parser ) {
 		$this->parser = $parser;
-		$this->namespaceExaminer = $namespaceExaminer;
-		$this->cache = $cache;
+		$this->namespaceExaminer = ApplicationFactory::getInstance()->getNamespaceExaminer();
 	}
 
 	/**
@@ -128,7 +116,6 @@ class ParserAfterTidy extends HookHandler {
 		$parserOutput = $this->parser->getOutput();
 
 		if ( $parserOutput->getProperty( 'displaytitle' ) ||
-			$parserOutput->getImages() !== [] ||
 			$parserOutput->getExtensionData( 'translate-translation-page' ) ||
 			$parserOutput->getCategoryLinks() ) {
 			return true;
@@ -137,17 +124,6 @@ class ParserAfterTidy extends HookHandler {
 		if ( ParserData::hasSemanticData( $parserOutput ) ||
 			$title->isProtected( 'edit' ) ||
 			$this->parser->getDefaultSort() ) {
-			return true;
-		}
-
-		$key = smwfCacheKey( self::CACHE_NAMESPACE, $title->getPrefixedDBKey() );
-
-		// Allow to continue the processing even without a `[[...::...]]` text
-		// so that a change (such as an approved file, page version) is run
-		// through the annotation and update process as part of a programtic
-		// purge request.
-		// @see SemanticApprovedRevs#2
-		if( $this->cache->fetch( $key ) !== false ) {
 			return true;
 		}
 
@@ -176,7 +152,7 @@ class ParserAfterTidy extends HookHandler {
 		// Only carry out a purge where the InTextAnnotationParser have set
 		// an appropriate context reference otherwise it is assumed that the hook
 		// call is part of another non SMW related parse
-		if ( $subject->getContextReference() !== null || $subject->getNamespace() === NS_FILE ) {
+		if ( $subject->getContextReference() !== null || $subject->getNamespace() === SMW_NS_SCHEMA ) {
 			$this->checkPurgeRequest( $parserData );
 		}
 	}
@@ -225,12 +201,6 @@ class ParserAfterTidy extends HookHandler {
 			$parserOutput->getExtensionData( 'translate-translation-page' )
 		);
 
-		// #3640
-		$propertyAnnotator = $propertyAnnotatorFactory->newAttachmentLinkPropertyAnnotator(
-			$propertyAnnotator,
-			$parserOutput->getImages()
-		);
-
 		$propertyAnnotator->addAnnotation();
 	}
 
@@ -245,14 +215,15 @@ class ParserAfterTidy extends HookHandler {
 	 */
 	private function checkPurgeRequest( $parserData ) {
 
+		$cache = ApplicationFactory::getInstance()->getCache();
 		$start = microtime( true );
-		$title = $this->parser->getTitle();
 
-		$key = smwfCacheKey( ArticlePurge::CACHE_NAMESPACE, $title->getArticleID() );
+		$key = ApplicationFactory::getInstance()->getCacheFactory()->getPurgeCacheKey(
+			$this->parser->getTitle()->getArticleID()
+		);
 
-		if( $this->cache->contains( $key ) && $this->cache->fetch( $key ) ) {
-			$this->cache->delete( $key );
-			$this->cache->delete( smwfCacheKey( self::CACHE_NAMESPACE, $title->getPrefixedDBKey() ) );
+		if( $cache->contains( $key ) && $cache->fetch( $key ) ) {
+			$cache->delete( $key );
 
 			// Avoid a Parser::lock for when a PurgeRequest remains intact
 			// during an update process while being executed from the cmdLine
@@ -260,27 +231,21 @@ class ParserAfterTidy extends HookHandler {
 				return true;
 			}
 
-			$semanticData = $parserData->getSemanticData();
+			$parserData->setOrigin( 'ParserAfterTidy' );
 
 			// Set an explicit timestamp to create a new hash for the property
 			// table change row differ and force a data comparison (this doesn't
 			// change the _MDAT annotation)
-			$semanticData->setOption(
+			$parserData->getSemanticData()->setOption(
 				SemanticData::OPT_LAST_MODIFIED,
 				wfTimestamp( TS_UNIX )
 			);
-
-			// #3849
-			if ( $this->getOption( 'smwgCheckForRemnantEntities' ) === 'purge' ) {
-				$semanticData->setOption( SemanticData::OPT_CHECK_REMNANT_ENTITIES, true );
-			}
 
 			$parserData->setOption(
 				$parserData::OPT_FORCED_UPDATE,
 				true
 			);
 
-			$parserData->setOrigin( 'ParserAfterTidy' );
 			$parserData->updateStore( true );
 
 			$parserData->addLimitReport(

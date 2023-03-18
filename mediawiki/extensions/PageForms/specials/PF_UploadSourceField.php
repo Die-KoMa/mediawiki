@@ -18,34 +18,33 @@
  * @ingroup PFSpecialPages
  */
 class PFUploadSourceField extends HTMLTextField {
-
-	function getLabelHtml( $cellAttributes = [] ) {
+	
+	function getLabelHtml( $cellAttributes = array() ) {
 		$id = "wpSourceType{$this->mParams['upload-type']}";
-		$label = Html::rawElement( 'label', [ 'for' => $id ], $this->mLabel );
+		$label = Html::rawElement( 'label', array( 'for' => $id ), $this->mLabel );
 
 		if ( !empty( $this->mParams['radio'] ) ) {
-			$attribs = [
+			$attribs = array(
 				'name' => 'wpSourceType',
 				'type' => 'radio',
 				'id' => $id,
 				'value' => $this->mParams['upload-type'],
-			];
-
-			if ( !empty( $this->mParams['checked'] ) ) {
+			);
+			
+			if ( !empty( $this->mParams['checked'] ) )
 				$attribs['checked'] = 'checked';
-			}
 			$label .= Html::element( 'input', $attribs );
 		}
 
-		return Html::rawElement( 'td', [ 'class' => 'mw-label' ], $label );
+		return Html::rawElement( 'td', array( 'class' => 'mw-label' ), $label );
 	}
-
+	
 	function getSize() {
 		return isset( $this->mParams['size'] )
 			? $this->mParams['size']
 			: 60;
 	}
-
+	
 	/**
 	 * This page can be shown if uploading is enabled.
 	 * Handle permission checking elsewhere in order to be able to show

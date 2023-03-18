@@ -141,7 +141,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 
 		$this->timezone = $timezone !== false ? $timezone : 0;
 		$year = strval( $year );
-		$this->era      = $year[0] === '+' ? 1 : ( $year[0] === '-' ? -1 : 0 );
+		$this->era      = $year{0} === '+' ? 1 : ( $year{0} === '-' ? -1 : 0 );
 
 		if ( $this->isOutOfBoundsBySome() ) {
 			throw new DataItemException( "Part of the date is out of bounds." );
@@ -280,8 +280,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 	 *
 	 * @param DateTime $dateTime
 	 *
-	 * @return self
-	 * @throws DataItemException
+	 * @return SMWDITime|false
 	 */
 	public static function newFromDateTime( DateTime $dateTime ) {
 
@@ -336,7 +335,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 	 *
 	 * @param string $timestamp must be in format
 	 *
-	 * @return self|false
+	 * @return SMWDITime|false
 	 */
 	public static function newFromTimestamp( $timestamp ) {
 		$timestamp = wfTimestamp( TS_MW, (string)$timestamp );
@@ -387,14 +386,14 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 	 * Callers might want to avoid this (calendar models make little sense
 	 * in such cases anyway).
 	 * @param $calendarmodel integer one of SMWDITime::CM_GREGORIAN or SMWDITime::CM_JULIAN
-	 * @return self
+	 * @return SMWDITime
 	 */
 	public function getForCalendarModel( $calendarmodel ) {
 		if ( $calendarmodel == $this->m_model ) {
 			return $this;
+		} else {
+			return self::newFromJD( $this->getJD(), $calendarmodel, $this->m_precision );
 		}
-
-		return self::newFromJD( $this->getJD(), $calendarmodel, $this->m_precision );
 	}
 
 	/**
@@ -410,9 +409,9 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 		$jd = ( $this->m_year >= -4713 ) ? $jd = $this->getJD() : -1;
 		if ( $jd > 0 ) {
 			return $jd;
+		} else {
+			return $this->m_year - 1 + ( $this->m_month - 1 ) / 12 + ( $this->m_day - 1 ) / 12 / 31;
 		}
-
-		return $this->m_year - 1 + ( $this->m_month - 1 ) / 12 + ( $this->m_day - 1 ) / 12 / 31;
 	}
 
 	/**
@@ -465,7 +464,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 	/**
 	 * Create a data item from the provided serialization string.
 	 *
-	 * @return self
+	 * @return SMWDITime
 	 */
 	public static function doUnserialize( $serialization ) {
 		$parts = explode( '/', $serialization, 8 );
@@ -496,7 +495,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 
 				// Find out whether the input contained an explicit AD/CE era marker
 				if ( $i == 1 ) {
-					$values[$i] = ( $parts[1][0] === '+' ? '+' : '' ) . $values[$i];
+					$values[$i] = ( $parts[1]{0} === '+' ? '+' : '' ) . $values[$i];
 				}
 			}
 		}
@@ -512,7 +511,7 @@ class SMWDITime extends SMWDataItem implements CalendarModel {
 	 * @param integer|null $calendarmodel
 	 * @param integer|null $precision
 	 *
-	 * @return self
+	 * @return DITime object
 	 */
 	public static function newFromJD( $jdValue, $calendarModel = null, $precision = null, $timezone = false ) {
 

@@ -1,5 +1,7 @@
 <?php
 /**
+ * File holding the PFFormInput class.
+ *
  * The predecessor of this file held several subclasses of PFFormInput. The
  * authors can not be sorted out with certainty anymore, thus are all listed
  * here.
@@ -27,21 +29,26 @@ abstract class PFFormInput {
 	protected $mIsDisabled;
 	protected $mOtherArgs;
 
-	protected $mJsInitFunctionData = [];
-	protected $mJsValidationFunctionData = [];
+	protected $mJsInitFunctionData = array();
+	protected $mJsValidationFunctionData = array();
 
 	/**
-	 * @param string $input_number The number of the input in the form. For a simple HTML input
-	 *  element this should end up in the id attribute in the format 'input_<number>'.
-	 * @param string $cur_value The current value of the input field. For a simple HTML input
-	 *  element this should end up in the value attribute.
-	 * @param string $input_name The name of the input. For a simple HTML input element this should
-	 *  end up in the name attribute.
-	 * @param bool $disabled Is this input disabled?
-	 * @param array $other_args An associative array of other parameters that were present in the
-	 *  input definition.
+	 * Constructor for the PFFormInput class.
+	 *
+	 * @param String $input_number
+	 *		The number of the input in the form. For a simple HTML input element
+	 *      this should end up in the id attribute in the format 'input_<number>'.
+	 * @param String $cur_value
+	 *		The current value of the input field. For a simple HTML input
+	 *		element this should end up in the value attribute.
+	 * @param String $input_name
+	 *		The name of the input. For a simple HTML input element this should
+	 *		end up in the name attribute.
+	 * @param Array $other_args
+	 *		An associative array of other parameters that were present in the
+	 *		input definition.
 	 */
-	public function __construct( $input_number, $cur_value, $input_name, $disabled, array $other_args ) {
+	public function __construct( $input_number, $cur_value, $input_name, $disabled, $other_args ) {
 		$this->mInputNumber = $input_number;
 		$this->mCurrentValue = $cur_value;
 		$this->mInputName = $input_name;
@@ -69,7 +76,7 @@ abstract class PFFormInput {
 	 * Returns the set of SMW property types which this input can
 	 * handle. See SMW's SMW_DataValueFactory.php
 	 *
-	 * @return string[]
+	 * @return Array of Strings
 	 */
 	public static function getHandledPropertyTypes() {
 		return null;
@@ -77,52 +84,49 @@ abstract class PFFormInput {
 
 	/**
 	 * Returns the set of parameters for this form input.
-	 * @return array[]
 	 */
 	public static function getParameters() {
-		$params = [];
-		$params['mandatory'] = [
+		$params = array();
+		$params['mandatory'] = array(
 			'name' => 'mandatory',
 			'type' => 'boolean',
 			'description' => wfMessage( 'pf_forminputs_mandatory' )->text()
-		];
-		$params['restricted'] = [
+		);
+		$params['restricted'] = array(
 			'name' => 'restricted',
 			'type' => 'boolean',
 			'description' => wfMessage( 'pf_forminputs_restricted' )->text()
-		];
-		$params['class'] = [
+		);
+		$params['class'] = array(
 			'name' => 'class',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_class' )->text()
-		];
-		if ( defined( 'SMW_VERSION' ) ) {
-			$params['property'] = [
-				'name' => 'property',
-				'type' => 'string',
-				'description' => wfMessage( 'pf_forminputs_property' )->text()
-			];
-		}
-		$params['default'] = [
+		);
+		$params['property'] = array(
+			'name' => 'property',
+			'type' => 'string',
+			'description' => wfMessage( 'pf_forminputs_property' )->text()
+		);
+		$params['default'] = array(
 			'name' => 'default',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_default' )->text()
-		];
+		);
 		return $params;
 	}
 
 	/**
-	 * @param string $key
-	 * @param array &$configVars
-	 * @param array $functionData
-	 * @param string $input_id
+	 * @param $key
+	 * @param $configVars
+	 * @param $functionData
+	 * @param $input_id
 	 * @return array
 	 */
 	private static function updateFormInputJsFunctionData( $key, &$configVars, $functionData, $input_id ) {
 		if ( array_key_exists( $key, $configVars ) ) {
 			$functionDataArray = $configVars[ $key ];
 		} else {
-			$functionDataArray = [];
+			$functionDataArray = array();
 		}
 		$functionDataArray[ $input_id ] = $functionData;
 		return $functionDataArray;
@@ -132,7 +136,7 @@ abstract class PFFormInput {
 	 * Return an array of the default parameters for this input where the
 	 * parameter name is the key while the parameter value is the value.
 	 *
-	 * @return string[]
+	 * @return Array of Strings
 	 */
 	public function getDefaultParameters() {
 		return null;
@@ -144,7 +148,8 @@ abstract class PFFormInput {
 	 * Ideally this HTML code should provide a basic functionality even if the
 	 * browser is not JavaScript capable. I.e. even without JavaScript the user
 	 * should be able to input values.
-	 * @return null
+	 *
+	 * This function is not used yet.
 	 */
 	public function getHtmlText() {
 		return null;
@@ -152,7 +157,7 @@ abstract class PFFormInput {
 
 	/**
 	 *
-	 * @return bool True, if this input type can handle lists
+	 * @return Boolean True, if this input type can handle lists
 	 */
 	public static function canHandleLists() {
 		return false;
@@ -163,7 +168,6 @@ abstract class PFFormInput {
 	 * function for this input type, if any.
 	 *
 	 * This function is not used yet.
-	 * @return array[]
 	 */
 	public function getJsInitFunctionData() {
 		return $this->mJsInitFunctionData;
@@ -174,11 +178,11 @@ abstract class PFFormInput {
 	 * functions for this input type, if any.
 	 *
 	 * This function is not used yet.
-	 * @return array[]
 	 */
 	public function getJsValidationFunctionData() {
 		return $this->mJsValidationFunctionData;
 	}
+
 
 	/**
 	 * Returns the names of the resource modules this input type uses.
@@ -213,14 +217,14 @@ abstract class PFFormInput {
 	 * Adding initFoo like this: <code>addJsInitFunctionData( "initFoo", "array('bar', 'baz'" );</code> will result in this JavaScript call: <code>initFoo( inputID, array('bar', 'baz') );</code>.
 	 *
 	 *
-	 * @param string $name The name of the initialization function.
-	 * @param string|null $param The parameter passed to the initialization function.
+	 * @param String $name The name of the initialization function.
+	 * @param String $param The parameter passed to the initialization function.
 	 */
 	public function addJsInitFunctionData( $name, $param = null ) {
 		if ( is_string( $param ) ) {
 			$param = json_decode( $param );
 		}
-		$this->mJsInitFunctionData[] = [ 'name' => $name, 'param' => $param ];
+		$this->mJsInitFunctionData[] = array( 'name' => $name, 'param' => $param );
 	}
 
 	/**
@@ -244,11 +248,11 @@ abstract class PFFormInput {
 	 * Adding validateFoo like this: <code>addJsValidationFunctionData( "initFoo", "array('bar', 'baz'" );</code> will result in this JavaScript call: <code>validateFoo( inputID, array('bar', 'baz') );</code>.
 	 *
 	 *
-	 * @param string $name The name of the initialization function.
-	 * @param string $param The parameter passed to the initialization function.
+	 * @param String $name The name of the initialization function.
+	 * @param String $param The parameter passed to the initialization function.
 	 */
 	public function addJsValidationFunctionData( $name, $param = 'null' ) {
-		$this->mJsValidationFunctionData[] = [ 'name' => $name, 'param' => $param ];
+		$this->mJsValidationFunctionData[] = array( 'name' => $name, 'param' => $param );
 	}
 
 	/**
@@ -257,11 +261,11 @@ abstract class PFFormInput {
 	 * should declare itself the default for any specific type.
 	 *
 	 * @deprecated
-	 * @return array[] key is the property type, value is an array of
-	 *  default args to be used for this input
+	 * @return Array of arrays (key is the property type, value is an array of
+	 *  default args to be used for this input)
 	 */
 	public static function getDefaultPropTypes() {
-		return [];
+		return array();
 	}
 
 	/**
@@ -270,11 +274,11 @@ abstract class PFFormInput {
 	 * should declare itself the default for any specific type.
 	 *
 	 * @deprecated
-	 * @return array[] key is the property type, value is an array of
-	 *  default args to be used for this input
+	 * @return Array of arrays (key is the property type, value is an array of
+	 *  default args to be used for this input)
 	 */
 	public static function getDefaultPropTypeLists() {
-		return [];
+		return array();
 	}
 
 	/**
@@ -282,10 +286,10 @@ abstract class PFFormInput {
 	 * handle, but for which it isn't the default input.
 	 *
 	 * @deprecated
-	 * @return string[]
+	 * @return Array of strings
 	 */
 	public static function getOtherPropTypesHandled() {
-		return [];
+		return array();
 	}
 
 	/**
@@ -293,59 +297,81 @@ abstract class PFFormInput {
 	 * handle, but for which it isn't the default input.
 	 *
 	 * @deprecated
-	 * @return string[]
+	 * @return Array of strings
 	 */
 	public static function getOtherPropTypeListsHandled() {
-		return [];
+		return array();
 	}
 
 	// Now the same set of methods, but for Cargo instead of SMW.
 	public static function getDefaultCargoTypes() {
-		return [];
+		return array();
 	}
 
 	public static function getDefaultCargoTypeLists() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherCargoTypesHandled() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherCargoTypeListsHandled() {
-		return [];
+		return array();
 	}
 
 	/**
-	 * Add the necessary JavaScript for this input.
+	 * Method to make new style input types compatible with old-style call from
+	 * the PF parser.
+	 *
+	 * @deprecated Do not use/override this in new input type classes
+	 *
+	 * TODO: remove/refactor once PF uses forminput objects properly
 	 */
-	public function addJavaScript() {
-		global $wgOut;
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
 
-		// @TODO - the first works better for Special:RunQuery, and the
-		// second better for Special:FormEdit? Try to find some solution
-		// that always works correctly.
-		// $output = $wgParser->getOutput();
-		$output = $wgOut;
-		$modules = $this->getResourceModuleNames();
+		global $wgPageFormsFieldNum, $wgParser;
 
-		// Register modules for the input.
-		if ( $modules !== null ) {
-			$output->addModules( $modules );
+		// create an input of the called class
+		// TODO: get_called_class was introduced in PHP 5.3. The use of the
+		// backtrace should be removed once support for PHP 5.2 is dropped.
+		if ( function_exists('get_called_class') ) {
+			$calledClass = get_called_class();
+		} else {
+			if ( $input_name === 'pf_free_text' ) { // free text
+				$calledClass = 'PFTextAreaInput';
+			} else {
+				$bt = debug_backtrace(false);
+				$calledClass = $bt[1]['args'][0][0];
+			}
 		}
 
-		if ( $this->getJsInitFunctionData() || $this->getJsValidationFunctionData() ) {
-			$input_id = $this->mInputName == 'pf_free_text' ? 'pf_free_text' : 'input_' . $this->mInputNumber;
+		$input = new $calledClass ( $wgPageFormsFieldNum, $cur_value, $input_name, $is_disabled, $other_args );
+
+		$output = $wgParser->getOutput();
+		$modules = $input->getResourceModuleNames();
+
+		// register modules for the input
+		if ( $modules !== null ) {
+			$output->addModuleStyles( $modules );
+			$output->addModuleScripts( $modules );
+		}
+
+		if ( $input->getJsInitFunctionData() || $input->getJsValidationFunctionData() ) {
+
+			$input_id = $input_name == 'pf_free_text' ? 'pf_free_text' : "input_$wgPageFormsFieldNum";
 			$configVars = $output->getJsConfigVars();
 
-			$initFunctionData = self::updateFormInputJsFunctionData( 'ext.pf.initFunctionData', $configVars, $this->getJsInitFunctionData(), $input_id );
-			$validationFunctionData = self::updateFormInputJsFunctionData( 'ext.pf.validationFunctionData', $configVars, $this->getJsValidationFunctionData(), $input_id );
+			$initFunctionData = self::updateFormInputJsFunctionData( 'ext.pf.initFunctionData', $configVars, $input->getJsInitFunctionData(), $input_id );
+			$validationFunctionData = self::updateFormInputJsFunctionData( 'ext.pf.validationFunctionData', $configVars, $input->getJsValidationFunctionData(), $input_id );
 
-			$output->addJsConfigVars( [
+			$output->addJsConfigVars( array(
 				'ext.pf.initFunctionData' => $initFunctionData,
 				'ext.pf.validationFunctionData' => $validationFunctionData
-			] );
+			) );
 		}
+
+		return $input->getHtmlText();
 	}
 
 }

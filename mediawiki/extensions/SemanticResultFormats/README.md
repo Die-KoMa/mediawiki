@@ -1,6 +1,8 @@
 # Semantic Result Formats
 
 [![Build Status](https://secure.travis-ci.org/SemanticMediaWiki/SemanticResultFormats.svg?branch=master)](http://travis-ci.org/SemanticMediaWiki/SemanticResultFormats)
+[![Code Coverage](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/?branch=master)
+[![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/badges/quality-score.png?s=a2f091e91cb9c8aa297e028f2f30d99153446796)](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/)
 [![Latest Stable Version](https://poser.pugx.org/mediawiki/semantic-result-formats/version.png)](https://packagist.org/packages/mediawiki/semantic-result-formats)
 [![Packagist download count](https://poser.pugx.org/mediawiki/semantic-result-formats/d/total.png)](https://packagist.org/packages/mediawiki/semantic-result-formats)
 
@@ -11,9 +13,10 @@ installation independently. For more information, visit the [SRF homepage][srf] 
 
 ## Requirements
 
-- PHP 7.0 or later
-- MediaWiki 1.31 or later
+- PHP 5.6 or later
+- MediaWiki 1.27 or later
 - Semantic MediaWiki 3.0 or later
+- MySQL 5 or later or SQLite 3 or later
 
 ## Installation
 
@@ -40,9 +43,6 @@ A list of people who have made contributions in the past can be found [here][con
 
 This extension provides unit and integration tests and are normally run by a [continues integration platform][travis]
 but can also be executed locally using the shortcut command `composer phpunit` from the extension base directory.
-
-[![Code Coverage](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/?branch=master)
-[![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/badges/quality-score.png?s=a2f091e91cb9c8aa297e028f2f30d99153446796)](https://scrutinizer-ci.com/g/SemanticMediaWiki/SemanticResultFormats/)
 
 ## License
 

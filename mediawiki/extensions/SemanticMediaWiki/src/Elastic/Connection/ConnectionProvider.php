@@ -4,11 +4,11 @@ namespace SMW\Elastic\Connection;
 
 use Elasticsearch\ClientBuilder;
 use SMW\Elastic\Exception\ClientBuilderNotFoundException;
-use SMW\Elastic\Exception\MissingEndpointConfigException;
 use SMW\ApplicationFactory;
 use SMW\Connection\ConnectionProvider as IConnectionProvider;
 use SMW\Options;
 use Psr\Log\LoggerAwareTrait;
+use Onoi\Cache\Cache;
 
 /**
  * @private
@@ -23,14 +23,14 @@ class ConnectionProvider implements IConnectionProvider {
 	use LoggerAwareTrait;
 
 	/**
-	 * @var LockManager
-	 */
-	private $lockManager;
-
-	/**
 	 * @var Options
 	 */
 	private $options;
+
+	/**
+	 * @var Cache
+	 */
+	private $cache;
 
 	/**
 	 * @var ElasticClient
@@ -40,12 +40,12 @@ class ConnectionProvider implements IConnectionProvider {
 	/**
 	 * @since 3.0
 	 *
-	 * @param LockManager $lockManager
 	 * @param Options $options
+	 * @param Cache $cache
 	 */
-	public function __construct( LockManager $lockManager, Options $options ) {
-		$this->lockManager = $lockManager;
+	public function __construct( Options $options, Cache $cache ) {
 		$this->options = $options;
+		$this->cache = $cache;
 	}
 
 	/**
@@ -61,14 +61,8 @@ class ConnectionProvider implements IConnectionProvider {
 			return $this->connection;
 		}
 
-		$endpoints = $this->options->safeGet( 'endpoints', [] );
-
-		if ( !$this->hasEndpoints( $endpoints ) ) {
-			throw new MissingEndpointConfigException();
-		}
-
 		$params = [
-			'hosts' => $endpoints,
+			'hosts' => $this->options->get( 'endpoints' ),
 			'retries' => $this->options->dotGet( 'connection.retries', 1 ),
 
 			'client' => [
@@ -85,21 +79,30 @@ class ConnectionProvider implements IConnectionProvider {
 			// 'handler' => ClientBuilder::singleHandler()
 		];
 
-		if ( $this->hasAvailableClientBuilder() ) {
-			$clientBuilder = ClientBuilder::fromConfig( $params, true );
+		if ( $this->hasClientBuilder() ) {
+			$this->connection = new Client(
+				ClientBuilder::fromConfig( $params, true ),
+				$this->cache,
+				$this->options
+			);
 		} else {
-			$clientBuilder = null;
+			$this->connection = new DummyClient();
 		}
-
-		$this->connection = $this->newClient( $clientBuilder );
 
 		$this->connection->setLogger(
 			$this->logger
 		);
 
 		$this->logger->info(
-			[ 'Connection', '{provider} : {hosts}' ],
-			[ 'role' => 'developer', 'provider' => 'elastic', 'hosts' => $params['hosts'] ]
+			[
+				'Connection',
+				'{provider} : {hosts}'
+			],
+			[
+				'role' => 'developer',
+				'provider' => 'elastic',
+				'hosts' => $params['hosts']
+			]
 		);
 
 		return $this->connection;
@@ -114,32 +117,7 @@ class ConnectionProvider implements IConnectionProvider {
 		$this->connection = null;
 	}
 
-	private function newClient( $clientBuilder = null ) {
-
-		if ( $clientBuilder === null ) {
-			return new DummyClient();
-		}
-
-		// For unit/integration tests use a special `TestClient` to force a refresh
-		// hereby make results immediately available on some actions before
-		// the actual request is transmitted to the `Client`
-		if ( defined( 'MW_PHPUNIT_TEST' ) ) {
-			return new TestClient( $clientBuilder, $this->lockManager, $this->options );
-		}
-
-		return new Client( $clientBuilder, $this->lockManager, $this->options );
-	}
-
-	private function hasEndpoints( $endpoints ) {
-
-		if ( $this->options->dotGet( 'is.elasticstore', false ) === false ) {
-			return true;
-		}
-
-		return $endpoints !== [];
-	}
-
-	private function hasAvailableClientBuilder() {
+	private function hasClientBuilder() {
 
 		if ( $this->options->dotGet( 'is.elasticstore', false ) === false ) {
 			return false;

@@ -2,8 +2,8 @@
 	"@metadata": {
 		"authors": [
 			"Sasan700",
-			"Исмаил Садуев",
-			"Умар"
+			"Умар",
+			"Исмаил Садуев"
 		]
 	},
 	"pageforms-desc": "Cемантикийн хаамаш тӀетуху а, нисбо а кепаш",
@@ -82,14 +82,14 @@
 	"pf_editsource": "Нисъе чухуларниш",
 	"pf_formedit_edittitle": "Таяр $1: $2",
 	"pf_formedit_remove": "ДӀаяккха",
-	"pf_formedit_addanother": "Кхин тӀетоха",
+	"pf_formedit_addanother": "Кхин тIетоха",
 	"pf_formedit_none": "Хlумма цаоьшу",
 	"pf_autoedit_success": "Кхиамца хийцина [[$1]] $2 форман гӀоьнца.",
 	"pf-autoedit-wait": "Собар де...",
 	"runquery": "ДӀадоладалийта дехар",
 	"pf_runquery_title": "ДӀадоладалийта дехар: $1",
 	"pf_runquery_additionalquery": "Кхин тӀе дехарш",
-	"pf_blank_error": "яьсса хила цамега",
+	"pf_blank_error": "есса хила цамега",
 	"pf-preview-header": "Кепан хьалххе хьажар",
 	"pf_blank_namespace": "Коьрта",
 	"pf-select2-no-matches": "Терниш цакарий",
@@ -97,6 +97,6 @@
 	"pf-select2-input-too-short": "Дехар до, язъе $1 я дукха символаш",
 	"pf-select2-selection-too-big": "ХӀокху меттигехь $1 дукъа маьӀнаш хилийла дац.",
 	"pf-datepicker-close": "ДӀачӀагӀа",
-	"pf-datepicker-prev": "Хьалхара",
-	"pf-datepicker-next": "РогӀера"
+	"pf-datepicker-prev": "Хьалха йоьдург",
+	"pf-datepicker-next": "ТӀаьхьа йогӀург"
 }

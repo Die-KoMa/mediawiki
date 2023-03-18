@@ -8,9 +8,7 @@ use SMW\DIWikiPage;
 use SMW\SemanticData;
 use SMW\SQLStore\SQLStore;
 use SMWQuery as Query;
-use SMW\Options;
 use Title;
-use SMW\SetupFile;
 
 /**
  * @private
@@ -32,11 +30,6 @@ use SMW\SetupFile;
  * @author mwjames
  */
 class ElasticStore extends SQLStore {
-
-	/**
-	 * Setup key to verify that the `rebuildElasticIndex.php` has been executed.
-	 */
-	const REBUILD_INDEX_RUN_COMPLETE = 'elastic.rebuild_index_run_complete';
 
 	/**
 	 * @var ElasticFactory
@@ -62,15 +55,6 @@ class ElasticStore extends SQLStore {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @param ElasticFactory $elasticFactory
-	 */
-	public function setElasticFactory( ElasticFactory $elasticFactory ) {
-		$this->elasticFactory = $elasticFactory;
-	}
-
-	/**
 	 * @see Store::service
 	 *
 	 * {@inheritDoc}
@@ -86,12 +70,6 @@ class ElasticStore extends SQLStore {
 			// $this->servicesContainer->add( 'ProximityPropertyValueLookup', function() {
 			//	return $this->elasticFactory->newProximityPropertyValueLookup( $this );
 			// } );
-			//
-			$this->servicesContainer->add( 'IndicatorProvider', function() {
-				return $this->elasticFactory->newIndicatorProvider(
-					$this
-				);
-			} );
 		}
 
 		return $this->servicesContainer->get( $service, ...$args );
@@ -251,16 +229,13 @@ class ElasticStore extends SQLStore {
 		}
 
 		$text = '';
-		$changeDiff = $this->extensionData['change.diff'];
-		$rev_id = $semanticData->getExtensionData( 'revision_id' );
-		$changeDiff->setAssociatedRev( $rev_id );
 
-		if ( $config->dotGet( 'indexer.raw.text', false ) && $rev_id !== null ) {
-			$text = $this->indexer->fetchNativeData( $rev_id );
+		if ( $config->dotGet( 'indexer.raw.text', false ) && ( $revID = $semanticData->getExtensionData( 'revision_id' ) ) !== null ) {
+			$text = $this->indexer->fetchNativeData( $revID );
 		}
 
 		$this->indexer->safeReplicate(
-			$changeDiff,
+			$this->extensionData['change.diff'],
 			$text
 		);
 
@@ -280,8 +255,8 @@ class ElasticStore extends SQLStore {
 			]
 		);
 
-		if ( $config->dotGet( 'indexer.experimental.file.ingest', false ) && $semanticData->getOption( 'is.fileupload' ) ) {
-			$this->ingestFile( $subject->getTitle() );
+		if ( $subject->getNamespace() === NS_FILE && $config->dotGet( 'indexer.experimental.file.ingest', false ) && $semanticData->getOption( 'is.fileupload' ) ) {
+			$this->indexer->getFileIndexer()->planIngestJob( $subject->getTitle() );
  		}
 	}
 
@@ -297,29 +272,13 @@ class ElasticStore extends SQLStore {
 			$this->indexer = $this->elasticFactory->newIndexer( $this, $this->messageReporter );
 		}
 
-		$indices = $this->indexer->setup();
+		$this->indexer->setup();
 
-		if ( $verbose instanceof Options && $verbose->get( 'verbose' ) ) {
-
-			$setupFile = new SetupFile();
-
-			if ( $setupFile->get( ElasticStore::REBUILD_INDEX_RUN_COMPLETE ) === null ) {
-				$setupFile->set(
-					[
-						ElasticStore::REBUILD_INDEX_RUN_COMPLETE => false
-					]
-				);
-			}
-
+		if ( $verbose ) {
 			$this->messageReporter->reportMessage( "\n" );
-			$this->messageReporter->reportMessage( 'Query engine: "SMWElasticStore"' );
+			$this->messageReporter->reportMessage( 'Selected query engine: "SMWElasticStore"' );
 			$this->messageReporter->reportMessage( "\n" );
 			$this->messageReporter->reportMessage( "\nSetting up indices ...\n" );
-
-			foreach ( $indices as $index ) {
-				$this->messageReporter->reportMessage( "   ... $index ...\n" );
-			}
-
 			$this->messageReporter->reportMessage( "   ... done.\n" );
 		}
 
@@ -338,24 +297,13 @@ class ElasticStore extends SQLStore {
 			$this->indexer = $this->elasticFactory->newIndexer( $this, $this->messageReporter );
 		}
 
-		$indices = $this->indexer->drop();
-
-		$setupFile = new SetupFile();
-
-		$setupFile->remove(
-			ElasticStore::REBUILD_INDEX_RUN_COMPLETE
-		);
+		$this->indexer->drop();
 
 		if ( $verbose ) {
 			$this->messageReporter->reportMessage( "\n" );
-			$this->messageReporter->reportMessage( 'Query engine: "SMWElasticStore"' );
+			$this->messageReporter->reportMessage( 'Selected query engine: "SMWElasticStore"' );
 			$this->messageReporter->reportMessage( "\n" );
 			$this->messageReporter->reportMessage( "\nDropping indices ...\n" );
-
-			foreach ( $indices as $index ) {
-				$this->messageReporter->reportMessage( "   ... $index ...\n" );
-			}
-
 			$this->messageReporter->reportMessage( "   ... done.\n" );
 		}
 
@@ -400,15 +348,6 @@ class ElasticStore extends SQLStore {
 		return [
 			'SMWElasticStore' => $database->getInfo() + [ 'es' => $client->getVersion() ]
 		];
-	}
-
-	private function ingestFile( $title, array $params = [] ) {
-
-		if ( $title->getNamespace() !== NS_FILE ) {
-			return;
-		}
-
-		$this->indexer->getFileIndexer()->pushIngestJob( $title, $params );
 	}
 
 }

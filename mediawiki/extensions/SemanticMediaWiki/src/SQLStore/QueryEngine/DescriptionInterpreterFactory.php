@@ -3,7 +3,6 @@
 namespace SMW\SQLStore\QueryEngine;
 
 use SMW\ApplicationFactory;
-use SMW\Store;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\ClassDescriptionInterpreter;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\ConceptDescriptionInterpreter;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\DisjunctionConjunctionInterpreter;
@@ -12,7 +11,6 @@ use SMW\SQLStore\QueryEngine\DescriptionInterpreters\NamespaceDescriptionInterpr
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\SomePropertyInterpreter;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\ThingDescriptionInterpreter;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreters\ValueDescriptionInterpreter;
-use SMW\Utils\CircularReferenceGuard;
 
 /**
  * @license GNU GPL v2+
@@ -23,71 +21,43 @@ use SMW\Utils\CircularReferenceGuard;
 class DescriptionInterpreterFactory {
 
 	/**
-	 * @var Store
-	 */
-	private $store;
-
-	/**
-	 * @var CircularReferenceGuard
-	 */
-	private $circularReferenceGuard;
-
-	/**
 	 * @since 2.4
 	 *
-	 * @param SQLStore $store
-	 */
-	public function __construct( Store $store, CircularReferenceGuard $circularReferenceGuard ) {
-		$this->store = $store;
-		$this->circularReferenceGuard = $circularReferenceGuard;
-	}
-
-	/**
-	 * @since 2.4
-	 *
-	 * @param ConditionBuilder $conditionBuilder
+	 * @param QuerySegmentListBuilder $querySegmentListBuilder
 	 *
 	 * @return DispatchingDescriptionInterpreter
 	 */
-	public function newDispatchingDescriptionInterpreter( ConditionBuilder $conditionBuilder ) {
+	public function newDispatchingDescriptionInterpreter( QuerySegmentListBuilder $querySegmentListBuilder ) {
 
 		$pplicationFactory = ApplicationFactory::getInstance();
 		$dispatchingDescriptionInterpreter = new DispatchingDescriptionInterpreter();
 
-		$fulltextSearchTableFactory = new FulltextSearchTableFactory();
-
-		$valueMatchConditionBuilder = $fulltextSearchTableFactory->newValueMatchConditionBuilderByType(
-			$this->store
-		);
-
 		$dispatchingDescriptionInterpreter->addDefaultInterpreter(
-			new ThingDescriptionInterpreter( $conditionBuilder )
+			new ThingDescriptionInterpreter( $querySegmentListBuilder )
 		);
 
 		$dispatchingDescriptionInterpreter->addInterpreter(
-			new SomePropertyInterpreter( $this->store, $conditionBuilder, $valueMatchConditionBuilder )
+			new SomePropertyInterpreter( $querySegmentListBuilder )
 		);
 
 		$dispatchingDescriptionInterpreter->addInterpreter(
-			new DisjunctionConjunctionInterpreter( $conditionBuilder )
+			new DisjunctionConjunctionInterpreter( $querySegmentListBuilder )
 		);
 
 		$dispatchingDescriptionInterpreter->addInterpreter(
-			new NamespaceDescriptionInterpreter( $this->store, $conditionBuilder )
+			new NamespaceDescriptionInterpreter( $querySegmentListBuilder )
 		);
 
 		$dispatchingDescriptionInterpreter->addInterpreter(
-			new ClassDescriptionInterpreter( $this->store, $conditionBuilder )
+			new ClassDescriptionInterpreter( $querySegmentListBuilder )
 		);
 
 		$dispatchingDescriptionInterpreter->addInterpreter(
-			new ValueDescriptionInterpreter( $this->store, $conditionBuilder )
+			new ValueDescriptionInterpreter( $querySegmentListBuilder )
 		);
 
 		$conceptDescriptionInterpreter = new ConceptDescriptionInterpreter(
-			$this->store,
-			$conditionBuilder,
-			$this->circularReferenceGuard
+			$querySegmentListBuilder
 		);
 
 		$conceptDescriptionInterpreter->setQueryParser(

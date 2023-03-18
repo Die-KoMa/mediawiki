@@ -41,7 +41,7 @@ abstract class TableBuilder implements TableBuilderInterface, MessageReporterAwa
 	 *
 	 * @param DatabaseBase $connection
 	 */
-	protected function __construct( $connection ) {
+	protected function __construct( DatabaseBase $connection ) {
 		$this->connection = $connection;
 	}
 
@@ -53,14 +53,7 @@ abstract class TableBuilder implements TableBuilderInterface, MessageReporterAwa
 	 * @return TableBuilder
 	 * @throws RuntimeException
 	 */
-	public static function factory( $connection ) {
-
-		if (
-			!$connection instanceof \Wikimedia\Rdbms\IDatabase &&
-			!$connection instanceof \IDatabase &&
-			!$connection instanceof \DatabaseBase ) {
-			throw new RuntimeException( "Invalid connection instance!" );
-		}
+	public static function factory( DatabaseBase $connection ) {
 
 		$instance = null;
 
@@ -80,12 +73,8 @@ abstract class TableBuilder implements TableBuilderInterface, MessageReporterAwa
 			throw new RuntimeException( "Unknown or unsupported DB type " . $connection->getType() );
 		}
 
-		if ( !is_a( $instance, static::class ) ) {
-			throw new RuntimeException( get_class( $instance ) . " instance doesn't match " . static::class );
-		}
-
-		$instance->setConfig( 'wgDBname', $GLOBALS['wgDBname'] );
-		$instance->setConfig( 'wgDBTableOptions', $GLOBALS['wgDBTableOptions'] );
+		$instance->addConfig( 'wgDBname', $GLOBALS['wgDBname'] );
+		$instance->addConfig( 'wgDBTableOptions', $GLOBALS['wgDBTableOptions'] );
 
 		return $instance;
 	}
@@ -96,7 +85,7 @@ abstract class TableBuilder implements TableBuilderInterface, MessageReporterAwa
 	 * @param string|integer $key
 	 * @param mixed
 	 */
-	public function setConfig( $key, $value ) {
+	public function addConfig( $key, $value ) {
 		$this->config[$key] = $value;
 	}
 
@@ -178,11 +167,11 @@ abstract class TableBuilder implements TableBuilderInterface, MessageReporterAwa
 		$tableName = $table->getName();
 
 		if ( $this->connection->tableExists( $tableName ) === false ) { // create new table
-			return $this->reportMessage( "   ... $tableName not found, skipping removal ...\n" );
+			return $this->reportMessage( " ... $tableName not found, skipping removal.\n" );
 		}
 
 		$this->doDropTable( $tableName );
-		$this->reportMessage( "   ... dropped table $tableName ...\n" );
+		$this->reportMessage( " ... dropped table $tableName.\n" );
 	}
 
 	/**

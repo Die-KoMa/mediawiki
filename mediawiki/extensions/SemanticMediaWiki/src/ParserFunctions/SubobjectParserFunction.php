@@ -13,7 +13,6 @@ use SMW\ParserData;
 use SMW\ParserParameterProcessor;
 use SMW\SemanticData;
 use SMW\Subobject;
-use SMW\Parser\AnnotationProcessor;
 
 /**
  * @private This class should not be instantiated directly, please use
@@ -143,15 +142,6 @@ class SubobjectParserFunction {
 	}
 
 	/**
-	 * @since 3.1
-	 *
-	 * @return SemanticData
-	 */
-	public function getSemanticData() {
-		return $this->subobject->getSemanticData();
-	}
-
-	/**
 	 * @since 1.9
 	 *
 	 * @param ParserParameterProcessor $params
@@ -167,7 +157,7 @@ class SubobjectParserFunction {
 			$this->parserData->getSemanticData()->addSubobject( $this->subobject );
 		}
 
-		$this->parserData->copyToParserOutput();
+		$this->parserData->pushSemanticDataToParserOutput();
 
 		$html = $this->messageFormatter->addFromArray( $this->subobject->getErrors() )
 			->addFromArray( $this->parserData->getErrors() )
@@ -204,11 +194,6 @@ class SubobjectParserFunction {
 
 		$subject = $this->subobject->getSubject();
 
-		$annotationProcessor = new AnnotationProcessor(
-			$this->subobject->getSemanticData(),
-			DataValueFactory::getInstance()
-		);
-
 		foreach ( $parameters as $property => $values ) {
 
 			if ( $property === self::PARAM_SORTKEY ) {
@@ -221,7 +206,7 @@ class SubobjectParserFunction {
 
 			foreach ( $values as $value ) {
 
-				$dataValue = $annotationProcessor->newDataValueByText(
+				$dataValue = DataValueFactory::getInstance()->newDataValueByText(
 						$property,
 						$value,
 						false,
@@ -229,13 +214,10 @@ class SubobjectParserFunction {
 					);
 
 				$this->subobject->addDataValue( $dataValue );
-
 			}
 		}
 
 		$this->augment( $this->subobject->getSemanticData() );
-
-		$annotationProcessor->release( SemanticData::class );
 
 		return true;
 	}
@@ -298,7 +280,7 @@ class SubobjectParserFunction {
 
 			// Normalize property names to generate the same hash for when
 			// CapitalLinks is enabled (has foo === Has foo)
-			if ( $property !== '' && $property[0] !== '@' && $this->isCapitalLinks ) {
+			if ( $property !== '' && $property{0} !== '@' && $this->isCapitalLinks ) {
 				$property = mb_strtoupper( mb_substr( $property, 0, 1 ) ) . mb_substr( $property, 1 );
 			}
 

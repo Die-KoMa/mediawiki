@@ -1,10 +1,11 @@
 <?php
 
 use ParamProcessor\Options;
+use ParamProcessor\Param;
 use ParamProcessor\ParamDefinition;
-use ParamProcessor\ProcessedParam;
 use ParamProcessor\Processor;
 use SMW\ApplicationFactory;
+use SMW\Message;
 use SMW\Parser\RecursiveTextProcessor;
 use SMW\Query\Deferred;
 use SMW\Query\PrintRequest;
@@ -12,10 +13,14 @@ use SMW\Query\Processor\ParamListProcessor;
 use SMW\Query\Processor\DefaultParamDefinition;
 use SMW\Query\QueryContext;
 use SMW\Query\Exception\ResultFormatNotFoundException;
-use SMW\Query\ResultFormat;
-use SMW\Query\ResultPrinter;
-use SMW\Query\ResultPrinters\NullResultPrinter;
-use SMW\Query\ResultPrinterDependency;
+
+/**
+ * This file contains a static class for accessing functions to generate and execute
+ * semantic queries and to serialise their results.
+ *
+ * @ingroup SMWQuery
+ * @author Markus Krötzsch
+ */
 
 /**
  * Static class for accessing functions to generate and execute semantic queries
@@ -46,52 +51,26 @@ class SMWQueryProcessor implements QueryContext {
 	 * param name (string) => param value (mixed)
 	 *
 	 * @since 1.6.2
-	 * The return value changed in SMW 3.1 from Param[] to ProcessedParam[]
+	 * The return value changed in SMW 1.8 from an array with result values
+	 * to an array with Param objects.
 	 *
 	 * @param array $params
-	 * @param PrintRequest[] $printRequests
+	 * @param array $printRequests
 	 * @param boolean $unknownInvalid
 	 *
-	 * @return ProcessedParam[]
+	 * @return Param[]
 	 */
 	public static function getProcessedParams( array $params, array $printRequests = [], $unknownInvalid = true, $context = null, $showMode = false ) {
+		$validator = self::getValidatorForParams( $params, $printRequests, $unknownInvalid, $context, $showMode );
+		$validator->processParameters();
+		$parameters =  $validator->getParameters();
 
-		// #4261
-		// The `ProcessedParam` library creates inconsistent results pending the
-		// input types especially between conversion of string to integer, so to
-		// ensure that method outputs a consistent behaviour independent of the
-		// type, we recast offset/limit as string.
-		//
-		// We remove the string casts tests would start to fail!
-
-		if ( isset( $params['offset'] ) ) {
-			$params['offset'] = (string)$params['offset'];
-		}
-
-		if ( isset( $params['limit'] ) ) {
-			$params['limit'] = (string)$params['limit'];
-		}
-
-		$validator = self::getProcessorForParams( $params, $printRequests, $unknownInvalid, $context, $showMode );
-		$processingResult = $validator->processParameters();
-
-		$parameters = [];
-
-		foreach ( $processingResult->getParameters() as $parameter ) {
-			$parameters[$parameter->getName()] = $parameter;
-		}
-
-		// Set limit parameter to its original value.
-		// This is to allow for special handling of invalid values rather than just setting the parameter to its default.
-		// $smwgQMaxLimit and $smwgQMaxInlineLimit will be applied at a later point.
+		// Negates some weird behaviour of ParamDefinition::setDefault used in
+		// an individual printer.
+		// Applying $smwgQMaxLimit, $smwgQMaxInlineLimit will happen at a later
+		// stage.
 		if ( isset( $params['limit'] ) && isset( $parameters['limit'] ) ) {
-			$parameters['limit'] = new ProcessedParam(
-				'limit',
-				(int)$params['limit'],
-				false,
-				'limit',
-				(int)$params['limit']
-			);
+			$parameters['limit']->setValue( (int)$params['limit'] );
 		}
 
 		return $parameters;
@@ -214,6 +193,26 @@ class SMWQueryProcessor implements QueryContext {
 	}
 
 	/**
+	 * Preprocess a query as given by an array of parameters as is typically
+	 * produced by the #ask parser function. The parsing results in a querystring,
+	 * an array of additional parameters, and an array of additional SMWPrintRequest
+	 * objects, which are filled into call-by-ref parameters.
+	 * $showMode is true if the input should be treated as if given by #show
+	 *
+	 * @param array $rawParams
+	 * @param string $querystring
+	 * @param array $params
+	 * @param array $printouts array of SMWPrintRequest
+	 * @param boolean $showMode
+	 * @deprecated Will vanish after SMW 1.8 is released.
+	 * Use getComponentsFromFunctionParams which has a cleaner interface.
+	 */
+	static public function processFunctionParams( array $rawParams, &$querystring, &$params, &$printouts, $showMode = false ) {
+		list( $querystring, $params, $printouts ) = self::getComponentsFromFunctionParams( $rawParams, $showMode );
+	}
+
+
+	/**
 	 * Preprocess a query as given by an array of parameters as is
 	 * typically produced by the #ask parser function or by Special:Ask.
 	 * The parsing results in a querystring, an array of additional
@@ -228,9 +227,7 @@ class SMWQueryProcessor implements QueryContext {
 	 * @return array( string, array( string => string ), array( SMWPrintRequest ) )
 	 */
 	static public function getComponentsFromFunctionParams( array $rawParams, $showMode ) {
-		/**
-		 * @var ParamListProcessor $paramListProcessor
-		 */
+
 		$paramListProcessor = ApplicationFactory::getInstance()->singleton( 'ParamListProcessor' );
 
 		return $paramListProcessor->format(
@@ -254,7 +251,7 @@ class SMWQueryProcessor implements QueryContext {
 	 * @param integer $outputMode SMW_OUTPUT_WIKI, SMW_OUTPUT_HTML, ...
 	 * @param integer $context INLINE_QUERY, SPECIAL_PAGE, CONCEPT_DESC
 	 * @param boolean $showMode process like #show parser function?
-	 * @return array( SMWQuery, ProcessedParam[] )
+	 * @return array( SMWQuery, array of IParam )
 	 */
 	static public function getQueryAndParamsFromFunctionParams( array $rawParams, $outputMode, $context, $showMode, $contextPage = null ) {
 		list( $queryString, $params, $printouts ) = self::getComponentsFromFunctionParams( $rawParams, $showMode );
@@ -279,6 +276,62 @@ class SMWQueryProcessor implements QueryContext {
 	}
 
 	/**
+	 * Process and answer a query as given by an array of parameters as is
+	 * typically produced by the #ask parser function. The result is formatted
+	 * according to the specified $outputformat. The parameter $context defines
+	 * in what context the query is used, which affects ceretain general settings.
+	 *
+	 * The main task of this function is to preprocess the raw parameters to
+	 * obtain actual parameters, printout requests, and the query string for
+	 * further processing.
+	 *
+	 * @note Consider using getQueryAndParamsFromFunctionParams() and
+	 * getResultFromQuery() instead.
+	 * @deprecated Will vanish after release of SMW 1.8.
+	 * See SMW_Ask.php for example code on how to get query results from
+	 * #ask function parameters.
+	 */
+	static public function getResultFromFunctionParams( array $rawParams, $outputMode, $context = self::INLINE_QUERY, $showMode = false ) {
+		list( $queryString, $params, $printouts ) = self::getComponentsFromFunctionParams( $rawParams, $showMode );
+
+		if ( !$showMode ) {
+			self::addThisPrintout( $printouts, $params );
+		}
+
+		$params = self::getProcessedParams( $params, $printouts );
+
+		return self::getResultFromQueryString( $queryString, $params, $printouts, SMW_OUTPUT_WIKI, $context );
+	}
+
+	/**
+	 * Process a query string in SMW's query language and return a formatted
+	 * result set as specified by $outputmode. A parameter array of key-value-pairs
+	 * constrains the query and determines the serialisation mode for results. The
+	 * parameter $context defines in what context the query is used, which affects
+	 * certain general settings. Finally, $extraprintouts supplies additional
+	 * printout requests for the query results.
+	 *
+	 * @param string $queryString
+	 * @param array $params These need to be the result of a list fed to getProcessedParams
+	 * @param $extraPrintouts
+	 * @param $outputMode
+	 * @param $context
+	 *
+	 * @return string
+	 * @deprecated Will vanish after release of SMW 1.8.
+	 * See SMW_Ask.php for example code on how to get query results from
+	 * #ask function parameters.
+	 */
+	static public function getResultFromQueryString( $queryString, array $params, $extraPrintouts, $outputMode, $context = self::INLINE_QUERY ) {
+
+		$query  = self::createQuery( $queryString, $params, $context, '', $extraPrintouts );
+		$result = self::getResultFromQuery( $query, $params, $outputMode, $context );
+
+
+		return $result;
+	}
+
+	/**
 	 * Create a fully formatted result string from a query and its
 	 * parameters. The method takes care of processing various types of
 	 * query result. Most cases are handled by printers, but counting and
@@ -298,10 +351,6 @@ class SMWQueryProcessor implements QueryContext {
 			$params['format']->getValue(),
 			$context
 		);
-
-		if ( $printer instanceof ResultPrinterDependency && $printer->hasMissingDependency() ) {
-			return $printer->getDependencyError();
-		}
 
 		if ( $printer->isDeferrable() && $context === self::DEFERRED_QUERY && $query->getLimit() > 0 ) {
 
@@ -326,20 +375,11 @@ class SMWQueryProcessor implements QueryContext {
 			$query->setLimit( 0 );
 		}
 
-		$querySourceFactory = ApplicationFactory::getInstance()->getQuerySourceFactory();
-		$source = $params['source']->getValue();
-
-		if ( $source === '' && $context === self::CURTAILMENT_MODE ) {
-			$querySource = $querySourceFactory->newSingleEntityQueryLookup();
-		} else {
-			$querySource = $querySourceFactory->get( $source );
-		}
-
-		$res = $querySource->getQueryResult( $query );
+		$res = self::getStoreFromParams( $params )->getQueryResult( $query );
 		$start = microtime( true );
 
 		if ( $res instanceof SMWQueryResult && $query->getOption( 'calc.result_hash' ) ) {
-			$query->setOption( 'result_hash', $res->getHash( SMWQueryResult::QUICK_HASH ) );
+			$query->setOption( 'result_hash', $res->getHash( 'quick' ) );
 		}
 
 		if ( ( $query->querymode == SMWQuery::MODE_INSTANCES ) ||
@@ -375,6 +415,10 @@ class SMWQueryProcessor implements QueryContext {
 		}
 	}
 
+	private static function getStoreFromParams( array $params ) {
+		return ApplicationFactory::getInstance()->getQuerySourceFactory()->get( $params['source']->getValue() );
+	}
+
 	/**
 	 * Find suitable SMWResultPrinter for the given format. The context in
 	 * which the query is to be used determines some basic settings of the
@@ -386,12 +430,12 @@ class SMWQueryProcessor implements QueryContext {
 	 * @param $context
 	 *
 	 * @return SMWResultPrinter
-	 * @throws ResultFormatNotFoundException
+	 * @throws MissingResultFormatException
 	 */
 	static public function getResultPrinter( $format, $context = self::SPECIAL_PAGE ) {
 		global $smwgResultFormats;
 
-		ResultFormat::resolveFormatAliases( $format );
+		SMWParamFormat::resolveFormatAliases( $format );
 
 		if ( !array_key_exists( $format, $smwgResultFormats ) ) {
 			throw new ResultFormatNotFoundException( "There is no result format for '$format'." );
@@ -399,9 +443,6 @@ class SMWQueryProcessor implements QueryContext {
 
 		$formatClass = $smwgResultFormats[$format];
 
-		/**
-		 * @var SMWResultPrinter $printer
-		 */
 		$printer = new $formatClass( $format, ( $context != self::SPECIAL_PAGE ) );
 
 		if ( self::$recursiveTextProcessor === null ) {
@@ -424,7 +465,7 @@ class SMWQueryProcessor implements QueryContext {
 	 * @param integer|null $context
 	 * @param ResultPrinter|null $resultPrinter
 	 *
-	 * @return ParamDefinition[]
+	 * @return IParamDefinition[]
 	 */
 	public static function getParameters( $context = null, $resultPrinter = null ) {
 		return DefaultParamDefinition::getParamDefinitions( $context, $resultPrinter );
@@ -440,7 +481,7 @@ class SMWQueryProcessor implements QueryContext {
 	 * @return ParamDefinition[]
 	 */
 	public static function getFormatParameters( $format ) {
-		ResultFormat::resolveFormatAliases( $format );
+		SMWParamFormat::resolveFormatAliases( $format );
 
 		if ( !array_key_exists( $format, $GLOBALS['smwgResultFormats'] ) ) {
 			return [];
@@ -448,7 +489,7 @@ class SMWQueryProcessor implements QueryContext {
 
 		$resultPrinter = self::getResultPrinter( $format );
 
-		if ( $resultPrinter instanceof NullResultPrinter ) {
+		if ( $resultPrinter instanceof \SMW\Query\ResultPrinters\NullResultPrinter ) {
 			return [];
 		}
 
@@ -462,31 +503,28 @@ class SMWQueryProcessor implements QueryContext {
 	 * and sets them on a new Validator object,
 	 * which is returned and ready to process the parameters.
 	 *
+	 * @since 1.8
+	 *
 	 * @param array $params
-	 * @param PrintRequest[] $printRequests
+	 * @param array $printRequests
 	 * @param boolean $unknownInvalid
 	 *
 	 * @return Processor
 	 */
-	private static function getProcessorForParams( array $params, array $printRequests = [], $unknownInvalid = true, $context = null, $showMode = false ) {
+	private static function getValidatorForParams( array $params, array $printRequests = [], $unknownInvalid = true, $context = null, $showMode = false ) {
 		$paramDefinitions = self::getParameters( $context );
 
-		/**
-		 * @var ResultFormat $formatParameter
-		 */
-		$formatParameter = $paramDefinitions['format'];
-
-		$formatParameter->setPrintRequests( $printRequests );
-		$formatParameter->setShowMode( $showMode );
+		$paramDefinitions['format']->setPrintRequests( $printRequests );
+		$paramDefinitions['format']->setShowMode( $showMode );
 
 		$processorOptions = new Options();
 		$processorOptions->setUnknownInvalid( $unknownInvalid );
 
-		$processor = Processor::newFromOptions( $processorOptions );
+		$validator = Processor::newFromOptions( $processorOptions );
 
-		$processor->setParameters( $params, $paramDefinitions );
+		$validator->setParameters( $params, $paramDefinitions, false );
 
-		return $processor;
+		return $validator;
 	}
 
 }

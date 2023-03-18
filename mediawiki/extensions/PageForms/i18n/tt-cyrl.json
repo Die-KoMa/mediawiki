@@ -1,11 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Ерней",
-			"Ильнар"
+			"Ерней"
 		]
 	},
-	"pf_createform_inputtypedefault": "(гадәттәге)",
-	"formedit": "Форма ярдәмендә үзгәртү",
-	"pf_formedit_none": "Һични"
+	"pf_createform_inputtypedefault": "(килешү буенча)"
 }

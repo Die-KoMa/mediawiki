@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Nemo bis",
-			"පසිඳු කාවින්ද"
+			"පසිඳු කාවින්ද",
+			"Nemo bis"
 		]
 	},
+	"srf-name": "අර්ථ විචාර ප්‍රතිඑල ආකෘතීන්",
 	"prefs-srf": "අර්ථ විචාර ප්‍රතිඑල ආකෘතීන්",
 	"srf-module-loading": "ප්‍රවේශනය වෙමින්...",
 	"srf-paramdesc-layout": "ලබා ගත හැකි සැලැස්ම",

@@ -5,7 +5,6 @@ namespace SMW\MediaWiki\Specials\Ask;
 use Html;
 use SMW\Message;
 use SMWInfolink as Infolink;
-use SMW\Utils\UrlArgs;
 use Title;
 
 /**
@@ -207,31 +206,21 @@ class LinksWidget {
 			return '';
 		}
 
-		return  Html::rawElement(
-			'div',
-				[
-					'id' => 'ask-change-info'
-				]
-			) . Html::rawElement(
-			'div',
+		return Html::rawElement( 'div', [ 'class' => 'smw-ask-button-submit' ], Html::element(
+			'input',
 			[
-				'class' => 'smw-ask-button-submit'
-			], Html::element(
-				'input',
-				[
-					'id' => 'search-action',
-					'type'  => 'submit',
-					'value' => wfMessage( 'smw_ask_submit' )->escaped()
-				]
-			) . Html::element(
-				'input',
-				[
-					'type'  => 'hidden',
-					'name'  => 'eq',
-					'value' => 'yes'
-				]
-			)
-		);
+				'type'  => 'submit',
+				'class' => '',
+				'value' => wfMessage( 'smw_ask_submit' )->escaped()
+			], ''
+		) . ' ' . Html::element(
+			'input',
+			[
+				'type'  => 'hidden',
+				'name'  => 'eq',
+				'value' => 'yes'
+			], ''
+		) );
 	}
 
 	/**
@@ -281,7 +270,6 @@ class LinksWidget {
 			return '';
 		}
 
-		$urlArgs = clone $urlArgs;
 		$urlArgs->set( 'eq', 'yes' );
 		$urlArgs->set( 'debug', 'true' );
 		$urlArgs->setFragment( 'search' );
@@ -368,8 +356,7 @@ class LinksWidget {
 			'span',
 			[
 				'id' => 'ask-clipboard ',
-				'class' => 'page-link',
-				'style' => 'vertical-align: top;'
+			//	'class' => 'smw-ask-button smw-ask-button-right smw-ask-button-lgrey'
 			],
 			Html::element(
 				'a',

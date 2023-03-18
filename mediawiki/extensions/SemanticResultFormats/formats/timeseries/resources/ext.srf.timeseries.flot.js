@@ -135,10 +135,7 @@
 			// Tabs height can vary (due to CSS) therefore after tabs instance was
 			// created get the height
 			var _tabs = chart.find( '.ui-tabs-nav' );
-			if (_tabs.length > 0) {
-				height -= _tabs.outerHeight();
-			}
-			container.find( '.' + plotClass ).css( { 'height': height, 'width': width } );
+			container.find( '.' + plotClass ).css( { 'height': height - _tabs.outerHeight() , 'width': width } );
 
 			// Draw chart
 			container.srfFlotTimeSeries( 'chart', settings );

@@ -5,7 +5,6 @@ namespace SMW\Tests\Elastic\Indexer;
 use SMW\Elastic\Indexer\FileIndexer;
 use SMW\DIWikiPage;
 use SMW\Tests\PHPUnitCompat;
-use SMW\Tests\TestEnvironment;
 
 /**
  * @covers \SMW\Elastic\Indexer\FileIndexer
@@ -20,14 +19,10 @@ class FileIndexerTest extends \PHPUnit_Framework_TestCase {
 
 	use PHPUnitCompat;
 
-	private $testEnvironment;
 	private $indexer;
 	private $logger;
-	private $entityCache;
 
 	protected function setUp() {
-
-		$this->testEnvironment =  new TestEnvironment();
 
 		$this->indexer = $this->getMockBuilder( '\SMW\Elastic\Indexer\Indexer' )
 			->disableOriginalConstructor()
@@ -36,18 +31,6 @@ class FileIndexerTest extends \PHPUnit_Framework_TestCase {
 		$this->logger = $this->getMockBuilder( '\Psr\Log\NullLogger' )
 			->disableOriginalConstructor()
 			->getMock();
-
-		$this->entityCache = $this->getMockBuilder( '\SMW\EntityCache' )
-			->disableOriginalConstructor()
-			->setMethods( [ 'save', 'associate', 'fetch' ] )
-			->getMock();
-
-		$this->testEnvironment->registerObject( 'EntityCache', $this->entityCache );
-	}
-
-	protected function tearDown() {
-		$this->testEnvironment->tearDown();
-		parent::tearDown();
 	}
 
 	public function testCanConstruct() {
@@ -60,15 +43,13 @@ class FileIndexerTest extends \PHPUnit_Framework_TestCase {
 
 	public function testIndex() {
 
-		$url = 'http://example.org/Foo.txt';
-
 		$file = $this->getMockBuilder( '\File' )
 			->disableOriginalConstructor()
 			->getMock();
 
 		$file->expects( $this->once() )
 			->method( 'getFullURL' )
-			->will( $this->returnValue( $url ) );
+			->will( $this->returnValue( 'http://example.org/Foo.txt' ) );
 
 		$ingest = $this->getMockBuilder( '\stdClass' )
 			->disableOriginalConstructor()
@@ -90,28 +71,9 @@ class FileIndexerTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getConnection' )
 			->will( $this->returnValue( $client ) );
 
-		$this->entityCache->expects( $this->once() )
-			->method( 'save' )
-			->with( $this->stringContains( 'smw:entity:d2711ab614dfb2d68dcea212c71769d5' ) );
-
-		$this->entityCache->expects( $this->once() )
-			->method( 'associate' )
-			->with(
-				$this->anything(),
-				$this->stringContains( 'smw:entity:d2711ab614dfb2d68dcea212c71769d5' ) );
-
 		$instance = new FileIndexer(
 			$this->indexer
 		);
-
-		$instance->setReadCallback( function( $read_url ) use( $url ) {
-
-			if ( $read_url !== $url ) {
-				throw new \RuntimeException( "Invalid read URL!" );
-			}
-
-			return 'Foo';
-		} );
 
 		$instance->setLogger( $this->logger );
 

@@ -9,11 +9,12 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 }
 
 function registerAutoloaderPath( $identifier, $path ) {
-	print "\nUsing the {$identifier} vendor autoloader ...\n\n";
+	print( "\nUsing the {$identifier} vendor autoloader ...\n\n" );
 	return require $path;
 }
 
 function runTestAutoLoader() {
+
 	$mwVendorPath = __DIR__ . '/../../../vendor/autoload.php';
 	$localVendorPath = __DIR__ . '/../vendor/autoload.php';
 
@@ -22,7 +23,7 @@ function runTestAutoLoader() {
 	} elseif ( is_readable( $mwVendorPath ) ) {
 		$autoLoader = registerAutoloaderPath( 'MediaWiki', $mwVendorPath );
 	} else {
-		print "\No vendor autoloader ...\n\n";
+		print( "\No vendor autoloader ...\n\n" );
 	}
 
 	if ( !$autoLoader instanceof \Composer\Autoload\ClassLoader ) {

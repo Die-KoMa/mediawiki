@@ -19,9 +19,6 @@ use SMW\Utils\HtmlDivTable;
 use SMW\Utils\HtmlTabs;
 use SMWInfolink;
 use SMWSemanticData;
-use SMWDIBlob as DIBlob;
-use SMWDataItem as DataItem;
-use SMW\PropertyRegistry;
 
 /**
  * Class handling the "Factbox" content rendering
@@ -69,14 +66,9 @@ class Factbox {
 	protected $content = null;
 
 	/**
-	 * @var string
+	 * @var boolean
 	 */
-	private $attachments = [];
-
-	/**
-	 * @var CheckMagicWords
-	 */
-	private $checkMagicWords;
+	private $previewFlag = false;
 
 	/**
 	 * @since 1.9
@@ -89,7 +81,6 @@ class Factbox {
 		$this->parserData = $parserData;
 		$this->applicationFactory = ApplicationFactory::getInstance();
 		$this->dataValueFactory = DataValueFactory::getInstance();
-		$this->attachmentFormatter = new AttachmentFormatter( $store );
 	}
 
 	/**
@@ -102,12 +93,14 @@ class Factbox {
 	}
 
 	/**
-	 * @since 3.1
+	 * @note contains information about wpPreview
 	 *
-	 * @param CheckMagicWords $checkMagicWords
+	 * @since 2.1
+	 *
+	 * @param boolean $previewFlag
 	 */
-	public function setCheckMagicWords( CheckMagicWords $checkMagicWords ) {
-		$this->checkMagicWords = $checkMagicWords;
+	public function setPreviewFlag( $previewFlag ) {
+		$this->previewFlag = $previewFlag;
 	}
 
 	/**
@@ -120,12 +113,10 @@ class Factbox {
 	 */
 	public function doBuild() {
 
-		$this->content = $this->fetchContent(
-			$this->getMagicWords()
-		);
+		$this->content = $this->fetchContent( $this->getMagicWords() );
 
-		if ( $this->content !== '' || $this->attachments !== [] ) {
-			$this->parserData->getOutput()->addModules( self::getModules() );
+		if ( $this->content !== '' ) {
+			$this->parserData->getOutput()->addModules( $this->getModules() );
 			$this->parserData->pushSemanticDataToParserOutput();
 			$this->isVisible = true;
 		}
@@ -145,43 +136,14 @@ class Factbox {
 	}
 
 	/**
+	 * Returns content
+	 *
 	 * @since 1.9
 	 *
 	 * @return string|null
 	 */
 	public function getContent() {
 		return $this->content;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @param array $attachments
-	 */
-	public function setAttachments( array $attachments ) {
-		$this->attachments = $attachments;
-	}
-
-	/**
-	 * @since 3.1
-	 *
-	 * @return string
-	 */
-	public function getAttachmentContent() {
-
-		if ( $this->attachments === [] || !$this->hasFeature( SMW_FACTBOX_DISPLAY_ATTACHMENT ) ) {
-			return '';
-		}
-
-		$this->attachmentFormatter->setHeader(
-			$this->createHeader( DIWikiPage::newFromTitle( $this->getTitle() ) )
-		);
-
-		$html = $this->attachmentFormatter->buildHTML(
-			$this->attachments
-		);
-
-		return $html;
 	}
 
 	/**
@@ -203,40 +165,19 @@ class Factbox {
 	 *
 	 * @return string
 	 */
-	public static function tabs( $list, $attachment = '', $derived = '' ) {
+	public static function tabs( $rendered, $derived = '' ) {
 
 		$htmlTabs = new HtmlTabs();
-		$htmlTabs->setActiveTab(
-			$list !== '' ? 'facts-list' : 'facts-attachment'
-		);
-
+		$htmlTabs->setActiveTab( 'facts-rendered' );
 		$htmlTabs->tab(
-			'facts-list',
+			'facts-rendered',
 			Message::get( 'smw-factbox-facts' , Message::TEXT, Message::USER_LANGUAGE ),
 			[
-				'title' => Message::get( 'smw-factbox-facts-help' , Message::TEXT, Message::USER_LANGUAGE ),
-				'hide' => $list === '' ? true : false
+				'title' => Message::get( 'smw-factbox-facts-help' , Message::TEXT, Message::USER_LANGUAGE )
 			]
 		);
 
-		$htmlTabs->content(
-			'facts-list',
-			$list
-		);
-
-		$htmlTabs->tab(
-			'facts-attachment',
-			Message::get( 'smw-factbox-attachments' , Message::TEXT, Message::USER_LANGUAGE ),
-			[
-				'title' => Message::get( 'smw-factbox-attachments-help' , Message::TEXT, Message::USER_LANGUAGE ),
-				'hide' => $attachment === '' ? true : false
-			]
-		);
-
-		$htmlTabs->content(
-			'facts-attachment',
-			$attachment
-		);
+		$htmlTabs->content( 'facts-rendered', $rendered );
 
 		$htmlTabs->tab(
 			'facts-derived',
@@ -264,15 +205,30 @@ class Factbox {
 	 */
 	protected function getMagicWords() {
 
-		if ( $this->checkMagicWords === null ) {
-			return SMW_FACTBOX_HIDDEN;
+		$settings = $this->applicationFactory->getSettings();
+		$parserOutput = $this->parserData->getOutput();
+
+		// Prior MW 1.21 mSMWMagicWords is used (see SMW\ParserTextProcessor)
+		if ( method_exists( $parserOutput, 'getExtensionData' ) ) {
+			$smwMagicWords = $parserOutput->getExtensionData( 'smwmagicwords' );
+			$mws = $smwMagicWords === null ? [] : $smwMagicWords;
+		} else {
+			// @codeCoverageIgnoreStart
+			$mws = isset( $parserOutput->mSMWMagicWords ) ? $parserOutput->mSMWMagicWords : [];
+			// @codeCoverageIgnoreEnd
 		}
 
-		$magicWords = $this->checkMagicWords->getMagicWords(
-			$this->parserData->getOutput()
-		);
+		if ( in_array( 'SMW_SHOWFACTBOX', $mws ) ) {
+			$showfactbox = SMW_FACTBOX_NONEMPTY;
+		} elseif ( in_array( 'SMW_NOFACTBOX', $mws ) ) {
+			$showfactbox = SMW_FACTBOX_HIDDEN;
+		} elseif ( $this->previewFlag ) {
+			$showfactbox = $settings->get( 'smwgShowFactboxEdit' );
+		} else {
+			$showfactbox = $settings->get( 'smwgShowFactbox' );
+		}
 
-		return $magicWords;
+		return $showfactbox;
 	}
 
 	/**
@@ -282,11 +238,10 @@ class Factbox {
 	 *
 	 * @return array
 	 */
-	public static function getModules() {
+	protected function getModules() {
 		return [
 			'ext.smw.style',
-			'ext.smw.table.styles',
-			'smw.factbox'
+			'ext.smw.table.styles'
 		];
 	}
 
@@ -348,10 +303,6 @@ class Factbox {
 
 			$header = $this->createHeader( $semanticData->getSubject() );
 			$rows = $this->createRows( $semanticData );
-
-			if ( $rows === '' ) {
-				return $html;
-			}
 
 			$html .= Html::rawElement(
 				'div',
@@ -425,7 +376,6 @@ class Factbox {
 				continue;
 			}
 
-			$key = $property->getKey();
 			$propertyDv = $this->dataValueFactory->newDataValueByItem( $property, null );
 			$row = '';
 
@@ -452,19 +402,15 @@ class Factbox {
 
 			foreach ( $semanticData->getPropertyValues( $property ) as $dataItem ) {
 
-				if ( $key === '_ATTCH_LINK' ) {
-					$this->attachments[] = $dataItem;
-				} else {
-					$dataValue = $this->dataValueFactory->newDataValueByItem( $dataItem, $property );
+				$dataValue = $this->dataValueFactory->newDataValueByItem( $dataItem, $property );
 
-					$outputFormat = $dataValue->getOutputFormat();
-					$dataValue->setOutputFormat( $outputFormat ? $outputFormat : 'LOCL' );
+				$outputFormat = $dataValue->getOutputFormat();
+				$dataValue->setOutputFormat( $outputFormat ? $outputFormat : 'LOCL' );
 
-					$dataValue->setOption( $dataValue::OPT_DISABLE_SERVICELINKS, true );
+				$dataValue->setOption( $dataValue::OPT_DISABLE_SERVICELINKS, true );
 
-					if ( $dataValue->isValid() ) {
-						$list[] = $dataValue->getLongWikiText( true ) . $dataValue->getInfolinkText( SMW_OUTPUT_WIKI );
-					}
+				if ( $dataValue->isValid() ) {
+					$list[] = $dataValue->getLongWikiText( true ) . $dataValue->getInfolinkText( SMW_OUTPUT_WIKI );
 				}
 			}
 
@@ -476,8 +422,6 @@ class Factbox {
 				} else {
 					$html = implode( $comma, $list ) . '&nbsp;' . $and . '&nbsp;' . $last;
 				}
-			} else {
-				continue;
 			}
 
 			$row .= HtmlDivTable::cell(
@@ -508,6 +452,7 @@ class Factbox {
 
 		return $semanticData->isEmpty();
 	}
+
 
 	private function hasFeature( $feature ) {
 		return ( (int)$this->featureSet & $feature ) != 0;

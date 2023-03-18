@@ -6,7 +6,6 @@ use ParserOutput;
 use ReflectionClass;
 use SMW\ApplicationFactory;
 use SMW\Factbox\Factbox;
-use SMW\Factbox\CheckMagicWords;
 use SMW\ParserData;
 use SMW\Tests\TestEnvironment;
 use Title;
@@ -100,23 +99,15 @@ class FactboxMagicWordsTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$checkMagicWords = new CheckMagicWords(
-			[
-				'preview' => isset( $expected['preview'] ) && $expected['preview'],
-				'showFactboxEdit' => SMW_FACTBOX_HIDDEN,
-				'showFactbox' => SMW_FACTBOX_HIDDEN
-			]
-		);
-
 		$instance = new Factbox(
 			$store,
 			new ParserData( $title, $parserOutput ),
 			$messageBuilder
 		);
 
-		$instance->setCheckMagicWords(
-			$checkMagicWords
-		);
+		if ( isset( $expected['preview'] ) && $expected['preview'] ) {
+			$instance->setPreviewFlag( true );
+		}
 
 		$reflector = new ReflectionClass( '\SMW\Factbox\Factbox' );
 

@@ -3,9 +3,9 @@
 namespace SMW\MediaWiki\Hooks;
 
 use SMW\ApplicationFactory;
-use SMW\MediaWiki\EditInfo;
+use SMW\MediaWiki\EditInfoProvider;
 use SMW\Message;
-use SMW\Property\Annotators\EditProtectedPropertyAnnotator;
+use SMW\PropertyAnnotators\EditProtectedPropertyAnnotator;
 use Title;
 
 /**
@@ -33,19 +33,20 @@ class ArticleProtectComplete extends HookHandler {
 	private $title;
 
 	/**
-	 * @var EditInfo
+	 * @var EditInfoProvider
 	 */
-	private $editInfo;
+	private $editInfoProvider;
 
 	/**
 	 * @since  2.5
 	 *
 	 * @param Title $title
-	 * @param EditInfo $editInfo
+	 * @param EditInfoProvider $editInfoProvider
 	 */
-	public function __construct( Title $title, EditInfo $editInfo ) {
+	public function __construct( Title $title, EditInfoProvider $editInfoProvider ) {
+		parent::__construct();
 		$this->title = $title;
-		$this->editInfo = $editInfo;
+		$this->editInfoProvider = $editInfoProvider;
 	}
 
 	/**
@@ -60,9 +61,9 @@ class ArticleProtectComplete extends HookHandler {
 			return $this->log( __METHOD__ . ' No changes required, invoked by own process!' );
 		}
 
-		$this->editInfo->fetchEditInfo();
+		$this->editInfoProvider->fetchEditInfo();
 
-		$output = $this->editInfo->getOutput();
+		$output = $this->editInfoProvider->getOutput();
 
 		if ( $output === null ) {
 			return $this->log( __METHOD__ . ' Missing ParserOutput!' );

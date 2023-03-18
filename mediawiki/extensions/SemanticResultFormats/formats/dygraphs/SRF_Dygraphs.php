@@ -90,29 +90,27 @@ class SRFDygraphs extends SMWResultPrinter {
 				while ( ( $dataValue = $field->getNextDataValue() ) !== false ) { // Data values
 
 					// Jump the column (indicated by continue) because we don't want the data source being part of the annotation array
-					$dataItem = $dataValue->getDataItem();
-
-					if ( $dataItem->getDIType() === SMWDataItem::TYPE_WIKIPAGE ) {
-						$title = $dataItem->getTitle();
-					}
-
-					if ( $dataItem->getDIType() == SMWDataItem::TYPE_WIKIPAGE && $this->params['datasource'] === 'raw' && !$dataSource ) {
+					if ( $dataValue->getDataItem()->getDIType(
+						) == SMWDataItem::TYPE_WIKIPAGE && $this->params['datasource'] === 'raw' && !$dataSource ) {
 						// Support data source = raw which pulls the url from a wikipage in raw format
 						$aggregatedValues['subject'] = $this->makePageFromTitle(
-							$title
+							$dataValue->getTitle()
 						)->getLongHTMLText( $this->getLinker( $field->getResultSubject() ) );
-						$aggregatedValues['url'] = $title->getLocalURL( 'action=raw' );
+						$aggregatedValues['url'] = $dataValue->getTitle()->getLocalURL( 'action=raw' );
 						$dataSource = true;
 						continue;
-					} elseif ( $dataItem->getDIType() == SMWDataItem::TYPE_WIKIPAGE && $this->params['datasource'] === 'file' && $title->getNamespace() === NS_FILE && !$dataSource ) {
+					} elseif ( $dataValue->getDataItem()->getDIType(
+						) == SMWDataItem::TYPE_WIKIPAGE && $this->params['datasource'] === 'file' && $dataValue->getTitle(
+						)->getNamespace() === NS_FILE && !$dataSource ) {
 						// Support data source = file which pulls the url from a uploaded file
 						$aggregatedValues['subject'] = $this->makePageFromTitle(
-							$title
+							$dataValue->getTitle()
 						)->getLongHTMLText( $this->getLinker( $field->getResultSubject() ) );
-						$aggregatedValues['url'] = wfFindFile( $title )->getUrl();
+						$aggregatedValues['url'] = wfFindFile( $dataValue->getTitle() )->getUrl();
 						$dataSource = true;
 						continue;
-					} elseif ( $dataItem->getDIType() == SMWDataItem::TYPE_URI && $this->params['datasource'] === 'url' && !$dataSource ) {
+					} elseif ( $dataValue->getDataItem()->getDIType(
+						) == SMWDataItem::TYPE_URI && $this->params['datasource'] === 'url' && !$dataSource ) {
 						// Support data source = url, pointing to an url data source
 						$aggregatedValues['link'] = $dataValue->getShortHTMLText( $this->getLinker( false ) );
 						$aggregatedValues['url'] = $dataValue->getURL();
@@ -127,7 +125,7 @@ class SRFDygraphs extends SMWResultPrinter {
 					// text -> A longer description of the annotation
 					// @see  http://dygraphs.com/annotations.html
 					if ( in_array( $propertyLabel, [ 'series', 'x', 'shortText', 'text' ] ) ) {
-						if ( $dataItem->getDIType() == SMWDataItem::TYPE_NUMBER ) {
+						if ( $dataValue->getDataItem()->getDIType() == SMWDataItem::TYPE_NUMBER ) {
 							// Set unit if available
 							$dataValue->setOutputFormat( $this->params['unit'] );
 							// Check if unit is available
@@ -201,7 +199,7 @@ class SRFDygraphs extends SMWResultPrinter {
 
 		// Array encoding and output
 		$requireHeadItem = [ $chartID => FormatJson::encode( $chartData ) ];
-		SMWOutputs::requireHeadItem( $chartID, SRFUtils::makeVariablesScript( $requireHeadItem ) );
+		SMWOutputs::requireHeadItem( $chartID, Skin::makeVariablesScript( $requireHeadItem ) );
 
 		SMWOutputs::requireResource( 'ext.srf.dygraphs' );
 

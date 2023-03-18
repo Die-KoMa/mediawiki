@@ -91,6 +91,17 @@ abstract class Job extends MediaWikiJob {
 	}
 
 	/**
+	 * @note Job::getTitle() in MW 1.19 does not exist
+	 *
+	 * @since  1.9
+	 *
+	 * @return Title
+	 */
+	public function getTitle() {
+		return $this->title;
+	}
+
+	/**
 	 * @since  1.9
 	 *
 	 * @param mixed $key

@@ -10,9 +10,10 @@ if ( php_sapi_name() !== 'cli' ) {
 	die( 'Not an entry point' );
 }
 
-print "\nMediaWiki phpunit runnner ... \n";
+print( "\nMediaWiki phpunit runnner ... \n" );
 
 function isReadablePath( $path ) {
+
 	if ( is_readable( $path ) ) {
 		return $path;
 	}
@@ -21,9 +22,11 @@ function isReadablePath( $path ) {
 }
 
 function addArguments( $args ) {
-	$arguments = [];
+
+	$arguments = array();
 
 	for ( $arg = reset( $args ); $arg !== false; $arg = next( $args ) ) {
+
 		if ( $arg === basename( __FILE__ ) ) {
 			continue;
 		}

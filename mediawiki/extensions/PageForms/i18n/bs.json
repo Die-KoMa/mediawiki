@@ -3,9 +3,7 @@
 		"authors": [
 			"CERminator",
 			"KWiki",
-			"Obsuser",
-			"Srdjan m",
-			"Srđan"
+			"Srdjan m"
 		]
 	},
 	"pageforms-desc": "Obrasci za dodavanje i uređivanje semantičkih podataka",
@@ -66,7 +64,7 @@
 	"pf_formedit_createtitle": "Napravi $1: $2",
 	"pf_formedit_createtitlenotarget": "Napravi $1",
 	"pf_formedit_altformsonly": "Molimo Vas da odaberete jedan od slijedećih obrazaca za dodavanje ovoj stranici:",
-	"pf_formcreate": "Napravi s obrascem",
+	"pf_formcreate": "Napravi sa obrascem",
 	"pf_viewform": "Pogledaj obrazac",
 	"pf_editsource": "Uredi izvor",
 	"pf_formedit_edittitle": "Uređivanje $1: $2",
@@ -79,11 +77,10 @@
 	"pf_blank_error": "ne može biti prazno",
 	"pf_bad_email_error": "mora se navesti valjan format e-mail adrese",
 	"pf_bad_number_error": "mora biti validan broj",
-	"pf_bad_integer_error": "mora biti valjan cijeli broj",
 	"pf_bad_date_error": "mora biti valjan datum",
 	"uploadwindow": "Prozor za postavljanje",
 	"pf_deletionlog": "Zapisnik brisanja",
-	"pf_template_docu": "Ovo je '$1' obrazac.\nTrebao bi se nazvati u sljedećem formatu:",
+	"pf_template_docu": "Ovo je '$1' obrazac.\nTrebao bi se nazvati u slijedećem formatu:",
 	"pf_form_freetextlabel": "Slobodni tekst",
 	"pf_category_hasdefaultform": "Ova kategorija koristi obrazac $1.",
 	"pf_category_desc": "Ovo je $1 kategorija.",
@@ -91,7 +88,7 @@
 	"right-editrestrictedfields": "Uređivanje ograničenih polja obrazca",
 	"pf-datepicker-close": "Zatvori",
 	"pf-datepicker-prev": "Prethodno",
-	"pf-datepicker-next": "Sljedeće",
+	"pf-datepicker-next": "Slijedeće",
 	"pf-datepicker-today": "Danas",
 	"pf-regexp-wrongformat": "Pogrešan format."
 }

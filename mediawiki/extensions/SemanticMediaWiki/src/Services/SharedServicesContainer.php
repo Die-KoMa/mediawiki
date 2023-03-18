@@ -6,6 +6,7 @@ use JsonSchema\Validator as SchemaValidator;
 use Onoi\BlobStore\BlobStore;
 use Onoi\CallbackContainer\CallbackContainer;
 use Onoi\CallbackContainer\ContainerBuilder;
+use SMW\CachedPropertyValuesPrefetcher;
 use SMW\CacheFactory;
 use SMW\ContentParser;
 use SMW\DataItemFactory;
@@ -26,40 +27,32 @@ use SMW\MediaWiki\MediaWikiNsContentReader;
 use SMW\MediaWiki\PageCreator;
 use SMW\MediaWiki\PageUpdater;
 use SMW\MediaWiki\TitleFactory;
-use SMW\Query\Cache\ResultCache;
-use SMW\Services\DataValueServiceFactory;
 use SMW\MessageFormatter;
 use SMW\NamespaceExaminer;
 use SMW\Parser\LinksProcessor;
-use SMW\MediaWiki\PermissionManager;
+use SMW\PermissionPthValidator;
 use SMW\ParserData;
 use SMW\PostProcHandler;
-use SMW\Property\AnnotatorFactory;
+use SMW\PropertyAnnotatorFactory;
 use SMW\PropertyLabelFinder;
 use SMW\PropertyRestrictionExaminer;
 use SMW\PropertySpecificationLookup;
 use SMW\Protection\EditProtectionUpdater;
 use SMW\Protection\ProtectionValidator;
 use SMW\Query\QuerySourceFactory;
+use SMW\Query\Result\CachedQueryResultPrefetcher;
 use SMW\Schema\SchemaFactory;
-use SMW\ConstraintFactory;
-use SMW\Query\Cache\CacheStats;
-use SMW\QueryFactory;
 use SMW\Settings;
 use SMW\Options;
 use SMW\StoreFactory;
-use SMW\Utils\Stats;
+use SMW\Utils\BufferedStatsdCollector;
 use SMW\Utils\JsonSchemaValidator;
 use SMW\Utils\TempFile;
 use SMW\Elastic\ElasticFactory;
 use SMW\SQLStore\QueryDependencyLinksStoreFactory;
+use SMW\QueryFactory;
 use SMW\Query\Processor\QueryCreator;
 use SMW\Query\Processor\ParamListProcessor;
-use SMW\MediaWiki\IndicatorRegistry;
-use SMW\EntityCache;
-use SMW\DisplayTitleFinder;
-use SMW\Constraint\ConstraintErrorIndicatorProvider;
-use SMW\DependencyValidator;
 
 /**
  * @license GNU GPL v2+
@@ -77,7 +70,6 @@ class SharedServicesContainer implements CallbackContainer {
 	public function register( ContainerBuilder $containerBuilder ) {
 
 		$containerBuilder->registerCallback( 'Store', [ $this, 'newStore' ] );
-		$containerBuilder->registerCallback( 'IndicatorRegistry', [ $this, 'newIndicatorRegistry' ] );
 
 		$this->registerCallbackHandlers( $containerBuilder );
 		$this->registerCallableFactories( $containerBuilder );
@@ -120,44 +112,6 @@ class SharedServicesContainer implements CallbackContainer {
 		return $store;
 	}
 
-	/**
-	 * @since 3.1
-	 *
-	 * @return IndicatorRegistry
-	 */
-	public function newIndicatorRegistry( $containerBuilder ) {
-
-		$store = $containerBuilder->singleton( 'Store', null );
-		$settings = $containerBuilder->singleton( 'Settings' );
-
-		$indicatorRegistry = new IndicatorRegistry();
-
-		$constraintErrorIndicatorProvider = new ConstraintErrorIndicatorProvider(
-			$store,
-			$containerBuilder->singleton( 'EntityCache' )
-		);
-
-		$constraintErrorIndicatorProvider->setConstraintErrorCheck(
-			$settings->get( 'smwgCheckForConstraintErrors' )
-		);
-
-		$indicatorRegistry->addIndicatorProvider(
-			$constraintErrorIndicatorProvider
-		);
-
-		try{
-			$indicatorProvider = $store->service( 'IndicatorProvider' );
-		} catch( \SMW\Services\Exception\ServiceNotFoundException $e ) {
-			$indicatorProvider = null;
-		}
-
-		$indicatorRegistry->addIndicatorProvider(
-			$indicatorProvider
-		);
-
-		return $indicatorRegistry;
-	}
-
 	private function registerCallbackHandlers( $containerBuilder ) {
 
 		$containerBuilder->registerCallback( 'Settings', function( $containerBuilder ) {
@@ -181,19 +135,7 @@ class SharedServicesContainer implements CallbackContainer {
 		} );
 
 		$containerBuilder->registerCallback( 'NamespaceExaminer', function() use ( $containerBuilder ) {
-
-			$settings = $containerBuilder->singleton( 'Settings' );
-			$namespaceInfo = $containerBuilder->singleton( 'NamespaceInfo' );
-
-			$namespaceExaminer = new NamespaceExaminer(
-				$settings->get( 'smwgNamespacesWithSemanticLinks' )
-			);
-
-			$namespaceExaminer->setValidNamespaces(
-				$namespaceInfo->getValidNamespaces()
-			);
-
-			return $namespaceExaminer;
+			return NamespaceExaminer::newFromArray( $containerBuilder->singleton( 'Settings' )->get( 'smwgNamespacesWithSemanticLinks' ) );
 		} );
 
 		$containerBuilder->registerCallback( 'ParserData', function( $containerBuilder, \Title $title, \ParserOutput $parserOutput ) {
@@ -231,11 +173,6 @@ class SharedServicesContainer implements CallbackContainer {
 		$containerBuilder->registerCallback( 'PageUpdater', function( $containerBuilder, $connection, TransactionalCallableUpdate $transactionalCallableUpdate = null ) {
 			$containerBuilder->registerExpectedReturnType( 'PageUpdater', '\SMW\MediaWiki\PageUpdater' );
 			return new PageUpdater( $connection, $transactionalCallableUpdate );
-		} );
-
-		$containerBuilder->registerCallback( 'EntityCache', function( $containerBuilder ) {
-			$containerBuilder->registerExpectedReturnType( 'EntityCache', '\SMW\EntityCache' );
-			return new EntityCache( $containerBuilder->singleton( 'Cache', $GLOBALS['smwgMainCacheType'] ) );
 		} );
 
 		/**
@@ -296,8 +233,8 @@ class SharedServicesContainer implements CallbackContainer {
 		 * @var PropertyAnnotatorFactory
 		 */
 		$containerBuilder->registerCallback( 'PropertyAnnotatorFactory', function( $containerBuilder ) {
-			$containerBuilder->registerExpectedReturnType( 'PropertyAnnotatorFactory', AnnotatorFactory::class );
-			return new AnnotatorFactory();
+			$containerBuilder->registerExpectedReturnType( 'PropertyAnnotatorFactory', '\SMW\PropertyAnnotatorFactory' );
+			return new PropertyAnnotatorFactory();
 		} );
 
 		/**
@@ -381,14 +318,6 @@ class SharedServicesContainer implements CallbackContainer {
 			);
 
 			return $schemaFactory;
-		} );
-
-		/**
-		 * @var ConstraintFactory
-		 */
-		$containerBuilder->registerCallback( 'ConstraintFactory', function( $containerBuilder ) {
-			$containerBuilder->registerExpectedReturnType( 'ConstraintFactory', ConstraintFactory::class );
-			return new ConstraintFactory();
 		} );
 
 		/**
@@ -558,37 +487,30 @@ class SharedServicesContainer implements CallbackContainer {
 		} );
 
 		/**
-		 * @var ResultCache
+		 * @var CachedQueryResultPrefetcher
 		 */
-		$containerBuilder->registerCallback( 'ResultCache', function( $containerBuilder, $cacheType = null ) {
-			$containerBuilder->registerExpectedReturnType( 'ResultCache', '\SMW\Query\Cache\ResultCache' );
-
-			$cacheFactory = $containerBuilder->create( 'CacheFactory' );
+		$containerBuilder->registerCallback( 'CachedQueryResultPrefetcher', function( $containerBuilder, $cacheType = null ) {
+			$containerBuilder->registerExpectedReturnType( 'CachedQueryResultPrefetcher', '\SMW\Query\Result\CachedQueryResultPrefetcher' );
 
 			$settings = $containerBuilder->singleton( 'Settings' );
 			$cacheType = $cacheType === null ? $settings->get( 'smwgQueryResultCacheType' ) : $cacheType;
 
-
-			// Explicitly use the CACHE_DB to access a SqlBagOstuff instance
-			// for a bit more persistence
-			$cacheStats = new CacheStats(
-				$cacheFactory->newMediaWikiCache( CACHE_DB ),
-				ResultCache::STATSD_ID
-			);
-
-			$resultCache = new ResultCache(
+			$cachedQueryResultPrefetcher = new CachedQueryResultPrefetcher(
 				$containerBuilder->singleton( 'Store', null ),
 				$containerBuilder->singleton( 'QueryFactory' ),
 				$containerBuilder->create(
 					'BlobStore',
-					ResultCache::CACHE_NAMESPACE,
+					CachedQueryResultPrefetcher::CACHE_NAMESPACE,
 					$cacheType,
 					$settings->get( 'smwgQueryResultCacheLifetime' )
 				),
-				$cacheStats
+				$containerBuilder->singleton(
+					'BufferedStatsdCollector',
+					CachedQueryResultPrefetcher::STATSD_ID
+				)
 			);
 
-			$resultCache->setCacheKeyExtension(
+			$cachedQueryResultPrefetcher->setDependantHashIdExtension(
 				// If the mix of dataTypes changes then modify the hash
 				$settings->get( 'smwgFulltextSearchIndexableDataTypes' ) .
 
@@ -601,32 +523,47 @@ class SharedServicesContainer implements CallbackContainer {
 				$settings->get( 'smwgUseComparableContentHash' )
 			);
 
-			$resultCache->setLogger(
+			$cachedQueryResultPrefetcher->setLogger(
 				$containerBuilder->singleton( 'MediaWikiLogger' )
 			);
 
-			$resultCache->setNonEmbeddedCacheLifetime(
+			$cachedQueryResultPrefetcher->setNonEmbeddedCacheLifetime(
 				$settings->get( 'smwgQueryResultNonEmbeddedCacheLifetime' )
 			);
 
-			return $resultCache;
+			return $cachedQueryResultPrefetcher;
 		} );
 
 		/**
-		 * @var Stats
+		 * @var CachedPropertyValuesPrefetcher
 		 */
-		$containerBuilder->registerCallback( 'Stats', function( $containerBuilder, $id ) {
-			$containerBuilder->registerExpectedReturnType( 'Stats', '\SMW\Utils\Stats' );
+		$containerBuilder->registerCallback( 'CachedPropertyValuesPrefetcher', function( $containerBuilder, $cacheType = null, $ttl = 604800 ) {
+			$containerBuilder->registerExpectedReturnType( 'CachedPropertyValuesPrefetcher', CachedPropertyValuesPrefetcher::class );
 
-			$cacheFactory = $containerBuilder->create( 'CacheFactory' );
+			$cachedPropertyValuesPrefetcher = new CachedPropertyValuesPrefetcher(
+				$containerBuilder->singleton( 'Store', null ),
+				$containerBuilder->create( 'BlobStore', CachedPropertyValuesPrefetcher::CACHE_NAMESPACE, $cacheType, $ttl )
+			);
+
+			return $cachedPropertyValuesPrefetcher;
+		} );
+
+		/**
+		 * @var BufferedStatsdCollector
+		 */
+		$containerBuilder->registerCallback( 'BufferedStatsdCollector', function( $containerBuilder, $id ) {
+			$containerBuilder->registerExpectedReturnType( 'BufferedStatsdCollector', '\SMW\Utils\BufferedStatsdCollector' );
 
 			// Explicitly use the DB to access a SqlBagOstuff instance
-			$stats = new Stats(
-				$cacheFactory->newMediaWikiCache( CACHE_DB ),
+			$cacheType = CACHE_DB;
+			$ttl = 0;
+
+			$bufferedStatsdCollector = new BufferedStatsdCollector(
+				$containerBuilder->create( 'BlobStore', BufferedStatsdCollector::CACHE_NAMESPACE, $cacheType, $ttl ),
 				$id
 			);
 
-			return $stats;
+			return $bufferedStatsdCollector;
 		} );
 
 		/**
@@ -635,15 +572,9 @@ class SharedServicesContainer implements CallbackContainer {
 		$containerBuilder->registerCallback( 'PropertySpecificationLookup', function( $containerBuilder ) {
 			$containerBuilder->registerExpectedReturnType( 'PropertySpecificationLookup', '\SMW\PropertySpecificationLookup' );
 
-			$contentLanguage = Localizer::getInstance()->getContentLanguage();
-
 			$propertySpecificationLookup = new PropertySpecificationLookup(
-				$containerBuilder->singleton( 'Store', null ),
-				$containerBuilder->singleton( 'EntityCache' )
-			);
-
-			$propertySpecificationLookup->setLanguageCode(
-				$contentLanguage->getCode()
+				$containerBuilder->singleton( 'CachedPropertyValuesPrefetcher' ),
+				$containerBuilder->singleton( 'InMemoryPoolCache' )->getPoolCacheById( PropertySpecificationLookup::POOLCACHE_ID )
 			);
 
 			return $propertySpecificationLookup;
@@ -656,8 +587,8 @@ class SharedServicesContainer implements CallbackContainer {
 			$containerBuilder->registerExpectedReturnType( 'ProtectionValidator', '\SMW\Protection\ProtectionValidator' );
 
 			$protectionValidator = new ProtectionValidator(
-				$containerBuilder->singleton( 'Store', null ),
-				$containerBuilder->singleton( 'EntityCache' )
+				$containerBuilder->singleton( 'CachedPropertyValuesPrefetcher' ),
+				$containerBuilder->singleton( 'InMemoryPoolCache' )->getPoolCacheById( ProtectionValidator::POOLCACHE_ID )
 			);
 
 			$protectionValidator->setEditProtectionRight(
@@ -676,16 +607,16 @@ class SharedServicesContainer implements CallbackContainer {
 		} );
 
 		/**
-		 * @var PermissionManager
+		 * @var PermissionPthValidator
 		 */
-		$containerBuilder->registerCallback( 'PermissionManager', function( $containerBuilder ) {
-			$containerBuilder->registerExpectedReturnType( 'PermissionManager', '\SMW\MediaWiki\PermissionManager' );
+		$containerBuilder->registerCallback( 'PermissionPthValidator', function( $containerBuilder ) {
+			$containerBuilder->registerExpectedReturnType( 'PermissionPthValidator', '\SMW\PermissionPthValidator' );
 
-			$permissionManager = new PermissionManager(
+			$permissionPthValidator = new PermissionPthValidator(
 				$containerBuilder->create( 'ProtectionValidator' )
 			);
 
-			return $permissionManager;
+			return $permissionPthValidator;
 		} );
 
 
@@ -769,62 +700,6 @@ class SharedServicesContainer implements CallbackContainer {
 
 			return $propertyLabelFinder;
 		} );
-
-		/**
-		 * @var DisplayTitleFinder
-		 */
-		$containerBuilder->registerCallback( 'DisplayTitleFinder', function( $containerBuilder, $store = null ) {
-			$containerBuilder->registerExpectedReturnType( 'DisplayTitleFinder', '\SMW\DisplayTitleFinder' );
-
-			$store = $store === null ? $containerBuilder->singleton( 'Store', null ) : $store;
-			$settings = $containerBuilder->singleton( 'Settings' );
-
-			$displayTitleFinder = new DisplayTitleFinder(
-				$store,
-				$containerBuilder->singleton( 'EntityCache' )
-			);
-
-			$displayTitleFinder->setCanUse(
-				$settings->isFlagSet( 'smwgDVFeatures', SMW_DV_WPV_DTITLE )
-			);
-
-			return $displayTitleFinder;
-		} );
-
-		/**
-		 * @var MagicWordsFinder
-		 */
-		$containerBuilder->registerCallback( 'MagicWordsFinder', function( $containerBuilder, $parserOutput = null ) {
-			$containerBuilder->registerExpectedReturnType( 'MagicWordsFinder', '\SMW\MediaWiki\MagicWordsFinder' );
-
-			$magicWordsFinder = new \SMW\MediaWiki\MagicWordsFinder(
-				$parserOutput,
-				$containerBuilder->singleton( 'MagicWordFactory' )
-			);
-
-			return $magicWordsFinder;
-		} );
-
-		/**
-		 * @var DependencyValidator
-		 */
-		$containerBuilder->registerCallback( 'DependencyValidator', function( $containerBuilder, $store = null ) {
-			$containerBuilder->registerExpectedReturnType( 'DependencyValidator', '\SMW\DependencyValidator' );
-
-			$store = $store === null ? $containerBuilder->singleton( 'Store', null ) : $store;
-			$settings = $containerBuilder->singleton( 'Settings' );
-
-			$queryDependencyLinksStoreFactory = $containerBuilder->singleton( 'QueryDependencyLinksStoreFactory' );
-
-			$dependencyValidator = new DependencyValidator(
-				$containerBuilder->create( 'NamespaceExaminer' ),
-				$queryDependencyLinksStoreFactory->newDependencyLinksValidator(),
-				$containerBuilder->singleton( 'EntityCache' )
-			);
-
-			return $dependencyValidator;
-		} );
-
 	}
 
 }

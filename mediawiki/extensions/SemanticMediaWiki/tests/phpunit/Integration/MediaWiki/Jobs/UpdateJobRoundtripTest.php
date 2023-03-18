@@ -90,7 +90,10 @@ class UpdateJobRoundtripTest extends MwDBaseUnitTestCase {
 			->createPage( $oldTitle )
 			->doEdit( '[[Has jobqueue test::UpdateJob]]' );
 
-		$this->pageCreator->doMoveTo( $newTitle, true );
+		$this->pageCreator
+			->getPage()
+			->getTitle()
+			->moveTo( $newTitle, false, 'test', true );
 
 		// Execute the job directly
 		// $this->assertJob( 'SMW\UpdateJob' );

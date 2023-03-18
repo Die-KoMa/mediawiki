@@ -48,13 +48,13 @@ class PersonalUrls extends HookHandler {
 		$watchlist = $this->getOption( 'smwgJobQueueWatchlist', [] );
 
 		if ( $this->getOption( 'prefs-jobqueue-watchlist' ) !== null && $watchlist !== [] ) {
-			$personalUrls = $this->getJobQueueWatchlist( $watchlist, $personalUrls );
+			$this->addJobQueueWatchlist( $watchlist, $personalUrls );
 		}
 
 		return true;
 	}
 
-	private function getJobQueueWatchlist( $watchlist, $personalUrls ) {
+	private function addJobQueueWatchlist( $watchlist, &$personalUrls ) {
 
 		$queue = [];
 
@@ -62,14 +62,8 @@ class PersonalUrls extends HookHandler {
 			$size = $this->jobQueue->getQueueSize( $job );
 
 			if ( $size > 0 ) {
-				$queue[$job] = $size;
+				$queue[$job] = $this->humanReadable( $size );
 			}
-		}
-
-		arsort( $queue );
-
-		foreach ( $queue as $job => $size ) {
-			$queue[$job] = $this->humanReadable( $size );
 		}
 
 		$out = $this->skin->getOutput();
@@ -79,7 +73,7 @@ class PersonalUrls extends HookHandler {
 		$out->addJsConfigVars( 'smwgJobQueueWatchlist', $queue );
 
 		$personalUrl['smw-jobqueue-watchlist'] = [
-			'text'   => 'ⅉ [ ' . ( $queue === [] ? '0' : implode( ' | ', $queue ) ) . ' ]',
+			'text'   => 'ⅉ [ ' . ( $queue === [] ? '0' : implode( ' | ', $queue ) ) . ' ]' ,
 			'href'   => '#',
 			'class'  => 'smw-personal-jobqueue-watchlist is-disabled',
 			'active' => true
@@ -88,7 +82,7 @@ class PersonalUrls extends HookHandler {
 		$keys = array_keys( $personalUrls );
 
 		// Insert the link before the watchlist
-		return $this->splice(
+		$personalUrls = $this->splice(
 			$personalUrls,
 			$personalUrl,
 			array_search( 'watchlist', $keys )

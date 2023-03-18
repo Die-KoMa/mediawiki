@@ -17,21 +17,20 @@ use SMW\Protection\ProtectionValidator;
 class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 	private $dataItemFactory;
-	private $store;
-	private $entityCache;
+	private $cachedPropertyValuesPrefetcher;
+	private $cache;
 
 	protected function setUp() {
 		parent::setUp();
 
 		$this->dataItemFactory = new DataItemFactory();
 
-		$this->store = $this->getMockBuilder( '\SMW\store' )
+		$this->cachedPropertyValuesPrefetcher = $this->getMockBuilder( '\SMW\CachedPropertyValuesPrefetcher' )
 			->disableOriginalConstructor()
-			->getMockForAbstractClass();
+			->getMock();
 
-		$this->entityCache = $this->getMockBuilder( '\SMW\EntityCache' )
+		$this->cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
 			->disableOriginalConstructor()
-			->setMethods( [ 'save', 'contains', 'fetch', 'associate', 'invalidate' ] )
 			->getMock();
 	}
 
@@ -39,15 +38,15 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			ProtectionValidator::class,
-			new ProtectionValidator( $this->store, $this->entityCache )
+			new ProtectionValidator( $this->cachedPropertyValuesPrefetcher, $this->cache )
 		);
 	}
 
 	public function testSetGetEditProtectionRight() {
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$instance->setEditProtectionRight(
@@ -65,11 +64,11 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_MAIN, '', 'Bar' );
 		$property = $this->dataItemFactory->newDIProperty( '_EDIP' );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'contains' )
 			->will( $this->returnValue( false ) );
 
-		$this->store->expects( $this->once() )
+		$this->cachedPropertyValuesPrefetcher->expects( $this->once() )
 			->method( 'getPropertyValues' )
 			->with(
 				$this->equalTo( $subject->asBase() ),
@@ -77,8 +76,8 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( [ $this->dataItemFactory->newDIBoolean( true ) ] ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$instance->setEditProtectionRight(
@@ -95,11 +94,11 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_MAIN, '', 'Bar' );
 		$property = $this->dataItemFactory->newDIProperty( '_EDIP' );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'contains' )
 			->will( $this->returnValue( false ) );
 
-		$this->store->expects( $this->once() )
+		$this->cachedPropertyValuesPrefetcher->expects( $this->once() )
 			->method( 'getPropertyValues' )
 			->with(
 				$this->equalTo( $subject->asBase() ),
@@ -107,8 +106,8 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( [ $this->dataItemFactory->newDIBoolean( true ) ] ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$this->assertTrue(
@@ -120,17 +119,17 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_MAIN, '', 'Bar' );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'contains' )
 			->will( $this->returnValue( true ) );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'fetch' )
 			->will( $this->returnValue( false ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$this->assertFalse(
@@ -142,38 +141,17 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_CATEGORY );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'contains' )
 			->will( $this->returnValue( true ) );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'fetch' )
 			->will( $this->returnValue( false ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
-		);
-
-		$this->assertFalse(
-			$instance->hasChangePropagationProtection( $subject->getTitle() )
-		);
-	}
-
-	public function testHasChangePropagationProtectionOnCategory_Disabled() {
-
-		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_CATEGORY );
-
-		$this->entityCache->expects( $this->never() )
-			->method( 'contains' );
-
-		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
-		);
-
-		$instance->setChangePropagationProtection(
-			false
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$this->assertFalse(
@@ -185,17 +163,17 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_CATEGORY );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'contains' )
 			->will( $this->returnValue( true ) );
 
-		$this->entityCache->expects( $this->once() )
+		$this->cache->expects( $this->once() )
 			->method( 'fetch' )
-			->will( $this->returnValue( 'yes' ) );
+			->will( $this->returnValue( true ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$this->assertTrue(
@@ -207,12 +185,12 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$subject = $this->dataItemFactory->newDIWikiPage( 'Foo', NS_CATEGORY );
 
-		$this->entityCache->expects( $this->never() )
+		$this->cache->expects( $this->never() )
 			->method( 'contains' );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$instance->setChangePropagationProtection(
@@ -227,8 +205,8 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 	public function testSetGetCreateProtectionRight() {
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$instance->setCreateProtectionRight(
@@ -252,8 +230,8 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 			->will( $this->returnValue( false ) );
 
 		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
+			$this->cachedPropertyValuesPrefetcher,
+			$this->cache
 		);
 
 		$instance->setCreateProtectionRight(
@@ -262,30 +240,6 @@ class ProtectionValidatorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertTrue(
 			$instance->hasCreateProtection( $title )
-		);
-	}
-
-	public function testHasCreateProtection_NullTitle() {
-
-		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
-		);
-
-		$this->assertFalse(
-			$instance->hasCreateProtection( null )
-		);
-	}
-
-	public function testHasEditProtection_NullTitle() {
-
-		$instance = new ProtectionValidator(
-			$this->store,
-			$this->entityCache
-		);
-
-		$this->assertFalse(
-			$instance->hasEditProtection( null )
 		);
 	}
 

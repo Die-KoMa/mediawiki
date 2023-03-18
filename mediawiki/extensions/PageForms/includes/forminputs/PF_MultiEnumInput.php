@@ -1,10 +1,13 @@
 <?php
 /**
+ * File holding the PFMultiEnumInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFMultiEnumInput class.
  * The base class for every form input that holds a list of elements, each
  * one from a pre-set enumeration of values.
  *
@@ -13,28 +16,28 @@
 abstract class PFMultiEnumInput extends PFEnumInput {
 
 	public static function getOtherPropTypesHandled() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherPropTypeListsHandled() {
-		return [ 'enumeration' ];
+		return array( 'enumeration' );
 	}
 
 	public static function getOtherCargoTypesHandled() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherCargoTypeListsHandled() {
-		return [ 'Enumeration' ];
+		return array( 'Enumeration' );
 	}
 
 	public static function getParameters() {
 		$params = parent::getParameters();
-		$params[] = [
+		$params[] = array(
 			'name' => 'delimiter',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_delimiter' )->text()
-		];
+		);
 		return $params;
 	}
 }

@@ -7,7 +7,6 @@ use ReflectionClass;
 use SMW\DIProperty;
 use SMW\DIWikiPage;
 use SMW\Factbox\Factbox;
-use SMW\Factbox\CheckMagicWords;
 use SMW\ParserData;
 use SMW\SemanticData;
 use SMW\TableFormatter;
@@ -42,14 +41,25 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 		parent::tearDown();
 	}
 
-	public function testCreateTable() {
+	public function testCanConstruct() {
 
-		$checkMagicWords = new CheckMagicWords(
-			[
-				'smwgShowFactboxEdit' => SMW_FACTBOX_NONEMPTY,
-				'showFactbox' => SMW_FACTBOX_NONEMPTY
-			]
+		$store = $this->getMockBuilder( '\SMW\Store' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
+		$parserData = $this->getMockBuilder( '\SMW\ParserData' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->assertInstanceOf(
+			Factbox::class,
+			new Factbox( $store, $parserData )
 		);
+	}
+
+	public function testGetContent() {
+
+		$text = __METHOD__;
 
 		$parserData = new ParserData(
 			Title::newFromText( __METHOD__ ),
@@ -60,14 +70,108 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMockForAbstractClass();
 
-		$instance = new Factbox(
-			$store,
-			$parserData
+		// Build Factbox stub object to encapsulate the method
+		// without the need for other dependencies to occur
+		$instance = $this->getMockBuilder( '\SMW\Factbox\Factbox' )
+			->setConstructorArgs( [
+				$store,
+				$parserData
+			] )
+			->setMethods( [ 'fetchContent', 'getMagicWords' ] )
+			->getMock();
+
+		$instance->expects( $this->any() )
+			->method( 'getMagicWords' )
+			->will( $this->returnValue( 'Lula' ) );
+
+		$instance->expects( $this->any() )
+			->method( 'fetchContent' )
+			->will( $this->returnValue( $text ) );
+
+		$this->assertFalse( $instance->isVisible() );
+
+		$instance->doBuild();
+
+		$this->assertInternalType(
+			'string',
+			$instance->getContent()
 		);
 
-		$instance->setCheckMagicWords(
-			$checkMagicWords
+		$this->assertEquals(
+			$text,
+			$instance->getContent()
 		);
+
+		$this->assertTrue( $instance->isVisible() );
+	}
+
+	public function testGetContentRoundTripForNonEmptyContent() {
+
+		$subject = DIWikiPage::newFromTitle( Title::newFromText( __METHOD__ ) );
+
+		$this->testEnvironment->addConfiguration( 'smwgShowFactbox', SMW_FACTBOX_NONEMPTY );
+
+		$store = $this->getMockBuilder( '\SMW\Store' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
+		$semanticData = $this->getMockBuilder( '\SMW\SemanticData' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$semanticData->expects( $this->any() )
+			->method( 'getSubject' )
+			->will( $this->returnValue( $subject ) );
+
+		$semanticData->expects( $this->any() )
+			->method( 'hasVisibleProperties' )
+			->will( $this->returnValue( true ) );
+
+		$semanticData->expects( $this->any() )
+			->method( 'getPropertyValues' )
+			->will( $this->returnValue( [ $subject ] ) );
+
+		$semanticData->expects( $this->any() )
+			->method( 'getProperties' )
+			->will( $this->returnValue( [ DIProperty::newFromUserLabel( 'SomeFancyProperty' ) ] ) );
+
+		$parserOutput = $this->setupParserOutput( $semanticData );
+
+		$instance = new Factbox(
+			$store,
+			new ParserData( $subject->getTitle(), $parserOutput )
+		);
+
+		$result = $instance->doBuild()->getContent();
+
+		$this->assertInternalType(
+			'string',
+			$result
+		);
+
+		$this->assertContains(
+			$subject->getDBkey(),
+			 $result
+		);
+
+		$this->assertEquals(
+			$subject->getTitle(),
+			$instance->getTitle()
+		);
+	}
+
+	public function testCreateTable() {
+
+		$parserData = new ParserData(
+			Title::newFromText( __METHOD__ ),
+			new ParserOutput()
+		);
+
+		$store = $this->getMockBuilder( '\SMW\Store' )
+			->disableOriginalConstructor()
+			->getMockForAbstractClass();
+
+		$instance = new Factbox( $store, $parserData );
 
 		$reflector = new ReflectionClass( '\SMW\Factbox\Factbox' );
 		$createTable  = $reflector->getMethod( 'createTable' );
@@ -82,18 +186,13 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 	public function testTabs() {
 
 		$this->assertContains(
-			'tab-facts-list',
+			'tab-facts-rendered',
 			Factbox::tabs( 'Foo' )
 		);
 
 		$this->assertContains(
-			'tab-facts-attachment',
-			Factbox::tabs( 'Foo', 'Bar' )
-		);
-
-		$this->assertContains(
 			'tab-facts-derived',
-			Factbox::tabs( 'Foo', 'Bar','Foobar' )
+			Factbox::tabs( 'Foo', 'Bar' )
 		);
 	}
 
@@ -130,13 +229,6 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 	 * @dataProvider contentDataProvider
 	 */
 	public function testGetContentDataSimulation( $setup, $expected ) {
-
-		$checkMagicWords = new CheckMagicWords(
-			[
-				'smwgShowFactboxEdit' => SMW_FACTBOX_NONEMPTY,
-				'showFactbox' => $setup['showFactbox']
-			]
-		);
 
 		$semanticData = $this->getMockBuilder( '\SMW\SemanticData' )
 			->disableOriginalConstructor()
@@ -183,10 +275,6 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 			] )
 			->setMethods( [ 'createTable' ] )
 			->getMock();
-
-		$factbox->setCheckMagicWords(
-			$checkMagicWords
-		);
 
 		$factbox->expects( $this->any() )
 			->method( 'createTable' )
@@ -278,13 +366,6 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 
 	public function testGetTableHeader() {
 
-		$checkMagicWords = new CheckMagicWords(
-			[
-				'smwgShowFactboxEdit' => SMW_FACTBOX_NONEMPTY,
-				'showFactbox' => SMW_FACTBOX_NONEMPTY
-			]
-		);
-
 		$title = Title::newFromText( __METHOD__ );
 
 		$parserData = new ParserData(
@@ -302,22 +383,13 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMockForAbstractClass();
 
-		$instance = new Factbox(
-			$store,
-			$parserData
-		);
-
-		$instance->setCheckMagicWords(
-			$checkMagicWords
-		);
-
-		$instance->doBuild();
+		$instance = new Factbox( $store, $parserData );
 
 		$this->stringValidator->assertThatStringContains(
 			[
 				'div class="smwrdflink"'
 			],
-			$instance->getContent()
+			$instance->doBuild()->getContent()
 		);
 	}
 
@@ -325,13 +397,6 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 	 * @dataProvider tableContentDataProvider
 	 */
 	public function testGetTableContent( $test, $expected ) {
-
-		$checkMagicWords = new CheckMagicWords(
-			[
-				'smwgShowFactboxEdit' => SMW_FACTBOX_NONEMPTY,
-				'showFactbox' => SMW_FACTBOX_NONEMPTY
-			]
-		);
 
 		$title = Title::newFromText( __METHOD__ );
 
@@ -377,20 +442,11 @@ class FactboxTest extends \PHPUnit_Framework_TestCase {
 			DIWikiPage::newFromTitle( $title )
 		);
 
-		$instance = new Factbox(
-			$store,
-			$parserData
-		);
-
-		$instance->setCheckMagicWords(
-			$checkMagicWords
-		);
-
-		$instance->doBuild();
+		$instance = new Factbox( $store, $parserData );
 
 		$this->stringValidator->assertThatStringContains(
 			$expected,
-			$instance->getContent()
+			$instance->doBuild()->getContent()
 		);
 	}
 

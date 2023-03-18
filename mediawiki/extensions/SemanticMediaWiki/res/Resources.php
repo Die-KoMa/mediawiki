@@ -36,17 +36,9 @@ return [
 			'smw/ext.smw.dropdown.css',
 			'smw/ext.smw.table.css',
 			'smw/ext.smw.tabs.css',
-			'smw/factbox/smw.factbox.css',
-			'smw/smw.indicators.css'
+			'smw/ext.smw.factbox.css'
 		],
 		'position' => 'top',
-		'targets' => [ 'mobile', 'desktop' ]
-	],
-
-	'ext.smw.special.styles' => $moduleTemplate + [
-		'styles' => [
-			'smw/special/smw.special.preferences.css'
-		],
 		'targets' => [ 'mobile', 'desktop' ]
 	],
 
@@ -60,14 +52,6 @@ return [
 		'styles' => [
 			'jquery/jquery.selectmenu.css',
 			'smw/smw.selectmenu.css'
-		],
-		'position' => 'top',
-		'targets' => [ 'mobile', 'desktop' ]
-	],
-
-	'smw.summarytable' => $moduleTemplate + [
-		'styles' => [
-			'smw/smw.summarytable.css'
 		],
 		'position' => 'top',
 		'targets' => [ 'mobile', 'desktop' ]
@@ -106,16 +90,6 @@ return [
 		]
 	],
 
-	'jquery.jsonview' => $moduleTemplate + [
-		'scripts' => 'jquery/jquery.jsonview.js',
-		'styles' => 'jquery/jquery.jsonview.css',
-		'position' => 'top',
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
 	// Load the module explicitly, otherwise mobile will complain with
 	// "Uncaught Error: Unknown dependency: jquery.async"
 	'ext.jquery.async' => $moduleTemplate + [
@@ -127,7 +101,7 @@ return [
 	// jStorage was added in MW 1.20
 	'ext.jquery.jStorage' => $moduleTemplate + [
 		'scripts' => 'jquery/jquery.jstorage.js',
-		'dependencies' => version_compare( MW_VERSION, '1.29', '<' ) ? 'json' : [],
+		'dependencies' => version_compare( $GLOBALS['wgVersion'], '1.29', '<' ) ? 'json' : [],
 	],
 
 	// md5 hash key generator
@@ -214,6 +188,10 @@ return [
 	// Tooltip
 	'ext.smw.tooltip.styles' => $moduleTemplate + [
 		'styles' => [
+			// Style dependencies don't work
+			// therefore make sure to load it
+			// together
+			'jquery/jquery.qtip.css',
 			'smw/util/ext.smw.util.tooltip.css'
 		],
 		'position' => 'top',
@@ -221,7 +199,7 @@ return [
 	],
 
 	// Tooltip
-	'ext.smw.tooltip.old' => $moduleTemplate + [
+	'ext.smw.tooltip' => $moduleTemplate + [
 		'scripts' => 'smw/util/ext.smw.util.tooltip.js',
 		'dependencies' => [
 			'ext.smw.tooltip.styles',
@@ -240,19 +218,10 @@ return [
 		'targets' => [ 'mobile', 'desktop' ]
 	],
 
-	// Tooltip
-	'ext.smw.tooltip' => $moduleTemplate + [
-		'dependencies' => [
-			'ext.smw.tooltip.styles',
-			'smw.tippy'
-		],
-		'targets' => [ 'mobile', 'desktop' ]
-	],
-
 	'ext.smw.tooltips' => $moduleTemplate + [
 		'dependencies' => [
 			'ext.smw.style',
-			'smw.tippy'
+			'ext.smw.tooltip'
 		],
 		'targets' => [ 'mobile', 'desktop' ]
 	],
@@ -268,8 +237,7 @@ return [
 	'ext.smw.purge' => $moduleTemplate + [
 		'scripts' => 'smw/util/ext.smw.util.purge.js',
 		'messages' => [
-			'smw-purge-failed',
-			'smw-purge-update-dependencies'
+			'smw-purge-failed'
 		],
 		'position' => 'top',
 		'targets' => [
@@ -544,12 +512,12 @@ return [
 	'ext.smw.admin' => $moduleTemplate + [
 		'scripts' => 'smw/special/ext.smw.special.admin.js',
 		'dependencies' => [
-			'mediawiki.api',
-			'smw.jsonview'
+			'mediawiki.api'
 		],
 		'messages' => [
 			'smw-no-data-available',
-			'smw-list-count'
+			'smw-list-count',
+			'smw-list-count-from-cache'
 		],
 		'position' => 'top',
 		'targets' => [
@@ -566,9 +534,7 @@ return [
 			'mediawiki.api'
 		],
 		'messages' => [
-			'smw-personal-jobqueue-watchlist',
-			'smw-personal-jobqueue-watchlist-explain',
-			'brackets'
+			'smw-personal-jobqueue-watchlist'
 		],
 		'position' => 'top',
 		'targets' => [
@@ -685,121 +651,10 @@ return [
 	// Schema content styles
 	'smw.content.schema' => $moduleTemplate + [
 		'styles' => [
-			'smw/content/smw.schema.css',
+			'smw/smw.schema.css',
 			'smw/ext.smw.table.css'
 		],
 		'position' => 'top',
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
-	'smw.factbox'  => $moduleTemplate + [
-		'scripts'  => [
-			'libs/tinysort/tinysort.min.js',
-			'smw/factbox/smw.factbox.js'
-		]
-	],
-
-	'smw.content.schemaview' => $moduleTemplate + [
-		'scripts' => [
-			'smw/content/smw.schemaview.js'
-		],
-		'dependencies'  => [
-			'smw.jsonview'
-		],
-		'position' => 'top',
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
-	'smw.jsonview' => $moduleTemplate + [
-		'scripts' => [
-			'smw/smw.jsonview.js'
-		],
-		'styles' => [
-			'smw/smw.jsonview.css'
-		],
-		'messages' => [
-			'smw-expand',
-			'smw-collapse',
-			'smw-copy',
-			'smw-copy-clipboard-title',
-			'smw-jsonview-expand-title',
-			'smw-jsonview-collapse-title'
-		],
-		'dependencies'  => [
-			'jquery.jsonview',
-			'ext.smw'
-		],
-		'position' => 'top',
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
-	'ext.libs.tippy'  => $moduleTemplate + [
-		'position' => 'top',
-		'styles' => [
-			'libs/tippy/tippy.css',
-			'libs/tippy/light-border.css',
-			'libs/tippy/light.css'
-		],
-		'scripts'  => [
-			'libs/tippy/popper.min.js',
-			'libs/tippy/tippy.js'
-		],
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
-	'smw.tippy'  => $moduleTemplate + [
-		'position' => 'top',
-		'styles' => [
-			'smw/util/smw.tippy.css'
-		],
-		'scripts'  => [
-			'smw/util/smw.tippy.js'
-		],
-		'dependencies'  => [
-			'ext.smw',
-			'mediawiki.api',
-			'ext.libs.tippy',
-		],
-		'messages' => [
-			'smw-ui-tooltip-title-property',
-			'smw-ui-tooltip-title-quantity',
-			'smw-ui-tooltip-title-info',
-			'smw-ui-tooltip-title-service',
-			'smw-ui-tooltip-title-warning',
-			'smw-ui-tooltip-title-parameter',
-			'smw-ui-tooltip-title-event',
-			'smw-ui-tooltip-title-error',
-			'smw-ui-tooltip-title-note',
-			'smw-ui-tooltip-title-legend',
-			'smw-ui-tooltip-title-reference'
-		],
-		'targets' => [
-			'mobile',
-			'desktop'
-		]
-	],
-
-	'smw.check.replication'  => $moduleTemplate + [
-		'position' => 'top',
-		'scripts'  => [
-			'smw/util/smw.check.replication.js'
-		],
-		'dependencies'  => [
-			'mediawiki.api',
-			'smw.tippy',
-		],
 		'targets' => [
 			'mobile',
 			'desktop'

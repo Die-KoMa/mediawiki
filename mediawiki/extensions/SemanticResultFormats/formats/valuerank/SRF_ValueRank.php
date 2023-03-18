@@ -91,8 +91,8 @@ class SRFValueRank extends SMWResultPrinter {
 					}
 
 					// Get the HTML for the tag content. Pages are linked, other stuff is just plaintext.
-					if ( $dataValue->getTypeID() == '_wpg' && $dataValue->getDataItem()->getTitle() !== null ) {
-						$value = $dataValue->getDataItem()->getTitle()->getText();
+					if ( $dataValue->getTypeID() == '_wpg' ) {
+						$value = $dataValue->getTitle()->getText();
 						$html = $dataValue->getLongText( $outputMode, $this->getLinker( $isSubject ) );
 					} else {
 						$html = $dataValue->getShortText( $outputMode, $this->getLinker( false ) );
@@ -230,12 +230,12 @@ class SRFValueRank extends SMWResultPrinter {
 		];
 
 		$params['template'] = [
-			'message' => 'smw-paramdesc-template',
+			'message' => 'srf-paramdesc-template',
 			'default' => '',
 		];
 
 		$params['userparam'] = [
-			'message' => 'smw-paramdesc-userparam',
+			'message' => 'srf-paramdesc-userparam',
 			'default' => '',
 		];
 
@@ -256,7 +256,7 @@ class SRFValueRank extends SMWResultPrinter {
 		];
 
 		$params['class'] = [
-			'message' => 'smw-paramdesc-class',
+			'message' => 'srf-paramdesc-class',
 			'default' => '',
 		];
 

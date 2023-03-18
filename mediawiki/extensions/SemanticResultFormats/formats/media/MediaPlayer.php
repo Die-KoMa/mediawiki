@@ -5,14 +5,12 @@ namespace SRF;
 use File;
 use FormatJson;
 use Html;
-use MediaWiki\MediaWikiServices;
 use Skin;
 use SMW\ResultPrinter;
 use SMWDataItem;
 use SMWDataValue;
 use SMWOutputs;
 use SMWQueryResult;
-use SMWResultArray;
 use SRFUtils;
 use Title;
 
@@ -20,7 +18,7 @@ use Title;
  * HTML5 Audio / Video media query printer
  *
  * This printer integrates jPlayer which is a HTML5 Audio / Video
- * Javascript library under GPL/MIT license.
+ * Javascript libray under GPL/MIT license.
  *
  * @see http://www.semantic-mediawiki.org/wiki/Help:Media_format
  *
@@ -72,17 +70,17 @@ class MediaPlayer extends ResultPrinter {
 		$data = $this->getResultData( $result, $outputMode );
 
 		// Check if the data processing returned any results otherwise just bailout
-		if ( $data !== [] ) {
+		if ( $data === [] ) {
+			if ( $this->params['default'] !== '' ) {
+				return $this->params['default'];
+			} else {
+				$result->addErrors( [ $this->msg( 'srf-no-results' )->inContentLanguage()->text() ] );
+				return '';
+			}
+		} else {
 			// Return formatted results
 			return $this->getFormatOutput( $data );
 		}
-
-		if ( $this->params[ 'default' ] !== '' ) {
-			return $this->params[ 'default' ];
-		}
-
-		$result->addErrors( [ $this->msg( 'srf-no-results' )->inContentLanguage()->text() ] );
-		return '';
 	}
 
 	/**
@@ -141,6 +139,7 @@ class MediaPlayer extends ResultPrinter {
 					// Get other data value item details
 					$value = $this->getDataValueItem(
 						$propertyLabel,
+						$dataValue->getDataItem()->getDIType(),
 						$dataValue,
 						$mediaType,
 						$mimeType,
@@ -167,15 +166,11 @@ class MediaPlayer extends ResultPrinter {
 	 * @since 1.9
 	 *
 	 * @param Title $title
-	 *
-	 * @return string[]
-	 *
 	 */
 	private function getMediaSource( Title $title ) {
 
 		// Find the file source
-		$source = $this->findFile( $title );
-
+		$source = wfFindFile( $title );
 		if ( $source ) {
 			// $source->getExtension() returns ogg even though it is a ogv/oga (same goes for m4p) file
 			// this doesn't help much therefore we do it ourselves
@@ -203,49 +198,39 @@ class MediaPlayer extends ResultPrinter {
 	/**
 	 * Returns single data value item
 	 *
+	 * @since 1.9
+	 *
 	 * @param string $label
+	 * @param integer $type
 	 * @param SMWDataValue $dataValue
 	 * @param string $mediaType
 	 * @param string $mimeType
 	 *
-	 * @param $rowData
-	 *
 	 * @return mixed
-	 * @since 1.9
-	 *
 	 */
-	private function getDataValueItem( &$label, SMWDataValue $dataValue, &$mediaType, &$mimeType, &$rowData ) {
+	private function getDataValueItem( &$label, $type, SMWDataValue $dataValue, &$mediaType, &$mimeType, &$rowData ) {
 
-		$dataItem = $dataValue->getDataItem();
-		$type = $dataItem->getDIType();
+		if ( $type == SMWDataItem::TYPE_WIKIPAGE && $dataValue->getTitle()->getNamespace() === NS_FILE ) {
 
-		if ( $type === SMWDataItem::TYPE_WIKIPAGE ) {
+			if ( $label === 'source' && $mimeType === null ) {
 
-			$title = $dataItem->getTitle();
+				// Identify the media source
+				// and get media information
+				list( $mediaType, $mimeType, $source ) = $this->getMediaSource( $dataValue->getTitle() );
+				$label = $mimeType;
+				return $source;
+			} elseif ( $label === 'poster' ) {
+				$mediaType = 'video';
 
-			if ( $title instanceof Title && $title->getNamespace() === NS_FILE ) {
-
-				if ( $label === 'source' && $mimeType === null ) {
-
-					// Identify the media source
-					// and get media information
-					list( $mediaType, $mimeType, $source ) = $this->getMediaSource( $title );
-					$label = $mimeType;
-					return $source;
-				} elseif ( $label === 'poster' ) {
-					$mediaType = 'video';
-
-					// Get the cover art image url
-					$source = $this->findFile( $title );
-
-					return $source->getUrl();
-				}
+				// Get the cover art image url
+				$source = wfFindFile( $dataValue->getTitle() );
+				return $source->getUrl();
 			}
 		}
 
-		if ( $type === SMWDataItem::TYPE_URI ) {
+		if ( $type == SMWDataItem::TYPE_URI ) {
 
-			$source = $dataItem->getURI();
+			$source = $dataValue->getDataItem()->getURI();
 			$mimeType = '';
 
 			// Get file extension from the URI
@@ -308,7 +293,7 @@ class MediaPlayer extends ResultPrinter {
 		];
 
 		$requireHeadItem = [ $ID => FormatJson::encode( $output ) ];
-		SMWOutputs::requireHeadItem( $ID, SRFUtils::makeVariablesScript( $requireHeadItem, false ) );
+		SMWOutputs::requireHeadItem( $ID, Skin::makeVariablesScript( $requireHeadItem ) );
 
 		SMWOutputs::requireResource( 'ext.jquery.jplayer.skin.' . $this->params['theme'] );
 		SMWOutputs::requireResource( 'ext.srf.formats.media' );
@@ -362,19 +347,5 @@ class MediaPlayer extends ResultPrinter {
 		];
 
 		return $params;
-	}
-
-	/**
-	 * @param Title $title
-	 *
-	 * @return bool|File
-	 */
-	private function findFile( Title $title ) {
-
-		if ( method_exists( MediaWikiServices::class, 'getRepoGroup' ) ) {
-			return MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title );
-		}
-
-		return wfFindFile( $title ); // TODO: Remove when min MW version is 1.34
 	}
 }

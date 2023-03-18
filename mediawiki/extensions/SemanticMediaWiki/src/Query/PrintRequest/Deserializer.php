@@ -5,7 +5,6 @@ namespace SMW\Query\PrintRequest;
 use InvalidArgumentException;
 use SMW\DataValueFactory;
 use SMW\DataValues\PropertyChainValue;
-use SMW\DataValues\PropertyValue;
 use SMW\Localizer;
 use SMW\Query\PrintRequest;
 use Title;
@@ -30,32 +29,23 @@ class Deserializer {
 	 * @since 2.5
 	 *
 	 * @param string $text
-	 * @param array $options
+	 * @param boolean $showMode = false
 	 *
 	 * @return PrintRequest|null
 	 */
-	public static function deserialize( $text, array $options = [] ) {
-		$showMode = false;
-		$useCanonicalLabel = false;
-
-		if ( isset( $options['show_mode'] ) ) {
-			$showMode = $options['show_mode'];
-		}
-
-		if ( isset( $options['canonical_label'] ) ) {
-			$useCanonicalLabel = $options['canonical_label'];
-		}
+	public static function deserialize( $text, $showMode = false ) {
 
 		list( $parts, $outputFormat, $printRequestLabel ) = self::getPartsFromText(
 			$text
 		);
 
-		// default
-		$label = '';
 		$data = null;
 
 		if ( $printRequestLabel === '' ) { // print "this"
 			$printmode = PrintRequest::PRINT_THIS;
+
+			// default
+			$label = '';
 
 			// Distinguish the case of an empty format
 			if ( $outputFormat === '' ) {
@@ -64,25 +54,17 @@ class Deserializer {
 
 		} elseif ( self::isCategory( $printRequestLabel ) ) { // print categories
 			$printmode = PrintRequest::PRINT_CATS;
-
-			if ( $showMode === false ) {
-				$label = Localizer::getInstance()->getNamespaceTextById( NS_CATEGORY );
-			}
+			$label = $showMode ? '' : Localizer::getInstance()->getNamespaceTextById( NS_CATEGORY ); // default
 		} elseif ( PropertyChainValue::isChained( $printRequestLabel ) ) {
-			$printmode = PrintRequest::PRINT_CHAIN;
 
-			$data = DataValueFactory::getInstance()->newDataValueByType(
-				PropertyChainValue::TYPE_ID
-			);
-
-			$data->setOption( PropertyValue::OPT_CANONICAL_LABEL, $useCanonicalLabel );
+			$data = DataValueFactory::getInstance()->newDataValueByType( PropertyChainValue::TYPE_ID );
 			$data->setUserValue( $printRequestLabel );
 
-			if ( $showMode === false ) {
-				$label = $data->getLastPropertyChainValue()->getWikiValue();
-			}
+			$printmode = PrintRequest::PRINT_CHAIN;
+			$label = $showMode ? '' : $data->getLastPropertyChainValue()->getWikiValue();  // default
+
 		} else { // print property or check category
-			$title = Title::newFromText( $printRequestLabel, SMW_NS_PROPERTY );
+			$title = Title::newFromText( $printRequestLabel, SMW_NS_PROPERTY ); // trim needed for \n
 
 			// not a legal property/category name; give up
 			if ( $title === null ) {
@@ -92,28 +74,14 @@ class Deserializer {
 			if ( $title->getNamespace() == NS_CATEGORY ) {
 				$printmode = PrintRequest::PRINT_CCAT;
 				$data = $title;
-
-				if ( $showMode === false ) {
-					$label = $title->getText();
-				}
-			} else {
+				$label = $showMode ? '' : $title->getText();  // default
+			} else { // enforce interpretation as property (even if it starts with something that looks like another namespace)
 				$printmode = PrintRequest::PRINT_PROP;
-
-				// Enforce interpretation as property (even if it starts with
-				// something that looks like another namespace)
-				$data = DataValueFactory::getInstance()->newPropertyValueByLabel(
-					$printRequestLabel
-				);
-
-				$data->setOption( PropertyValue::OPT_CANONICAL_LABEL, $useCanonicalLabel );
-
+				$data = DataValueFactory::getInstance()->newPropertyValueByLabel( $printRequestLabel );
 				if ( !$data->isValid() ) { // not a property; give up
 					return null;
 				}
-
-				if ( $showMode === false ) {
-					$label = $data->getWikiValue();
-				}
+				$label = $showMode ? '' : $data->getWikiValue();  // default
 			}
 		}
 
@@ -155,14 +123,12 @@ class Deserializer {
 
 	private static function isCategory( $text ) {
 
-		$text = mb_convert_case( $text, MB_CASE_TITLE );
-
 		// Check for the canonical form (singular, plural)
 		if ( $text == 'Category' || $text == 'Categories' ) {
 			return true;
 		}
 
-		return Localizer::getInstance()->getNamespaceTextById( NS_CATEGORY ) == $text;
+		return Localizer::getInstance()->getNamespaceTextById( NS_CATEGORY ) == mb_convert_case( $text, MB_CASE_TITLE );
 	}
 
 	private static function getPartsFromText( $text ) {
@@ -188,7 +154,7 @@ class Deserializer {
 		$printRequestLabel = trim( $propparts[0] );
 		$outputFormat = isset( $propparts[1] ) ? trim( $propparts[1] ) : false;
 
-		return [ $parts, $outputFormat, smwfNormalTitleText( $printRequestLabel ) ];
+		return [ $parts, $outputFormat, $printRequestLabel ];
 	}
 
 }

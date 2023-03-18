@@ -35,6 +35,11 @@ window.PF_DP_init = function ( input_id, params ) {
 
 	if ( params.disabled ) {
 
+		// append inert reset button if image is set
+		if ( params.resetButtonImage && !params.partOfDTP ) {
+			inputShow.after( '<button type="button" class="ui-datepicker-trigger' + params.userClasses + '" disabled><img src="' + params.resetButtonImage + '" alt="..." title="..."></button>' );
+		}
+
 		// append inert datepicker button
 		inputShow.after( '<button type="button" class="ui-datepicker-trigger' + params.userClasses + '" disabled><img src="' + params.buttonImage + '" alt="..." title="..."></button>' );
 
@@ -47,6 +52,16 @@ window.PF_DP_init = function ( input_id, params ) {
 
 	} else {
 
+		// append reset button if image is set
+		if ( params.resetButtonImage && !params.partOfDTP ) {
+
+			var resetbutton = jQuery( '<button type="button" class="ui-datepicker-trigger ' + params.userClasses + '"><img src="' + params.resetButtonImage + '" alt="..." title="..."></button>' );
+			inputShow.after( resetbutton );
+			resetbutton.click( function () {
+				inputShow.datepicker( 'setDate', null );
+			} );
+		}
+
 		inputShow.datepicker( {
 			'showOn': 'both',
 			'buttonImage': params.buttonImage,
@@ -54,13 +69,17 @@ window.PF_DP_init = function ( input_id, params ) {
 			'changeMonth': true,
 			'changeYear': true,
 			'altFormat': 'yy/mm/dd',
-			'showButtonPanel': true,
+			// Today button does not work (http://dev.jqueryui.com/ticket/4045)
+			// do not show button panel for now
+			// TODO: show date picker button panel when bug is fixed
+			'showButtonPanel': false,
 			'firstDay': params.firstDay,
+			'showWeek': params.showWeek,
 			'dateFormat': params.dateFormat,
-			'beforeShowDay': function ( date ) { return PF_DP_checkDate( '#' + input_id + '_show', date ); }
+			'beforeShowDay': function ( date ) {return PF_DP_checkDate( '#' + input_id + '_show', date );}
 		} );
 
-		// at least in Firefox, the tabindex needs to be set delayed
+		// at least in FF tabindex needs to be set delayed
 		setTimeout( function () {
 			inputShow.siblings( 'button' ).attr( 'tabindex', tabindex );
 		}, 0 );

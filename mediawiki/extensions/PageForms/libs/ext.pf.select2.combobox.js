@@ -8,7 +8,6 @@
  *
  * @licence GNU GPL v2+
  * @author Jatin Mehta
- * @author Priyanshu Varshney
  */
 
 ( function( $, mw, pf ) {
@@ -23,6 +22,9 @@
 	pf.select2 = pf.select2 || {};
 
 	/**
+	 * Class constructor
+	 *
+	 *
 	 * @class
 	 * @constructor
 	 */
@@ -44,60 +46,48 @@
 		input_id = "#" + input_id;
 		var input_tagname = $(input_id).prop( "tagName" );
 		var autocomplete_opts = this.getAutocompleteOpts();
-		opts.escapeMarkup = function (m) { return m; };
+
 		if ( autocomplete_opts.autocompletedatatype !== undefined ) {
 			opts.ajax = this.getAjaxOpts();
 			opts.minimumInputLength = 1;
 			opts.formatInputTooShort = mw.msg( "pf-select2-input-too-short", opts.minimumInputLength );
-		} else if ( input_tagname === "SELECT" ) {
+			opts.formatSelection = this.formatSelection;
+			opts.escapeMarkup = function (m) { return m; };
+		} else if ( input_tagname === "INPUT" ) {
 			opts.data = this.getData( autocomplete_opts.autocompletesettings );
 		}
 		var wgPageFormsAutocompleteOnAllChars = mw.config.get( 'wgPageFormsAutocompleteOnAllChars' );
 		if ( !wgPageFormsAutocompleteOnAllChars ) {
 			opts.matcher = function( term, text ) {
-				if( term.term === undefined ) {
-					term.term = "";
-				}
-				var no_diac_text = pf.select2.base.prototype.removeDiacritics( text.text );
-				var position = no_diac_text.toUpperCase().indexOf(term.term.toString().toUpperCase());
-				var position_with_space = no_diac_text.toUpperCase().indexOf(" " + term.term.toString().toUpperCase());
+				var no_diac_text = pf.select2.base.prototype.removeDiacritics( text );
+				var position = no_diac_text.toUpperCase().indexOf(term.toUpperCase());
+				var position_with_space = no_diac_text.toUpperCase().indexOf(" " + term.toUpperCase());
 				if ( (position !== -1 && position === 0 ) || position_with_space !== -1 ) {
-					return text;
+					return true;
 				} else {
-					return null;
+					return false;
 				}
-				return null;
 			};
 		}
-		opts.templateResult = function( result ) {
-			var term = $( input_id ).data("select2").dropdown.$search.val();
-			if( term === undefined ) {
-				term = "";
-			}
-			var text = result.id;
-			var highlightedText = pf.select2.base.prototype.textHighlight( text, term );
-			var markup = highlightedText;
-
-			return markup;
-		}
+		opts.formatResult = this.formatResult;
 		opts.formatSearching = mw.msg( "pf-select2-searching" );
 		opts.formatNoMatches = mw.msg( "pf-select2-no-matches" );
 		opts.placeholder = $(input_id).attr( "placeholder" );
-		if( opts.placeholder === undefined ) {
-			opts.placeholder = "";
+		if ( $(input_id).attr( "existingvaluesonly" ) !== "true" && input_tagname === "INPUT" ) {
+			opts.createSearchChoice = function( term, data ) { if ( $(data).filter(function() { return this.text.localeCompare( term )===0; }).length===0 ) {return { id:term, text:term };} };
+		}
+		if ( $(input_id).val() !== "" && input_tagname === "INPUT" ) {
+			opts.initSelection = function ( element, callback ) { var data = {id: element.val(), text: element.val()}; callback(data); };
 		}
 		opts.allowClear = true;
-		var size = $(input_id).attr("data-size");
+		var size = $(input_id).attr("size");
 		if ( size === undefined ) {
-			size = '200'; //default value
+			size = 35; //default value
 		}
-		opts.containerCss = { 'min-width': size };
-		opts.width= NaN;
-		if( !this.existingValuesOnly ){
-			opts.tags = true;
-		}
+		opts.containerCss = { 'min-width': size * 6 };
 		opts.containerCssClass = 'pf-select2-container';
 		opts.dropdownCssClass = 'pf-select2-dropdown';
+
 		return opts;
 	};
 	/*
@@ -109,7 +99,7 @@
 	 */
 	combobox_proto.getData = function( autocompletesettings ) {
 		var input_id = "#" + this.id;
-		var values = [];
+		var values = [{id: 0, text: ""}];
 		var dep_on = this.dependentOn();
 		var i, data;
 		if ( dep_on === null ) {
@@ -120,11 +110,13 @@
 				data = {};
 				if ( wgPageFormsEDSettings[name].title !== undefined && wgPageFormsEDSettings[name].title !== "" ) {
 					data.title = edgValues[wgPageFormsEDSettings[name].title];
+					i = 0;
 					if ( data.title !== undefined && data.title !== null ) {
 						data.title.forEach(function() {
 							values.push({
-								id: data.title[i], text: data.title[i]
+								id: i + 1, text: data.title[i]
 							});
+							i++;
 						});
 					}
 					if ( wgPageFormsEDSettings[name].image !== undefined && wgPageFormsEDSettings[name].image !== "" ) {
@@ -132,7 +124,7 @@
 						i = 0;
 						if ( data.image !== undefined && data.image !== null ) {
 							data.image.forEach(function() {
-								values[ i+1 ].image = data.image[ i ];
+								values[i+1].image = data.image[i];
 								i++;
 							});
 						}
@@ -152,16 +144,14 @@
 			} else {
 				var wgPageFormsAutocompleteValues = mw.config.get( 'wgPageFormsAutocompleteValues' );
 				data = wgPageFormsAutocompleteValues[autocompletesettings];
-				// We need to insert an empty string at the starting
-				// of this array so that when select2 gets the data
-				// it doesn't duplicate the first option in the dropdown
-				data.unshift("");
 				//Convert data into the format accepted by Select2
 				if (data !== undefined && data !== null ) {
+					var index = 1;
 					for (var key in data) {
 						values.push({
-							id: data[key], text: data[key]
+							id: index, text: data[key]
 						});
+						index++;
 					}
 				}
 			}
@@ -186,23 +176,18 @@
 				var baseCargoField = baseCargoTableAndField[1];
 				my_server += "&cargo_table=" + cargoTable + "&cargo_field=" + cargoField + "&base_cargo_table=" + baseCargoTable + "&base_cargo_field=" + baseCargoField + "&basevalue=" + dep_field_opts.base_value;
 			}
-
+			//alert(my_server);
 			$.ajax({
 				url: my_server,
 				dataType: 'json',
 				async: false,
 				success: function(data) {
+					var id = 1;
 					//Convert data into the format accepted by Select2
 					data.pfautocomplete.forEach( function(item) {
-						if (item.displaytitle !== undefined) {
-							values.push({
-								id: item.displaytitle, text: item.displaytitle
-							});
-						} else {
-							values.push({
-								id: item.title, text: item.title
-							});
-						}
+						values.push({
+							id: id++, text: item.title
+						});
 					});
 					return values;
 				}
@@ -235,18 +220,15 @@
 			dataType: 'json',
 			data: function (term) {
 				return {
-					substr: term.term, // search term
+					substr: term, // search term
 				};
 			},
-			processResults: function (data) { // parse the results into the format expected by Select2.
+			results: function (data, page, query) { // parse the results into the format expected by Select2.
+				var id = 0;
 				if (data.pfautocomplete !== undefined) {
 					data.pfautocomplete.forEach( function(item) {
-						item.id = item.title;
-						if (item.displaytitle !== undefined) {
-							item.text = item.displaytitle;
-						} else {
-							item.text = item.title;
-						}
+						item.id = id++;
+						item.text = item.title;
 					});
 					return {results: data.pfautocomplete};
 				} else {
@@ -266,19 +248,17 @@
 		var self = this;
 		var data = $(this).select2( "data" );
 		var namespace = $(this).attr( "data-namespace" );
-		if (data.length !== 0) {
- 			var val = data[0].text;
- 			if ( namespace && data[0].id === data[0].text ) {
+
+		if (data !== null) {
+ 			var val = data.text;
+ 			if ( namespace && data.id === data.text ) {
  				if ( val.indexOf( namespace + ':' ) !== 0 ) {
  					val = namespace + ':' + val;
  				}
  			}
-			$(this)[0].children[0].text=val;
-			$(this)[0].children[0].value=val;
-
- 			$(this).value = val;
+ 			$(this).val( val );
 		} else {
-			$(this).value = '';
+			$(this).val( '' );
 		}
 
 		// Set the corresponding values for any other field

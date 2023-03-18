@@ -1,19 +1,20 @@
 {
 	"@metadata": {
 		"authors": [
-			"Ankabel",
 			"Beta16",
 			"Civvì",
 			"Darth Kule",
 			"F. Cosoleto",
-			"Kaspo",
+			"පසිඳු කාවින්ද",
+			"Ankabel",
 			"Macofe",
 			"McDutchie",
-			"S4b1nuz E.656",
-			"පසිඳු කාවින්ද"
+			"Kaspo",
+			"S4b1nuz E.656"
 		]
 	},
 	"srf-desc": "Formati addizionali per i risultati delle query di Semantic Mediawiki",
+	"srf-name": "Formati di risultato semantici",
 	"prefs-srf-eventcalendar-options": "Opzioni calendario eventi",
 	"prefs-srf-datatables-options": "Opzioni tabelle dati",
 	"srf-module-loading": "Caricamento in corso...",
@@ -99,7 +100,7 @@
 	"srf-paramdesc-graphname": "Imposta il titolo del grafico",
 	"srf-paramdesc-graphsize": "Imposta la dimensione del grafico in pixel",
 	"srf-paramdesc-graphlegend": "Imposta se la legenda del grafico va mostrata",
-	"srf-paramdesc-graphlabel": "Imposta la dimensione dei caratteri in pixel",
+	"srf-paramdesc-graphlabel": "Imposta l'etichetta del grafico",
 	"srf-paramdesc-graphcolor": "Imposta il colore del grafico",
 	"srf-printername-datatables": "Tabelle dati",
 	"srf-ui-datatables-label-conditions": "Condizioni",
@@ -138,12 +139,5 @@
 	"srf-paramdesc-yaxislabel": "Descrizione visualizzata sull'asse y",
 	"srf-paramdesc-xaxislabel": "Descrizione visualizzata sull'asse x",
 	"srf-ui-mediaplayer-label-shuffle": "Mescola",
-	"srf-spreadsheet-link": "Foglio di calcolo",
-	"srf-paramdesc-spreadsheet-filename": "Il nome del file per il download del foglio di calcolo generato",
-	"srf-paramdesc-spreadsheet-fileformat": "Il formato file del foglio di calcolo da produrre. Valori ammessi: xlsx, xls, ods, csv. Predefinito: xlsx",
-	"srf-paramdesc-icalendar-timezone": "Un elenco di fusi orari separati da virgole",
-	"srf-paramdesc-gantt-diagramtitle": "Nome del diagramma",
-	"srf-paramdesc-gantt-diagramtheme": "Tema del diagramma",
-	"srf-paramdesc-gantt-axisformat": "Asse-X: Formato data",
-	"srf-printername-gantt": "Gantt"
+	"srf-paramdesc-icalendar-timezone": "Un elenco di fusi orari separati da virgole"
 }

@@ -3,7 +3,6 @@
 namespace SMW\Services;
 
 use RuntimeException;
-use SMW\Services\Exception\ServiceNotFoundException;
 
 /**
  * @private
@@ -37,7 +36,7 @@ class ServicesContainer {
 	public function get( $key, ...$args ) {
 
 		if ( !isset( $this->services[$key] ) ) {
-			throw new ServiceNotFoundException( "$key is an unknown service!" );
+			throw new RuntimeException( "$key is an unknown service!" );
 		};
 
 		$type = null;

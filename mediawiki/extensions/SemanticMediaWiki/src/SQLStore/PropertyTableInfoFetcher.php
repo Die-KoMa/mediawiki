@@ -3,7 +3,6 @@
 namespace SMW\SQLStore;
 
 use SMW\DataTypeRegistry;
-use SMW\TypesRegistry;
 use SMW\DIProperty;
 use SMWDataItem as DataItem;
 
@@ -38,9 +37,43 @@ class PropertyTableInfoFetcher {
 	private $fixedPropertyTableIds = null;
 
 	/**
+	 * Keys of special properties that should have their own
+	 * fixed property table.
+	 *
+	 * @var array
+	 */
+	private static $customizableSpecialProperties = [
+		'_MDAT', '_CDAT', '_NEWP', '_LEDT', '_MIME', '_MEDIA',
+	];
+
+	/**
 	 * @var array
 	 */
 	private $customSpecialPropertyList = [];
+
+	/**
+	 * @var array
+	 */
+	private $fixedSpecialProperties = [
+		// property declarations
+		'_TYPE', '_UNIT', '_CONV', '_PVAL', '_LIST', '_SERV', '_PREC', '_PPLB',
+		// query statistics (very frequently used)
+		'_ASK', '_ASKDE', '_ASKSI', '_ASKFO', '_ASKST', '_ASKDU', '_ASKPA',
+		// subproperties, classes, and instances
+		'_SUBP', '_SUBC', '_INST',
+		// redirects
+		'_REDI',
+		// has sub object
+		'_SOBJ',
+		// vocabulary import and URI assignments
+		'_IMPO', '_URI',
+		// Concepts
+		'_CONC',
+		// Monolingual text
+		'_LCODE', '_TEXT',
+		// Display title of
+		'_DTITLE'
+	];
 
 	/**
 	 * @var array
@@ -52,7 +85,7 @@ class PropertyTableInfoFetcher {
 	 *
 	 * @var array
 	 */
-	private static $defaultDiTypeTableIdMap = [
+	private $defaultDiTypeTableIdMap = [
 		DataItem::TYPE_NUMBER     => 'smw_di_number',
 		DataItem::TYPE_BLOB       => 'smw_di_blob',
 		DataItem::TYPE_BOOLEAN    => 'smw_di_bool',
@@ -70,6 +103,15 @@ class PropertyTableInfoFetcher {
 	 */
 	public function __construct( PropertyTypeFinder $propertyTypeFinder ) {
 		$this->propertyTypeFinder = $propertyTypeFinder;
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @return array
+	 */
+	public static function getFixedSpecialPropertyList() {
+		return self::$customizableSpecialProperties;
 	}
 
 	/**
@@ -118,10 +160,10 @@ class PropertyTableInfoFetcher {
 	 *
 	 * @return string
 	 */
-	public static function findTableIdForDataItemTypeId( $dataItemId ) {
+	public function findTableIdForDataItemTypeId( $dataItemId ) {
 
-		if ( array_key_exists( $dataItemId, self::$defaultDiTypeTableIdMap ) ) {
-			return self::$defaultDiTypeTableIdMap[$dataItemId];
+		if ( array_key_exists( $dataItemId, $this->defaultDiTypeTableIdMap ) ) {
+			return $this->defaultDiTypeTableIdMap[$dataItemId];
 		}
 
 		return '';
@@ -133,7 +175,7 @@ class PropertyTableInfoFetcher {
 	 * @return array
 	 */
 	public function getDefaultDataItemTables() {
-		return array_values( self::$defaultDiTypeTableIdMap );
+		return array_values( $this->defaultDiTypeTableIdMap );
 	}
 
 	/**
@@ -208,14 +250,11 @@ class PropertyTableInfoFetcher {
 
 	private function buildDefinitionsForPropertyTables() {
 
-		$enabledSpecialProperties = TypesRegistry::getFixedProperties( 'default_fixed' );
-
-		$customFixedSpecialPropertyList = array_flip(
-			TypesRegistry::getFixedProperties( 'custom_fixed' )
-		);
+		$enabledSpecialProperties = $this->fixedSpecialProperties;
+		$customizableSpecialProperties = array_flip( self::$customizableSpecialProperties );
 
 		foreach ( $this->customSpecialPropertyList as $property ) {
-			if ( isset( $customFixedSpecialPropertyList[$property] ) ) {
+			if ( isset( $customizableSpecialProperties[$property] ) ) {
 				$enabledSpecialProperties[] = $property;
 			}
 		}
@@ -225,7 +264,7 @@ class PropertyTableInfoFetcher {
 		);
 
 		$definitionBuilder->doBuild(
-			self::$defaultDiTypeTableIdMap,
+			$this->defaultDiTypeTableIdMap,
 			$enabledSpecialProperties,
 			$this->customFixedPropertyList
 		);

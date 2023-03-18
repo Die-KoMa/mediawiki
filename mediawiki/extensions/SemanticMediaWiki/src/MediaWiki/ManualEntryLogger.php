@@ -63,7 +63,7 @@ class ManualEntryLogger {
 		$logEntry->setTarget( Title::newFromText( $target ) );
 
 		if ( is_string( $performer) ) {
-			$performer = User::newSystemUser( $performer, [ 'steal' => true ] );
+			$performer = User::newFromName( $performer );
 		}
 
 		$logEntry->setPerformer( $performer );

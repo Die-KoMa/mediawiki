@@ -51,7 +51,7 @@ class MonolingualTextPropertyValueResourceBuilder extends PropertyValueResourceB
 
 			$expData->addPropertyObjectValue(
 				$this->exporter->getResourceElementForProperty( $property, false, $seekImportVocabulary ),
-				$this->exporter->newExpElement( $dataItem )
+				$this->exporter->getDataItemExpElement( $dataItem )
 			);
 		} else {
 			parent::addResourceValue( $expData, $property, $dataItem );

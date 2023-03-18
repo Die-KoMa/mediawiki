@@ -1,9 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Hindustanilanguage",
-			"Saraiki",
-			"පසිඳු කාවින්ද"
+			"පසිඳු කාවින්ද",
+			"Saraiki"
 		]
 	},
 	"pf_createproperty_proptype": "قسم:",
@@ -34,6 +33,5 @@
 	"pf_createclass_nameinput": "فارم کے نام:",
 	"pf_createclass_create": "تخلیق کریں",
 	"pf-autoedit-wait": "رکو...",
-	"pf_modified_input_error": "اس تبدیلی کو منظور یا نامنظور کیا جانا چاہیے",
 	"pf-datepicker-close": "بند کرو"
 }

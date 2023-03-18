@@ -17,7 +17,7 @@ use StripState;
  *
  * @note MW 1.20+ see InternalParseBeforeSanitize
  *
- * @see https://www.mediawiki.org/wiki/Manual:Hooks/InternalParseBeforeLinks
+ * @see http://www.mediawiki.org/wiki/Manual:Hooks/InternalParseBeforeLinks
  *
  * @ingroup FunctionHook
  *
@@ -73,7 +73,7 @@ class InternalParseBeforeLinks extends HookHandler {
 
 		// #2209, #2370 Allow content to be parsed that contain [[SMW::off]]/[[SMW::on]]
 		// even in case of MediaWiki messages
-		if ( InTextAnnotationParser::hasMarker( $text ) || InTextAnnotationParser::hasPropertyLink( $text ) ) {
+		if ( InTextAnnotationParser::hasMarker( $text ) ) {
 			return true;
 		}
 

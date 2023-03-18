@@ -58,52 +58,15 @@
 fieldset#mw-prefsection-smw-srf {
 	border: 0px solid #2a4b8d;
 	border-top: 1px solid #2a4b8d;
-	margin-top: 25px;
-	clear: both;
+	margin-top: -5px;
 }
 
-fieldset#mw-prefsection-smw-srf-eventcalendar-options {
+fieldset#mw-prefsection-smw-srf-eventcalendar-options, fieldset#mw-prefsection-smw-srf-datatables-options {
 	border: 0px solid #2a4b8d;
 	border-top: 1px solid #ddd;
-	margin-top: 0px;
+	margin-top: -5px;
 }
 
-fieldset#mw-prefsection-smw-srf-datatables-options {
-	border: 0px solid #2a4b8d;
-	border-top: 1px solid #ddd;
-	margin-top: 15px;
-}
-
-#mw-prefsection-smw-srf .oo-ui-fieldsetLayout-header .oo-ui-labelElement-label:before {
-	content: "◉ ";
-}
-
-#mw-prefsection-smw-srf .oo-ui-fieldsetLayout-header .oo-ui-labelElement-label {
-	color: #2a4b8d;
-}
-
-#mw-prefsection-smw-srf .oo-ui-panelLayout-padded {
-	padding-top: 0em;
-	padding-bottom: 0em;
-}
-
-#mw-prefsection-smw-srf-eventcalendar-options .oo-ui-fieldsetLayout-group,
-#mw-prefsection-smw-srf-datatables-options .oo-ui-fieldsetLayout-group {
-	columns: 2;
-}
-
-#mw-prefsection-smw-srf .oo-ui-fieldLayout-field {
-	margin-top: 10px;
-}
-
-/**
- * Responsive settings
- */
-@media screen and (max-width: 800px) {
-
-	#mw-prefsection-smw-srf-eventcalendar-options .oo-ui-fieldsetLayout-group,
-	#mw-prefsection-smw-srf-datatables-options .oo-ui-fieldsetLayout-group {
-		columns: 1;
-	}
-
+#mw-prefsection-smw-srf legend::before {
+	content: "▼ ";
 }

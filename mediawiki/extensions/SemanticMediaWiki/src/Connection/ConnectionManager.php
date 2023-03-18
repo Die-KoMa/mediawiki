@@ -3,7 +3,6 @@
 namespace SMW\Connection;
 
 use RuntimeException;
-use SMW\SetupCheck;
 
 /**
  * @license GNU GPL v2+
@@ -12,11 +11,6 @@ use SMW\SetupCheck;
  * @author mwjames
  */
 class ConnectionManager {
-
-	/**
-	 * @var boolean|null
-	 */
-	private static $isConnectable;
 
 	/**
 	 * By design this variable is static to ensure that ConnectionProvider
@@ -35,18 +29,7 @@ class ConnectionManager {
 	 * @throws RuntimeException
 	 */
 	public function getConnection( $id = null ) {
-
-		$id = strtolower( $id );
-
-		if ( self::$isConnectable === null ) {
-			self::$isConnectable = $this->isConnectable();
-		}
-
-		if ( isset( self::$connectionProviders[$id] ) ) {
-			return self::$connectionProviders[$id]->getConnection();
-		}
-
-		throw new RuntimeException( "{$id} is not registered as connection provider" );
+		return $this->findConnectionProvider( strtolower( $id ) )->getConnection();
 	}
 
 	/**
@@ -78,28 +61,13 @@ class ConnectionManager {
 		self::$connectionProviders[strtolower( $id )] = new CallbackConnectionProvider( $callback );
 	}
 
-	private function isConnectable() {
+	private function findConnectionProvider( $id ) {
 
-		if ( defined( 'SMW_VERSION' ) ) {
-			return true;
+		if ( isset( self::$connectionProviders[$id] ) ) {
+			return self::$connectionProviders[$id];
 		}
 
-		// #4150
-		// If `SMW_VERSION` is not defined then it means someone tried to
-		// establish a connection via SMW despite the fact that SMW wasn't setup
-		// correctly.
-		$setupCheck = SetupCheck::newFromDefaults();
-
-		if ( !$setupCheck->hasError() ) {
-			return true;
-		}
-
-		// Allow to figure out which program caused the issue
-		$setupCheck->setTraceString(
-			( new RuntimeException() )->getTraceAsString()
-		);
-
-		return $setupCheck->showErrorAndAbort( $setupCheck->isCli() );
+		throw new RuntimeException( "{$id} is missing a registered connection provider" );
 	}
 
 }

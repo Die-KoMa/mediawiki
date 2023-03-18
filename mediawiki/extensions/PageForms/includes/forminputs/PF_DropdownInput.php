@@ -1,10 +1,14 @@
 <?php
 /**
+ * File holding the PFDropdownInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFDropdownInput class.
+ *
  * @ingroup PFFormInput
  */
 class PFDropdownInput extends PFEnumInput {
@@ -13,30 +17,30 @@ class PFDropdownInput extends PFEnumInput {
 	}
 
 	public static function getDefaultPropTypes() {
-		return [
-			'enumeration' => []
-		];
+		return array(
+			'enumeration' => array()
+		);
 	}
 
 	public static function getOtherPropTypesHandled() {
-		return [ '_boo' ];
+		return array( '_boo' );
 	}
 
 	public static function getDefaultCargoTypes() {
-		return [
-			'Enumeration' => []
-		];
+		return array(
+			'Enumeration' => array()
+		);
 	}
 
 	public static function getOtherCargoTypesHandled() {
-		return [ 'Boolean' ];
+		return array( 'Boolean' );
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
 		global $wgPageFormsTabIndex, $wgPageFormsFieldNum, $wgPageFormsShowOnSelect;
 
 		// Standardize $cur_value
-		if ( $cur_value === null ) {
+		if ( is_null( $cur_value ) ) {
 			$cur_value = '';
 		}
 
@@ -49,9 +53,9 @@ class PFDropdownInput extends PFEnumInput {
 			$className .= ' pfShowIfSelected';
 			foreach ( $other_args['show on select'] as $div_id => $options ) {
 				if ( array_key_exists( $input_id, $wgPageFormsShowOnSelect ) ) {
-					$wgPageFormsShowOnSelect[$input_id][] = [ $options, $div_id ];
+					$wgPageFormsShowOnSelect[$input_id][] = array( $options, $div_id );
 				} else {
-					$wgPageFormsShowOnSelect[$input_id] = [ [ $options, $div_id ] ];
+					$wgPageFormsShowOnSelect[$input_id] = array( array( $options, $div_id ) );
 				}
 			}
 		}
@@ -67,16 +71,16 @@ class PFDropdownInput extends PFEnumInput {
 			// If it's a Boolean property, display 'Yes' and 'No'
 			// as the values.
 			if ( array_key_exists( 'property_type', $other_args ) && $other_args['property_type'] == '_boo' ) {
-				$possible_values = [
+				$possible_values = array(
 					PFUtils::getWordForYesOrNo( true ),
 					PFUtils::getWordForYesOrNo( false ),
-				];
+				);
 			} else {
-				$possible_values = [];
+				$possible_values = array();
 			}
 		}
 		foreach ( $possible_values as $possible_value ) {
-			$optionAttrs = [ 'value' => $possible_value ];
+			$optionAttrs = array( 'value' => $possible_value );
 			if ( $possible_value == $cur_value ) {
 				$optionAttrs['selected'] = "selected";
 			}
@@ -84,19 +88,20 @@ class PFDropdownInput extends PFEnumInput {
 				array_key_exists( 'value_labels', $other_args ) &&
 				is_array( $other_args['value_labels'] ) &&
 				array_key_exists( $possible_value, $other_args['value_labels'] )
-			) {
+			)
+			{
 				$label = $other_args['value_labels'][$possible_value];
 			} else {
 				$label = $possible_value;
 			}
 			$innerDropdown .= Html::element( 'option', $optionAttrs, $label );
 		}
-		$selectAttrs = [
+		$selectAttrs = array(
 			'id' => $input_id,
 			'tabindex' => $wgPageFormsTabIndex,
 			'name' => $input_name,
 			'class' => $className
-		];
+		);
 		if ( $is_disabled ) {
 			$selectAttrs['disabled'] = 'disabled';
 		}
@@ -108,13 +113,12 @@ class PFDropdownInput extends PFEnumInput {
 		if ( $is_mandatory ) {
 			$spanClass .= ' mandatoryFieldSpan';
 		}
-		$text = Html::rawElement( 'span', [ 'class' => $spanClass ], $text );
+		$text = Html::rawElement( 'span', array( 'class' => $spanClass ), $text );
 		return $text;
 	}
 
 	/**
 	 * Returns the HTML code to be included in the output page for this input.
-	 * @return string
 	 */
 	public function getHtmlText() {
 		return self::getHTML(

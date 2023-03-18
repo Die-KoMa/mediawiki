@@ -34,7 +34,7 @@ class HtmlFormTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$urlArgs = $this->getMockBuilder( '\SMW\Utils\UrlArgs' )
+		$urlArgs = $this->getMockBuilder( '\SMW\MediaWiki\Specials\Ask\UrlArgs' )
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -61,11 +61,11 @@ class HtmlFormTest extends \PHPUnit_Framework_TestCase {
 		$instance = new HtmlForm( $title );
 		$instance->isEditMode( true );
 
-		$log = [];
+ 		$text = '';
 
 		$this->assertInternalType(
 			'string',
-			$instance->getForm( $urlArgs, $queryResult, $log )
+			$instance->getForm( $urlArgs, $queryResult, $text )
 		);
 	}
 

@@ -72,7 +72,7 @@ class PropertyTableIdReferenceFinderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTryToFindAtLeastOneReferenceForProperty() {
 
-		$idTable = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\EntityIdManager' )
+		$idTable = $this->getMockBuilder( '\SMWSql3SmwIds' )
 			->disableOriginalConstructor()
 			->getMock();
 

@@ -19,35 +19,12 @@ use SMW\Tests\TestEnvironment;
  */
 class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $connection;
-	private $conditionBuilder;
-	private $valueMatchConditionBuilder;
+	private $querySegmentValidator;
 	private $descriptionFactory;
 	private $dataItemFactory;
 
 	protected function setUp() {
 		parent::setUp();
-
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->any() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $this->connection ) );
-
-		$this->conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->valueMatchConditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\Fulltext\ValueMatchConditionBuilder' )
-			->disableOriginalConstructor()
-			->getMockForAbstractClass();
 
 		$this->descriptionFactory = new DescriptionFactory();
 		$this->dataItemFactory = new DataItemFactory();
@@ -58,15 +35,23 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$this->assertInstanceOf(
-			SomePropertyInterpreter::class,
-			new SomePropertyInterpreter( $this->store, $this->conditionBuilder, $this->valueMatchConditionBuilder )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\SomePropertyInterpreter',
+			new SomePropertyInterpreter( $querySegmentListBuilder )
 		);
 	}
 
 	public function testinterpretDescriptionForUnknownTablePropertyId() {
 
-		$this->store->expects( $this->once() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->once() )
 			->method( 'findPropertyTableID' )
 			->will( $this->returnValue( '' ) );
 
@@ -78,12 +63,10 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 		$expected = new \stdClass;
 		$expected->type = 0;
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new SomePropertyInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder(),
-			$this->valueMatchConditionBuilder
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(
@@ -106,11 +89,15 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->method( 'usesIdSubject' )
 			->will( $this->returnValue( false ) );
 
-		$this->store->expects( $this->once() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->once() )
 			->method( 'findPropertyTableID' )
 			->will( $this->returnValue( 'Foo' ) );
 
-		$this->store->expects( $this->once() )
+		$store->expects( $this->once() )
 			->method( 'getPropertyTables' )
 			->will( $this->returnValue( [ 'Foo' => $proptable ] ) );
 
@@ -122,12 +109,10 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 		$expected = new \stdClass;
 		$expected->type = 0;
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new SomePropertyInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder(),
-			$this->valueMatchConditionBuilder
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(
@@ -162,11 +147,15 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->method( 'usesIdSubject' )
 			->will( $this->returnValue( true ) );
 
-		$this->store->expects( $this->once() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->once() )
 			->method( 'findPropertyTableID' )
 			->will( $this->returnValue( 'Foo' ) );
 
-		$this->store->expects( $this->once() )
+		$store->expects( $this->once() )
 			->method( 'getPropertyTables' )
 			->will( $this->returnValue( [ 'Foo' => $proptable ] ) );
 
@@ -177,12 +166,10 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 		$expected = new \stdClass;
 		$expected->type = 0;
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new SomePropertyInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder(),
-			$this->valueMatchConditionBuilder
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(
@@ -228,9 +215,17 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getSMWPageID' )
 			->will( $this->returnValue( 91 ) );
 
-		$this->connection->expects( $this->any() )
+		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$connection->expects( $this->any() )
 			->method( 'addQuotes' )
 			->will( $this->returnArgument( 0 ) );
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
 
 		$proptable = $this->getMockBuilder( '\SMWSQLStore3Table' )
 			->disableOriginalConstructor()
@@ -248,31 +243,37 @@ class SomePropertyInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->method( 'isFixedPropertyTable' )
 			->will( $this->returnValue( $isFixedPropertyTable ) );
 
-		$this->store->expects( $this->once() )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$store->expects( $this->once() )
 			->method( 'findPropertyTableID' )
 			->will( $this->returnValue( 'Foo' ) );
 
-		$this->store->expects( $this->once() )
+		$store->expects( $this->once() )
 			->method( 'getPropertyTables' )
 			->will( $this->returnValue( [ 'Foo' => $proptable ] ) );
 
-		$this->store->expects( $this->any() )
+		$store->expects( $this->any() )
+			->method( 'getConnection' )
+			->will( $this->returnValue( $connection ) );
+
+		$store->expects( $this->any() )
 			->method( 'getObjectIds' )
 			->will( $this->returnValue( $objectIds ) );
 
-		$this->store->expects( $this->any() )
+		$store->expects( $this->any() )
 			->method( 'getDataItemHandlerForDIType' )
 			->will( $this->returnValue( $dataItemHandler ) );
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
-		$conditionBuilder = $queryEngineFactory->newConditionBuilder();
-		$conditionBuilder->setSortKeys( $sortKeys );
+		$querySegmentListBuilder = $queryEngineFactory->newQuerySegmentListBuilder();
+		$querySegmentListBuilder->setSortKeys( $sortKeys );
 
 		$instance = new SomePropertyInterpreter(
-			$this->store,
-			$conditionBuilder,
-			$this->valueMatchConditionBuilder
+			$querySegmentListBuilder
 		);
 
 		$this->assertTrue(

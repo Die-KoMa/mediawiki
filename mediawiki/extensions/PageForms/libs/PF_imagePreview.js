@@ -52,7 +52,8 @@
 					function( url ) {
 						if ( url === false ) {
 							$previewDiv.html( '' );
-						} else {
+						}
+						else {
 							$previewDiv.html( $( '<img />' ).attr( { 'src': url } ) );
 						}
 					}

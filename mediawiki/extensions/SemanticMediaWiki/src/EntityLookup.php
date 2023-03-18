@@ -108,4 +108,9 @@ interface EntityLookup {
 	 */
 	public function getInProperties( DataItem $object, RequestOptions $requestOptions = null );
 
+	/**
+	 * @since 3.0
+	 */
+	public function invalidateCache();
+
 }

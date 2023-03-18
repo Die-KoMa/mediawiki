@@ -2,10 +2,9 @@
 	"@metadata": {
 		"authors": [
 			"Michaello",
-			"Milicevic01",
-			"Obsuser",
 			"Rancher",
 			"Жељко Тодоровић",
+			"Milicevic01",
 			"Сербијана"
 		]
 	},
@@ -58,13 +57,12 @@
 	"pf_formstart_createoredit": "Napravi ili izmeni",
 	"formedit": "Izmeni formom",
 	"pf_formedit_createtitle": "Napravi $1: $2",
-	"pf_editsource": "Uredi izvorni kod",
+	"pf_editsource": "Uredi izvor",
 	"pf_formedit_edittitle": "Izmeni $1: $2",
 	"pf_formedit_remove": "Ukloni",
 	"pf_formedit_none": "Nema",
-	"pf_autoedit_anoneditwarning": "Upozorenje: Niste prijavljeni. Ako objavite stranicu, Vaša IP adresa će biti javno vidljiva u njenoj istoriji izmena i drugde.",
+	"pf_autoedit_anoneditwarning": "Upozorenje: niste prijavljeni. Vaša IP adresa će biti zabeležena u istoriji ove stranice.",
 	"pf_bad_number_error": "mora biti ispravan broj",
-	"pf_bad_integer_error": "mora biti ispravan celi broj",
 	"pf_bad_date_error": "mora biti ispravan datum",
 	"uploadwindow": "Prozor za otpremanje",
 	"pf_deletionlog": "Istorija brisanja",

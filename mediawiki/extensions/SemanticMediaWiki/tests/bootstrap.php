@@ -1,7 +1,6 @@
 <?php
 
 use SMW\MediaWiki\Connection\Sequence;
-use SMW\MediaWiki\Connection\CleanUpTables;
 use SMW\ApplicationFactory;
 use SMW\SQLStore\SQLStore;
 
@@ -12,7 +11,7 @@ if ( PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg' ) {
 error_reporting( -1 );
 ini_set( 'display_errors', '1' );
 
-$autoloader = require SMW_PHPUNIT_AUTOLOADER_FILE;
+$autoloader = require __DIR__ . '/autoloader.php';
 
 $autoloader->addPsr4( 'SMW\\Test\\', __DIR__ . '/phpunit' );
 $autoloader->addPsr4( 'SMW\\Tests\\', __DIR__ . '/phpunit' );
@@ -26,13 +25,8 @@ $autoloader->addClassMap( [
 	'SMW\Maintenance\DumpRdf'                    => __DIR__ . '/../maintenance/dumpRDF.php',
 	'SMW\Maintenance\SetupStore'                 => __DIR__ . '/../maintenance/setupStore.php',
 	'SMW\Maintenance\UpdateEntityCollation'      => __DIR__ . '/../maintenance/updateEntityCollation.php',
-	'SMW\Maintenance\RemoveDuplicateEntities'    => __DIR__ . '/../maintenance/removeDuplicateEntities.php',
-	'SMW\Maintenance\PurgeEntityCache'           => __DIR__ . '/../maintenance/purgeEntityCache.php',
-	'SMW\Maintenance\UpdateQueryDependencies'    => __DIR__ . '/../maintenance/updateQueryDependencies.php'
+	'SMW\Maintenance\RemoveDuplicateEntities'    => __DIR__ . '/../maintenance/removeDuplicateEntities.php'
 ] );
-
-define( 'SMW_PHPUNIT_DIR', __DIR__ . '/phpunit' );
-define( 'SMW_PHPUNIT_TABLE_PREFIX', 'sunittest_' );
 
 /**
  * Register a shutdown function the invoke a final clean-up
@@ -43,24 +37,11 @@ register_shutdown_function( function() {
 		return;
 	}
 
-	$connectionManager = ApplicationFactory::getInstance()->getConnectionManager();
-	$connection = $connectionManager->getConnection( 'mw.db' );
-
 	// Reset any sequence modified during the test
 	$sequence = new Sequence(
-		$connection
+		ApplicationFactory::getInstance()->getConnectionManager()->getConnection( 'mw.db' )
 	);
 
-	try {
-		$sequence->tablePrefix( '' );
-		$sequence->restart( SQLStore::ID_TABLE, 'smw_id' );
-	} catch( \Wikimedia\Rdbms\DBConnectionError $e ) {
-		return;
-	}
-
-	$cleanUpTables = new CleanUpTables(
-		$connection
-	);
-
-	$cleanUpTables->dropTables( SMW_PHPUNIT_TABLE_PREFIX );
+	$sequence->tablePrefix( '' );
+	$sequence->restart( SQLStore::ID_TABLE, 'smw_id' );
 } );

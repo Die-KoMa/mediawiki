@@ -23,8 +23,6 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 
 	private $semanticDataValidator;
 	private $testEnvironment;
-	private $eventDispatcher;
-	private $editInfo;
 
 	protected function setUp() {
 		parent::setUp();
@@ -38,14 +36,6 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 			->getMockForAbstractClass();
 
 		$this->testEnvironment->registerObject( 'Store', $store );
-
-		$this->eventDispatcher = $this->getMockBuilder( '\Onoi\EventDispatcher\EventDispatcher' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->editInfo = $this->getMockBuilder( '\SMW\MediaWiki\EditInfo' )
-			->disableOriginalConstructor()
-			->getMock();
 	}
 
 	protected function tearDown() {
@@ -59,37 +49,31 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$pageInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\PageInfoProvider' )
 			->disableOriginalConstructor()
 			->getMock();
 
 		$this->assertInstanceOf(
 			NewRevisionFromEditComplete::class,
-			new NewRevisionFromEditComplete( $title, $this->editInfo, $pageInfoProvider )
+			new NewRevisionFromEditComplete( $title, $editInfoProvider, $pageInfoProvider )
 		);
 	}
 
 	/**
 	 * @dataProvider wikiPageDataProvider
 	 */
-	public function testProcess( $settings, $title, $editInfo, $pageInfoProvider, $expected ) {
-
-		$this->eventDispatcher->expects( $expected ? $this->atLeastOnce() : $this->never() )
-			->method( 'dispatch' )
-			->withConsecutive(
-				[ $this->equalTo( 'InvalidateResultCache' ) ],
-				[ $this->equalTo( 'InvalidateEntityCache' ) ] );
+	public function testProcess( $settings, $title, $editInfoProvider, $pageInfoProvider, $expected ) {
 
 		$this->testEnvironment->withConfiguration( $settings );
 
 		$instance = new NewRevisionFromEditComplete(
 			$title,
-			$editInfo,
+			$editInfoProvider,
 			$pageInfoProvider
-		);
-
-		$instance->setEventDispatcher(
-			$this->eventDispatcher
 		);
 
 		$this->assertTrue(
@@ -99,7 +83,7 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 		if ( $expected ) {
 			$this->semanticDataValidator->assertThatPropertiesAreSet(
 				$expected,
-				$editInfo->fetchSemanticData()
+				$editInfoProvider->fetchSemanticData()
 			);
 		}
 	}
@@ -112,7 +96,7 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$editInfo = $this->getMockBuilder( '\SMW\MediaWiki\EditInfo' )
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
 			->disableOriginalConstructor()
 			->setMethods( [ 'getOutput' ] )
 			->getMock();
@@ -124,7 +108,7 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[],
 			$title,
-			$editInfo,
+			$editInfoProvider,
 			$pageInfoProvider,
 			false
 		];
@@ -142,12 +126,12 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getNamespace' )
 			->will( $this->returnValue( NS_MAIN ) );
 
-		$editInfo = $this->getMockBuilder( '\SMW\MediaWiki\EditInfo' )
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
 			->disableOriginalConstructor()
 			->setMethods( [ 'getOutput' ] )
 			->getMock();
 
-		$editInfo->expects( $this->any() )
+		$editInfoProvider->expects( $this->any() )
 			->method( 'getOutput' )
 			->will( $this->returnValue( new ParserOutput() ) );
 
@@ -165,7 +149,7 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 				'smwgDVFeatures' => ''
 			],
 			$title,
-			$editInfo,
+			$editInfoProvider,
 			$pageInfoProvider,
 			[
 				'propertyCount'  => 1,
@@ -187,12 +171,12 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getNamespace' )
 			->will( $this->returnValue( SMW_NS_SCHEMA ) );
 
-		$editInfo = $this->getMockBuilder( '\SMW\MediaWiki\EditInfo' )
+		$editInfoProvider = $this->getMockBuilder( '\SMW\MediaWiki\EditInfoProvider' )
 			->disableOriginalConstructor()
 			->setMethods( [ 'getOutput' ] )
 			->getMock();
 
-		$editInfo->expects( $this->any() )
+		$editInfoProvider->expects( $this->any() )
 			->method( 'getOutput' )
 			->will( $this->returnValue( new ParserOutput() ) );
 
@@ -215,7 +199,7 @@ class NewRevisionFromEditCompleteTest extends \PHPUnit_Framework_TestCase {
 				'smwgSchemaTypes' => [ 'FOO_ROLE' => [] ]
 			],
 			$title,
-			$editInfo,
+			$editInfoProvider,
 			$pageInfoProvider,
 			[
 				'propertyCount'  => 3,

@@ -187,8 +187,7 @@
 			edgeTolerance: data.renderer === 'bar' ? '-35': '-20',
 			formatString: data.parameters.valueformat === '' ? '%d' : data.parameters.valueformat,
 			formatter: $.jqplot.LabelFormatter,
-			labels: data.parameters.pointlabels === 'label' ? data.labels : data.numbers,
-			hideZeros: data.parameters.hideZeroes
+			labels: data.parameters.pointlabels === 'label' ? data.labels : data.numbers
 		};
 
 		var seriesDefaults = {

@@ -56,11 +56,7 @@ class UpdateEntityCollation extends \Maintenance {
 		}
 
 		$applicationFactory = ApplicationFactory::getInstance();
-		$maintenanceFactory = $applicationFactory->newMaintenanceFactory();
-
 		$store = $applicationFactory->getStore( 'SMW\SQLStore\SQLStore' );
-
-		$messageReporter = $maintenanceFactory->newMessageReporter( [ $this, 'reportMessage' ] );
 
 		$connection = $store->getConnection( 'mw.db' );
 		$tableFieldUpdater = new TableFieldUpdater( $store );
@@ -87,30 +83,24 @@ class UpdateEntityCollation extends \Maintenance {
 		$expected = $res->numRows() + $i;
 
 		if ( $applicationFactory->getSettings()->get( 'smwgEntityCollation' ) !== $GLOBALS['wgCategoryCollation'] ) {
-			$smwgEntityCollation = $applicationFactory->getSettings()->get( 'smwgEntityCollation' );
-			$wgCategoryCollation = $GLOBALS['wgCategoryCollation'];
-
-			$this->reportMessage( "\n" . '$smwgEntityCollation: ' . $smwgEntityCollation );
-			$this->reportMessage( "\n" . '$wgCategoryCollation: ' . $wgCategoryCollation . "\n" );
-
 			$this->reportMessage(
-				"\nThe setting of `smwgEntityCollation` and `wgCategoryCollation`\n" .
-				"are different and may result in an inconsitent sorting display\n" .
-				"for entities.\n"
+				"\n" . 'The setting of $smwgEntityCollation and $wgCategoryCollation are different' . "\n" .
+				'and may result in an inconsitent sorting display for entities.' . "\n"
 			);
+
+			$this->reportMessage( "\n" . '$smwgEntityCollation: ' . $applicationFactory->getSettings()->get( 'smwgEntityCollation' ) );
+			$this->reportMessage( "\n" . '$wgCategoryCollation: ' . $GLOBALS['wgCategoryCollation'] . "\n" );
 		}
 
 		$this->reportMessage(
-			"\nRunning `$smwgEntityCollation` update ..."
+			"\nPerforming the update ..."
 		);
 
 		$this->reportMessage( "\n   ... selecting $expected rows ..." );
 		$this->reportMessage( "\n" );
 
 		$this->doUpdate( $store, $tableFieldUpdater, $res, $i, $expected );
-		$this->reportMessage( "\n   ... done.\n" );
-
-		\Hooks::run( 'SMW::Maintenance::AfterUpdateEntityCollationComplete', [ $store, $messageReporter ] );
+		$this->reportMessage( "\n" );
 	}
 
 	private function doUpdate( $store, $tableFieldUpdater, $res, $i, $expected ) {
@@ -134,7 +124,7 @@ class UpdateEntityCollation extends \Maintenance {
 			}
 
 			$this->reportMessage(
-				"\r". sprintf( "%-50s%s", "   ... updating `smw_sort` field", sprintf( "%4.0f%% (%s/%s)", ( $i / $expected ) * 100, $i, $expected ) )
+				"\r". sprintf( "%-35s%s", "   ... updating document no.", sprintf( "%4.0f%% (%s/%s)", ( $i / $expected ) * 100, $i, $expected ) )
 			);
 
 			$tableFieldUpdater->updateSortField( $row->smw_id, $search );
@@ -147,7 +137,7 @@ class UpdateEntityCollation extends \Maintenance {
 			return end( $pv )->getString();
 		}
 
-		if ( $row->smw_title[0] !== '_' ) {
+		if ( $row->smw_title{0} !== '_' ) {
 			return $row->smw_sortkey;
 		}
 

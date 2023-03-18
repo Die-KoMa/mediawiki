@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Nemo bis",
-			"Robby"
+			"Robby",
+			"Nemo bis"
 		]
 	},
+	"srf-name": "Formate vu semantesche Resultater",
 	"prefs-srf-eventcalendar-options": "Optioune vum Kalenner vun den Eventementer",
 	"prefs-srf-datatables-options": "Optioune vun den Tabelle vun Donnéeën",
 	"srf-module-loading": "Lueden...",
@@ -77,7 +78,7 @@
 	"srf-paramdesc-graphname": "Leet den Titel vun der Grafik fest",
 	"srf-paramdesc-graphsize": "Leet d'Gréisst vun der Grafik (a Pixel) fest",
 	"srf-paramdesc-graphlegend": "Leet fest ob d'Erklärung (Legend) vum Grafik gewise gi soll oder net",
-	"srf-paramdesc-graphlabel": "Leet d'Schrëftgréisst a Pixel fest",
+	"srf-paramdesc-graphlabel": "Lett d'Etiquette vun der Grafik fest",
 	"srf-paramdesc-rankdir": "Leet d'Richtung vun de Feiler fest",
 	"srf-paramdesc-graphlink": "Leet fest ob d'Kniet op hier Wikisäite verlinke sollen",
 	"srf-paramdesc-graphcolor": "Leet d'Faarf vun der Grafik fest",
@@ -131,6 +132,5 @@
 	"srf-ui-mediaplayer-label-previous": "Vireg",
 	"srf-ui-mediaplayer-label-pause": "Paus",
 	"srf-ui-mediaplayer-label-stop": "Stopp",
-	"srf-paramdesc-gantt-diagramtitle": "Numm vum Diagramm",
-	"srf-printername-gantt": "Gantt"
+	"srf-excel-link": "Excel"
 }

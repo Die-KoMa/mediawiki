@@ -1,10 +1,10 @@
 {
     "name": "SemanticResultFormats",
-	"version": "3.2.0",
+	"version": "3.0.1",
 	"author": [
 		"James Hong Kong",
 		"Stephan Gambke",
-		"[https://www.entropywins.wtf/mediawiki Jeroen De Dauw]",
+		"Jeroen De Dauw",
 		"Yaron Koren",
 		"..."
 	],
@@ -14,10 +14,7 @@
 	"license-name": "GPL-2.0-or-later",
 	"type": "semantic",
 	"requires": {
-		"MediaWiki": ">= 1.31",
-		"extensions": {
-			"SemanticMediaWiki": ">= 3.0"
-		}
+		"MediaWiki": ">= 1.27"
 	},
 	"MessagesDirs": {
 		"SemanticResultFormats": [
@@ -29,5 +26,5 @@
 		"SemanticResultFormats::onExtensionFunction"
 	],
 	"load_composer_autoloader":true,
-	"manifest_version": 2
+	"manifest_version": 1
 }

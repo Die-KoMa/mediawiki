@@ -15,52 +15,25 @@ use SMW\SQLStore\QueryEngine\DescriptionInterpreterFactory;
  */
 class DescriptionInterpreterFactoryTest extends \PHPUnit_Framework_TestCase {
 
-	private $store;
-	private $connection;
-	private $circularReferenceGuard;
-
-	protected function setUp() {
-
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
-			->disableOriginalConstructor()
-			->setMethods( [ 'getConnection' ] )
-			->getMockForAbstractClass();
-
-		$this->connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->any() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $this->connection ) );
-
-		$this->circularReferenceGuard = $this->getMockBuilder( '\SMW\Utils\CircularReferenceGuard' )
-			->disableOriginalConstructor()
-			->getMock();
-	}
-
 	public function testCanConstruct() {
 
 		$this->assertInstanceOf(
-			DescriptionInterpreterFactory::class,
-			new DescriptionInterpreterFactory( $this->store, $this->circularReferenceGuard )
+			'\SMW\SQLStore\QueryEngine\DescriptionInterpreterFactory',
+			new DescriptionInterpreterFactory()
 		);
 	}
 
 	public function testCanConstructDispatchingDescriptionInterpreter() {
 
-		$conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$instance = new DescriptionInterpreterFactory(
-			$this->store,
-			$this->circularReferenceGuard
-		);
+		$instance = new DescriptionInterpreterFactory();
 
 		$this->assertInstanceOf(
 			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\DispatchingDescriptionInterpreter',
-			$instance->newDispatchingDescriptionInterpreter( $conditionBuilder )
+			$instance->newDispatchingDescriptionInterpreter( $querySegmentListBuilder )
 		);
 	}
 

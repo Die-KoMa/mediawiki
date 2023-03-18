@@ -84,12 +84,18 @@ class ElasticClientTaskHandler extends TaskHandler {
 	 */
 	public function getHtml() {
 
+		$connection = $this->getStore()->getConnection( 'elastic' );
+
+		if ( !$connection->ping() ) {
+			return '';
+		}
+
 		$link = $this->outputFormatter->createSpecialPageLink(
 			$this->msg( 'smw-admin-supplementary-elastic-title' ),
 			[ 'action' => 'elastic' ]
 		);
 
-		$html = Html::rawElement(
+		return Html::rawElement(
 			'li',
 			[],
 			$this->msg(
@@ -99,18 +105,6 @@ class ElasticClientTaskHandler extends TaskHandler {
 				]
 			)
 		);
-
-		$html = Html::rawElement(
-			'h3',
-			[],
-			$this->msg( 'smw-admin-supplementary-elastic-section-subtitle' )
-		) . Html::rawElement(
-			'ul',
-			[],
-			$html
-		);
-
-		return $html;
 	}
 
 	/**
@@ -124,7 +118,7 @@ class ElasticClientTaskHandler extends TaskHandler {
 		$action = $webRequest->getText( 'action' );
 
 		if ( !$connection->ping() ) {
-			return $this->outputNoNodesAvailable( $connection );
+			return $this->outputNoNodesAvailable();
 		} elseif ( $action === 'elastic' ) {
 			$this->outputHead();
 		} else {
@@ -143,26 +137,14 @@ class ElasticClientTaskHandler extends TaskHandler {
 		$this->outputInfo();
 	}
 
-	private function outputNoNodesAvailable( $connection ) {
+	private function outputNoNodesAvailable() {
 
 		$this->outputHead();
 
-		$html = Html::rawElement(
-			'h3',
-			[ 'class' => 'smw-title' ],
-			$this->msg( [ 'smw-admin-supplementary-elastic-replication-header-title' ] )
-		) . Html::rawElement(
-			'p',
-			[],
-			$this->msg( [ 'smw-admin-supplementary-elastic-no-connection' ], Message::PARSE )
-		). Html::rawElement(
-			'h4',
-			[ 'class' => 'smw-title' ],
-			$this->msg( [ 'smw-admin-supplementary-elastic-endpoints' ] )
-		) . Html::rawElement(
-			'pre',
-			[],
-			json_encode( $connection->getConfig()->safeGet( 'endpoints', [] ), JSON_PRETTY_PRINT )
+		$html = Html::element(
+			'div',
+			[ 'class' => 'smw-callout smw-callout-error' ],
+			'Elasticsearch has no active nodes available.'
 		);
 
 		$this->outputFormatter->addHTML( $html );
@@ -195,25 +177,16 @@ class ElasticClientTaskHandler extends TaskHandler {
 			$this->outputFormatter->encodeAsJson( $connection->info() )
 		);
 
-		$applicationFactory = ApplicationFactory::getInstance();
-		$elasticFactory = $applicationFactory->singleton( 'ElasticFactory' );
-
-		$replicationStatus = $elasticFactory->newReplicationStatus(
+		$replicationStatus = new ReplicationStatus(
 			$connection
 		);
 
-		$jobQueue = $applicationFactory->getJobQueue();
+		$jobQueue = ApplicationFactory::getInstance()->getJobQueue();
 
 		$html .= Html::element(
 			'li',
 			[],
 			$this->msg( [ 'smw-admin-supplementary-elastic-status-last-active-replication', $replicationStatus->get( 'last_update' ) ] )
-		);
-
-		$html .= Html::element(
-			'li',
-			[],
-			$this->msg( [ 'smw-admin-supplementary-elastic-status-replication-monitoring', $connection->getConfig()->dotGet( 'indexer.monitor.entity.replication' ) ? '✓' : '✗' ] )
 		);
 
 		$html .= Html::rawElement(
@@ -244,7 +217,7 @@ class ElasticClientTaskHandler extends TaskHandler {
 		);
 
 		$this->outputFormatter->addHTML(
-			Html::element( 'h3', [ 'class' => 'smw-title'  ], $this->msg(
+			Html::element( 'h3', [], $this->msg(
 				'smw-admin-supplementary-elastic-status-replication' )
 			) . Html::rawElement( 'ul', [], $html )
 		);
@@ -256,7 +229,7 @@ class ElasticClientTaskHandler extends TaskHandler {
 		}
 
 		$this->outputFormatter->addHTML(
-			Html::element( 'h3', [ 'class' => 'smw-title' ], $this->msg( 'smw-admin-supplementary-elastic-functions' ) )
+			Html::element( 'h3', [], $this->msg( 'smw-admin-supplementary-elastic-functions' ) )
 		);
 
 		$this->outputFormatter->addHTML(

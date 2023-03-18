@@ -13,14 +13,14 @@ use SMW\Query\Language\ValueDescription;
 class SQLiteValueMatchConditionBuilder extends ValueMatchConditionBuilder {
 
 	/**
-	 * @see ValueMatchConditionBuilder::canHaveMatchCondition
+	 * @see ValueMatchConditionBuilder::canApplyFulltextSearchMatchCondition
 	 * @since 2.5
 	 *
 	 * @param ValueDescription $description
 	 *
 	 * @return boolean
 	 */
-	public function canHaveMatchCondition( ValueDescription $description ) {
+	public function canApplyFulltextSearchMatchCondition( ValueDescription $description ) {
 
 		if ( !$this->isEnabled() ) {
 			return false;

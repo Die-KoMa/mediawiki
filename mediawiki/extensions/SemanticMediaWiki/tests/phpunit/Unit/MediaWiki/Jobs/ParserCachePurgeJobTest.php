@@ -2,6 +2,8 @@
 
 namespace SMW\Tests\MediaWiki\Jobs;
 
+use SMW\ApplicationFactory;
+use SMW\DIWikiPage;
 use SMW\MediaWiki\Jobs\ParserCachePurgeJob;
 
 /**
@@ -9,11 +11,30 @@ use SMW\MediaWiki\Jobs\ParserCachePurgeJob;
  * @group semantic-mediawiki
  *
  * @license GNU GPL v2+
- * @since 3.1
+ * @since 2.3
  *
  * @author mwjames
  */
 class ParserCachePurgeJobTest extends \PHPUnit_Framework_TestCase {
+
+	private $applicationFactory;
+
+	protected function setUp() {
+		parent::setUp();
+
+		$this->applicationFactory = ApplicationFactory::getInstance();
+
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+			->getMockForAbstractClass();
+
+		$this->applicationFactory->registerObject( 'Store', $store );
+	}
+
+	protected function tearDown() {
+		$this->applicationFactory->clear();
+
+		parent::tearDown();
+	}
 
 	public function testCanConstruct() {
 
@@ -22,54 +43,59 @@ class ParserCachePurgeJobTest extends \PHPUnit_Framework_TestCase {
 			->getMock();
 
 		$this->assertInstanceOf(
-			ParserCachePurgeJob::class,
+			'SMW\MediaWiki\Jobs\ParserCachePurgeJob',
 			new ParserCachePurgeJob( $title )
 		);
 	}
 
-	public function testRun() {
+	/**
+	 * @dataProvider parametersProvider
+	 */
+	public function testJobWithIdList( $parameters ) {
 
-		$action = 'Foo';
+		$subject = DIWikiPage::newFromText( __METHOD__ );
 
-		$updateParserCacheCallback = function( $parameters ) use( $action ) {
-			return $parameters['causeAction'] === $action;
-		};
+		$instance = new ParserCachePurgeJob(
+			$subject->getTitle(),
+			$parameters
+		);
 
-		$parameters = [
-			'action' => $action
+		$this->assertTrue(
+			$instance->run()
+		);
+	}
+
+	public function testSplitList() {
+
+		$subject = DIWikiPage::newFromText( __METHOD__ );
+
+		$instance = new ParserCachePurgeJob(
+			$subject->getTitle()
+		);
+
+		$list = [
+			DIWikiPage::newFromText( 'Foo' ),
+			DIWikiPage::newFromText( 'Bar' ),
+			new DIWikiPage( 'Foobar', 0 , '', '_QUERY123' )
 		];
 
-		$title = $this->getMockBuilder( '\Title' )
-			->disableOriginalConstructor()
-			->getMock();
+		$this->assertEquals(
+			[ [ 'Foo#0##', 'Bar#0##', 'Foobar#0##' ], [ '_QUERY123' ] ],
+			$instance->splitList( $list )
+		);
+	}
 
-		$page = $this->getMockBuilder( '\WikiPage' )
-			->disableOriginalConstructor()
-			->getMock();
+	public function parametersProvider() {
 
-		$page->expects( $this->once() )
-			->method( 'getTitle' )
-			->will( $this->returnValue( $title ) );
+		$provider[] = [
+			'idlist' => [ 1, 2 ]
+		];
 
-		$page->expects( $this->once() )
-			->method( 'doPurge' );
+		$provider[] = [
+			'idlist' => '1|2'
+		];
 
-		if ( method_exists( $page, 'updateParserCache' ) ) {
-			$page->expects( $this->once() )
-				->method( 'updateParserCache' )
-				->with( $this->callback( $updateParserCacheCallback ) );
-		}
-
-		$instance = $this->getMockBuilder( ParserCachePurgeJob::class )
-			->setConstructorArgs( [ $title, $parameters ] )
-			->setMethods( [ 'newWikiPage' ] )
-			->getMock();
-
-		$instance->expects( $this->once() )
-			->method( 'newWikiPage' )
-			->will( $this->returnValue( $page ) );
-
-		$instance->run();
+		return $provider;
 	}
 
 }

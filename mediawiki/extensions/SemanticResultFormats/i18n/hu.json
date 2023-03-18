@@ -1,16 +1,17 @@
 {
 	"@metadata": {
 		"authors": [
-			"Csega",
 			"Dani",
 			"Dj",
 			"Glanthor Reviol",
-			"Misibacsi",
 			"TK-999",
+			"Csega",
+			"Misibacsi",
 			"Tacsipacsi"
 		]
 	},
 	"srf-desc": "További formátumok a Szemantikus MediaWiki beépített lekérdezéseihez",
+	"srf-name": "Szemantikus eredményformátumok",
 	"srf-module-loading": "Betöltés…",
 	"srf-paramdesc-height": "Magasság",
 	"srf-paramdesc-width": "Szélesség",

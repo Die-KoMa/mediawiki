@@ -145,11 +145,11 @@ class ParametersProcessor {
 		}
 
 		if ( !array_key_exists( 'offset', $parameters ) ) {
-			$parameters['offset'] = $request->getInt( 'offset', 0 );
+			$parameters['offset'] = $request->getVal( 'offset', 0 );
 		}
 
 		if ( !array_key_exists( 'limit', $parameters ) ) {
-			$parameters['limit'] = $request->getInt( 'limit', self::$defaultLimit );
+			$parameters['limit'] = $request->getVal( 'limit', self::$defaultLimit );
 		}
 
 		$parameters['limit'] = min( $parameters['limit'], self::$maxInlineLimit );
@@ -201,7 +201,7 @@ class ParametersProcessor {
 		foreach ( $printouts as $param ) {
 			$param = trim( $param );
 
-			if ( ( $param !== '' ) && ( $param [0] != '?' ) ) {
+			if ( ( $param !== '' ) && ( $param { 0 } != '?' ) ) {
 				$param = '?' . $param;
 			}
 
@@ -231,7 +231,7 @@ class ParametersProcessor {
 						$val = self::replace( '0x7C', '|', $val );
 					}
 
-					$parameters[] = $k == 0 && $key[0] == '?' ? $key . '=' . $val : $val;
+					$parameters[] = $k == 0 && $key{0} == '?' ? $key . '=' . $val : $val;
 				}
 			} elseif ( is_string( $key ) ) {
 				$parameters[$key] = $value;
@@ -245,11 +245,11 @@ class ParametersProcessor {
 
 	private static function hasPipe( $key, $value ) {
 
-		if ( $key !== '' && $key[0] == '?' && strpos( $value, '|' ) !== false ) {
+		if ( $key !== '' && $key{0} == '?' && strpos( $value, '|' ) !== false ) {
 			return true;
 		}
 
-		if ( is_string( $value ) && $value !== '' && $value[0] == '?' && strpos( $value, '|' ) !== false ) {
+		if ( is_string( $value ) && $value !== '' && $value{0} == '?' && strpos( $value, '|' ) !== false ) {
 			return true;
 		}
 

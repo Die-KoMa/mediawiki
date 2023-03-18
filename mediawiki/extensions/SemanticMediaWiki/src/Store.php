@@ -7,7 +7,6 @@ use Onoi\MessageReporter\MessageReporterAwareTrait;
 use Psr\Log\LoggerAwareTrait;
 use SMW\Connection\ConnectionManager;
 use SMW\Utils\Timer;
-use SMW\Options;
 use SMWDataItem as DataItem;
 use SMWQuery;
 use SMWQueryResult;
@@ -161,13 +160,6 @@ abstract class Store implements QueryEngine {
 			$wikipage = $dataItem;
 		}
 
-		$entityCache = ApplicationFactory::getInstance()->getEntityCache();
-		$key = $entityCache->makeCacheKey( 'redirect', $wikipage->getHash() );
-
-		if ( $type === DataItem::TYPE_PROPERTY && ( $serialization = $entityCache->fetch( $key ) ) !== false ) {
-			return DataItem::newFromSerialization( $type, $serialization );
-		}
-
 		$dataItems = $this->getPropertyValues( $wikipage, new DIProperty( '_REDI' ) );
 
 		if ( is_array( $dataItems ) && count( $dataItems ) > 0 ) {
@@ -179,11 +171,6 @@ abstract class Store implements QueryEngine {
 			} else {
 				$dataItem = $redirectDataItem;
 			}
-		}
-
-		if ( $type === DataItem::TYPE_PROPERTY ) {
-			$entityCache->save( $key, $dataItem->getSerialization(), $entityCache::TTL_DAY );
-			$entityCache->associate( $wikipage, $key );
 		}
 
 		return $dataItem;
@@ -230,28 +217,29 @@ abstract class Store implements QueryEngine {
 		$subject = $semanticData->getSubject();
 		$hash = $subject->getHash();
 
-		// Deprecated since 3.1, use SMW::Store::BeforeDataUpdateComplete
+		/**
+		 * @since 1.6
+		 */
 		\Hooks::run( 'SMWStore::updateDataBefore', [ $this, $semanticData ] );
-
-		\Hooks::run( 'SMW::Store::BeforeDataUpdateComplete', [ $this, $semanticData ] );
 
 		$this->doDataUpdate( $semanticData );
 
-		// Deprecated since 3.1, use SMW::Store::AfterDataUpdateComplete
+		/**
+		 * @since 1.6
+		 */
 		\Hooks::run( 'SMWStore::updateDataAfter', [ $this, $semanticData ] );
 
-		\Hooks::run( 'SMW::Store::AfterDataUpdateComplete', [ $this, $semanticData ] );
+		$context = [
+			'method' => __METHOD__,
+			'role' => 'production',
+			'origin' => $hash,
+			'procTime' => Timer::getElapsedTime( __METHOD__, 5 ),
+		];
 
-		$rev = $semanticData->getExtensionData( 'revision_id' );
-		$procTime = Timer::getElapsedTime( __METHOD__, 5 );
-
-		$this->logger->info(
-			[ 'Store', 'Update completed: {hash}', 'rev: {rev}', 'procTime: {procTime}'],
-			[ 'method' => __METHOD__, 'role' => 'production', 'hash' => $hash, 'rev' => $rev, 'procTime' => $procTime ]
-		);
+		$this->logger->info( '[Store] Update completed: {origin} (procTime in sec: {procTime})', $context );
 
 		if ( !$this->getOption( 'smwgAutoRefreshSubject' ) || $semanticData->getOption( Enum::OPT_SUSPEND_PURGE ) ) {
-			return $this->logger->info( [ 'Store', 'Skipping html, parser cache purge' ], [ 'role' => 'user' ] );
+			return $this->logger->info( '[Store] Skipping html, parser cache purge', [ 'role' => 'user' ] );
 		}
 
 		$pageUpdater = $applicationFactory->newPageUpdater();
@@ -475,9 +463,6 @@ abstract class Store implements QueryEngine {
 	 */
 	public static function setupStore( $verbose = true, $options = null ) {
 
-		$store = StoreFactory::getStore();
-		$messageReporter = null;
-
 		// See notes in ExtensionSchemaUpdates
 		if ( is_bool( $verbose ) ) {
 			$verbose = $verbose;
@@ -491,19 +476,15 @@ abstract class Store implements QueryEngine {
 			$options = $options['options'];
 		}
 
-		if ( $options instanceof Options && $options->has( 'messageReporter' ) ) {
-			$messageReporter = $options->get( 'messageReporter' );
+		$store = StoreFactory::getStore();
+
+		if ( $options instanceof Options ) {
+			foreach ( $options->getOptions() as $key => $value ) {
+				$store->getOptions()->set( $key, $value );
+			}
 		}
 
-		if ( $messageReporter !== null ) {
-			$store->setMessageReporter( $messageReporter );
-
-			$messageReporter->reportMessage(
-				"\nSemantic MediaWiki " . SMW_VERSION . " updater\n"
-			);
-		}
-
-		return $store->setup( $options );
+		return $store->setup( $verbose );
 	}
 
 	/**

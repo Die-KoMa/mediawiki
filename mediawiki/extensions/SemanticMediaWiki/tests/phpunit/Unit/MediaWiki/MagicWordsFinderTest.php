@@ -4,7 +4,6 @@ namespace SMW\Tests\MediaWiki;
 
 use ParserOutput;
 use SMW\MediaWiki\MagicWordsFinder;
-use SMW\ApplicationFactory;
 
 /**
  * @covers \SMW\MediaWiki\MagicWordsFinder
@@ -16,14 +15,6 @@ use SMW\ApplicationFactory;
  * @author mwjames
  */
 class MagicWordsFinderTest extends \PHPUnit_Framework_TestCase {
-
-	private $magicWordsFinder;
-
-	protected function setUp() {
-		parent::setUp();
-
-		$this->magicWordsFinder = ApplicationFactory::getInstance()->create( 'MagicWordsFinder' );
-	}
 
 	public function testCanConstruct() {
 
@@ -47,7 +38,7 @@ class MagicWordsFinderTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testFindMagicWordInText( $magicWord, $text, $expectedText, $expectedWord ) {
 
-		$instance = $this->magicWordsFinder;
+		$instance = new MagicWordsFinder();
 		$word = $instance->findMagicWordInText( $magicWord, $text );
 
 		$this->assertInternalType(

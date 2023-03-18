@@ -69,17 +69,11 @@
 
 		previewHeight = newPreviewHeight;
 
-		$( function() {
-			window.dispatchEvent( new Event( 'resize' ) ); // It fixes form preview
-		} );
-
 		return false;
 	};
 
 	/**
 	 * Called when the server has sent the preview
-	 *
-	 * @param result
 	 */
 	var resultReceivedHandler = function handleResultReceived( result ) {
 
@@ -139,19 +133,20 @@
 
 			// get the pagename and split it into parts
 			var pageName = mw.config.get( 'wgPageName' );
-			var parts = pageName.split( '/' );
+			var parts = pageName.split( '/', 3 );
 
 			if ( mw.util.getParamValue( 'form' ) ) {
 				data.form = mw.util.getParamValue( 'form' );
-			} else if ( parts.length > 1 ) { // found a formname
+			}
+			else if ( parts.length > 1 ) { // found a formname
 				data.form = parts[1];
 			}
 
 			if ( mw.util.getParamValue( 'target' ) ) {
 				data.target = mw.util.getParamValue( 'target' );
-			} else if ( parts.length > 2 ) { // found a pagename
-				// Put the name back together, if it contains slashes.
-				data.target = parts.slice(2).join( '/' );
+			}
+			else if ( parts.length > 2 ) { // found a pagename
+				data.target = parts[2];
 			}
 		}
 
@@ -218,15 +213,6 @@
 		if ( mw.config.get( 'wgAction' ) === 'formedit' ||
 			mw.config.get( 'wgCanonicalSpecialPageName' ) === 'FormEdit' ) {
 			$( '#wpPreview' ).pfAjaxPreview();
-			$( document ).on( 'VEForAllLoaded', function() {
-				if ( $('.visualeditor').length > 0 ) {
-					$( '#wpPreview' ).off('click', previewButtonClickedHandler).on('click', function( event ) {
-						mw.pageFormsActualizeVisualEditorFields( function() {
-							previewButtonClickedHandler( event );
-						});
-					});
-				}
-			});
 		}
 	} );
 

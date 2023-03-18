@@ -15,9 +15,9 @@ use SMW\SQLStore\SQLStore;
 class IdCacheManager {
 
 	/**
-	 * @var []
+	 * @var SQLStore
 	 */
-	private $caches;
+	private $store;
 
 	/**
 	 * @since 3.0
@@ -39,8 +39,8 @@ class IdCacheManager {
 			throw new RuntimeException( "Missing 'entity.lookup' instance.");
 		}
 
-		if ( !isset( $this->caches['propertytable.hash'] ) ) {
-			throw new RuntimeException( "Missing 'propertytable.hash' instance.");
+		if ( !isset( $this->caches['table.hash'] ) ) {
+			throw new RuntimeException( "Missing 'table.hash' instance.");
 		}
 	}
 
@@ -98,10 +98,6 @@ class IdCacheManager {
 	 * @param string $sortkey
 	 */
 	public function setCache( $title, $namespace, $interwiki, $subobject, $id, $sortkey ) {
-
-		if ( is_array( $title ) ) {
-			throw new RuntimeException( "Expected a string instead an array was detected!" );
-		}
 
 		if ( strpos( $title, ' ' ) !== false ) {
 			throw new RuntimeException( "Somebody tried to use spaces in a cache title! ($title)");
@@ -195,11 +191,7 @@ class IdCacheManager {
 			];
 		}
 
-		if ( is_array( $args ) ) {
-			$hash = $this->computeSha1( $args );
-		} else {
-			$hash = $args;
-		}
+		$hash = $this->computeSha1( $args );
 
 		if ( ( $id = $this->caches['entity.id']->fetch( $hash ) ) !== false ) {
 			return (int)$id;
@@ -222,11 +214,7 @@ class IdCacheManager {
 	 */
 	public function getSort( $args ) {
 
-		if ( is_array( $args ) ) {
-			$hash = $this->computeSha1( $args );
-		} else {
-			$hash = $args;
-		}
+		$hash = $this->computeSha1( $args );
 
 		if ( ( $sort = $this->caches['entity.sort']->fetch( $hash ) ) !== false ) {
 			return $sort;

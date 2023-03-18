@@ -39,16 +39,6 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructUpdater() {
-
-		$instance = new SQLStoreFactory( new SMWSQLStore3() );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\SQLStoreUpdater',
-			$instance->newUpdater()
-		);
-	}
-
 	public function testNewSlaveQueryEngineReturnType() {
 
 		$instance = new SQLStoreFactory( new SMWSQLStore3() );
@@ -95,12 +85,7 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			'SMWSql3SmwIds',
-			$instance->newEntityIdManager()
-		);
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\EntityStore\EntityIdManager',
-			$instance->newEntityIdManager()
+			$instance->newEntityTable()
 		);
 	}
 
@@ -162,8 +147,17 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new SQLStoreFactory( $this->store );
 
+		$this->testEnvironment->addConfiguration( 'smwgEntityLookupCacheType', CACHE_NONE );
+
 		$this->assertInstanceOf(
-			'SMW\SQLStore\EntityStore\EntityLookup',
+			'SMW\SQLStore\EntityStore\NativeEntityLookup',
+			$instance->newEntityLookup()
+		);
+
+		$this->testEnvironment->addConfiguration( 'smwgEntityLookupCacheType', 'hash' );
+
+		$this->assertInstanceOf(
+			'SMW\SQLStore\EntityStore\CachingEntityLookup',
 			$instance->newEntityLookup()
 		);
 	}
@@ -178,13 +172,13 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructDataItemHandlerFactory() {
+	public function testCanConstructDataItemHandlerDispatcher() {
 
 		$instance = new SQLStoreFactory( $this->store );
 
 		$this->assertInstanceOf(
-			'SMW\SQLStore\EntityStore\DataItemHandlerFactory',
-			$instance->newDataItemHandlerFactory()
+			'SMW\SQLStore\EntityStore\DataItemHandlerDispatcher',
+			$instance->newDataItemHandlerDispatcher()
 		);
 	}
 
@@ -211,6 +205,10 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
 			->disableOriginalConstructor()
 			->getMock();
+
+		$store->expects( $this->once() )
+			->method( 'getOptions' )
+			->will( $this->returnValue( new Options() ) );
 
 		$store->expects( $this->once() )
 			->method( 'getConnection' )
@@ -280,7 +278,7 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 			'entity.id' => '',
 			'entity.sort' => '',
 			'entity.lookup' => '',
-			'propertytable.hash' => ''
+			'table.hash' => ''
 		];
 
 		$this->assertInstanceOf(
@@ -313,42 +311,6 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructSequenceMapFinder() {
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$idCacheManager = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\IdCacheManager' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\EntityStore\SequenceMapFinder',
-			$instance->newSequenceMapFinder( $idCacheManager )
-		);
-	}
-
-	public function testCanConstructCacheWarmer() {
-
-		$idCacheManager = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\IdCacheManager' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\EntityStore\CacheWarmer',
-			$instance->newCacheWarmer( $idCacheManager )
-		);
-	}
-
 	public function testCanConstructIdChanger() {
 
 		$instance = new SQLStoreFactory( $this->store );
@@ -359,13 +321,13 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructDuplicateFinder() {
+	public function testCanConstructUniquenessLookup() {
 
 		$instance = new SQLStoreFactory( $this->store );
 
 		$this->assertInstanceOf(
-			'\SMW\SQLStore\EntityStore\DuplicateFinder',
-			$instance->newDuplicateFinder()
+			'\SMW\SQLStore\EntityStore\UniquenessLookup',
+			$instance->newUniquenessLookup()
 		);
 	}
 
@@ -453,151 +415,13 @@ class SQLStoreFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testCanConstructEntityUniquenessLookup() {
+	public function testCanConstructEntityValueUniquenessConstraintChecker() {
 
 		$instance = new SQLStoreFactory( $this->store );
 
 		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\EntityUniquenessLookup',
-			$instance->newEntityUniquenessLookup()
-		);
-	}
-
-	public function testCanConstructQueryDependencyLinksStoreFactory() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\QueryDependencyLinksStoreFactory',
-			$instance->newQueryDependencyLinksStoreFactory()
-		);
-	}
-
-	public function testCanConstructSortLetter() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SortLetter',
-			$instance->newSortLetter()
-		);
-	}
-
-	public function testCanConstructPropertyTableIdReferenceDisposer() {
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\PropertyTableIdReferenceDisposer',
-			$instance->newPropertyTableIdReferenceDisposer()
-		);
-	}
-
-	public function testCanConstructPropertyTableHashes() {
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$idCacheManager = $this->getMockBuilder( '\SMW\SQLStore\EntityStore\IdCacheManager' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\PropertyTable\PropertyTableHashes',
-			$instance->newPropertyTableHashes( $idCacheManager )
-		);
-	}
-
-	public function testCanConstructMissingRedirectLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\MissingRedirectLookup',
-			$instance->newMissingRedirectLookup()
-		);
-	}
-
-	public function testCanConstructMonolingualTextLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\MonolingualTextLookup',
-			$instance->newMonolingualTextLookup()
-		);
-	}
-
-	public function testCanConstructDisplayTitleLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\DisplayTitleLookup',
-			$instance->newDisplayTitleLookup()
-		);
-	}
-
-	public function testCanConstructPrefetchItemLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\EntityStore\PrefetchItemLookup',
-			$instance->newPrefetchItemLookup()
-		);
-	}
-
-	public function testCanConstructPropertyTypeFinder() {
-
-		$connection = $this->getMockBuilder( '\SMW\MediaWiki\Database' )
-			->disableOriginalConstructor()
-			->getMock();
-
-		$this->store->expects( $this->once() )
-			->method( 'getConnection' )
-			->will( $this->returnValue( $connection ) );
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\PropertyTypeFinder',
-			$instance->newPropertyTypeFinder()
-		);
-	}
-
-	public function testCanConstructTableStatisticsLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\TableStatisticsLookup',
-			$instance->newTableStatisticsLookup()
-		);
-	}
-
-	public function testCanConstructErrorLookup() {
-
-		$instance = new SQLStoreFactory( $this->store );
-
-		$this->assertInstanceOf(
-			'\SMW\SQLStore\Lookup\ErrorLookup',
-			$instance->newErrorLookup()
+			'\SMW\SQLStore\EntityValueUniquenessConstraintChecker',
+			$instance->newEntityValueUniquenessConstraintChecker()
 		);
 	}
 

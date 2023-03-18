@@ -10,7 +10,6 @@ use SMW\DIWikiPage;
 use SMW\Factbox\CachedFactbox;
 use SMW\Tests\TestEnvironment;
 use SMW\Tests\Utils\Mock\MockTitle;
-use SMW\EntityCache;
 
 /**
  * @covers \SMW\Factbox\CachedFactbox
@@ -26,8 +25,6 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 
 	private $testEnvironment;
 	private $memoryCache;
-	private $entityCache;
-	private $spyLogger;
 
 	protected function setUp() {
 		parent::setUp();
@@ -37,19 +34,10 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 
 		$this->testEnvironment->withConfiguration(
 			[
-				'smwgFactboxUseCache' => true,
-				'smwgCacheType'       => 'hash'
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
+				'smwgMainCacheType' => 'hash'
 			]
 		);
-
-		$this->spyLogger = $this->testEnvironment->newSpyLogger();
-
-		$this->entityCache = $this->getMockBuilder( '\SMW\EntityCache' )
-			->disableOriginalConstructor()
-			->setMethods( ['fetch', 'save', 'saveSub', 'fetchSub', 'associate' ] )
-			->getMock();
-
-		$this->testEnvironment->registerObject( 'EntityCache', $this->entityCache );
 	}
 
 	protected function tearDown() {
@@ -59,9 +47,13 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
+		$cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
+			->disableOriginalConstructor()
+			->getMock();
+
 		$this->assertInstanceOf(
-			CachedFactbox::class,
-			new CachedFactbox( $this->entityCache )
+			'\SMW\Factbox\CachedFactbox',
+			new CachedFactbox( $cache, new \stdClass )
 		);
 	}
 
@@ -80,30 +72,26 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 			$parameters['smwgShowFactbox']
 		);
 
+		$this->testEnvironment->addConfiguration(
+			'smwgFactboxFeatures',
+			$parameters['smwgFactboxFeatures']
+		);
+
 		$this->testEnvironment->registerObject( 'Store', $parameters['store'] );
 
 		$outputPage = $parameters['outputPage'];
 
-		$instance = new CachedFactbox(
-			new EntityCache( $this->memoryCache )
-		);
-
+		$instance = new CachedFactbox( $this->memoryCache );
 		$instance->isEnabled( true );
-
-		$instance->setShowFactbox(
-			$parameters['smwgShowFactbox']
-		);
-
-		$instance->setLogger(
-			$this->spyLogger
-		);
+		$instance->setFeatureSet( $parameters['smwgFactboxFeatures'] );
 
 		$this->assertEmpty(
 			$instance->retrieveContent( $outputPage )
 		);
 
-		$instance->prepare(
+		$instance->prepareFactboxContent(
 			$outputPage,
+			$parameters['language'],
 			$parameters['parserOutput']
 		);
 
@@ -117,8 +105,9 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		// Re-run on the same instance
-		$instance->prepare(
+		$instance->prepareFactboxContent(
 			$outputPage,
+			$parameters['language'],
 			$parameters['parserOutput']
 		);
 
@@ -171,7 +160,7 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 			'Asserts that content from the outputpage property and retrieveContent() is equal'
 		);
 
-		if ( isset( $expected['isCached'] ) &&  $expected['isCached'] ) {
+		if ( $expected['text'] ) {
 
 			$this->assertTrue(
 				$instance->isCached(),
@@ -261,14 +250,15 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_NONEMPTY,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( $semanticData )
 			],
 			[
-				'text'            => $subject->getDBKey(),
-				'isCached'        => true
+				'text'            => $subject->getDBKey()
 			]
 		];
 
@@ -313,14 +303,15 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_NONEMPTY,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( $semanticData )
 			],
 			[
-				'text'            => $subject->getDBKey(),
-				'isCached'        => true
+				'text'            => $subject->getDBKey()
 			]
 		];
 
@@ -358,9 +349,11 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => false ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_HIDDEN,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( $semanticData )
 			],
 			[
@@ -418,9 +411,11 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_NONEMPTY,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( null ),
 			],
 			[
@@ -462,9 +457,11 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_NONEMPTY,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( null ),
 			],
 			[
@@ -506,9 +503,11 @@ class CachedFactboxTest extends \PHPUnit_Framework_TestCase {
 		$provider[] = [
 			[
 				'smwgNamespacesWithSemanticLinks' => [ NS_MAIN => true ],
+				'smwgFactboxFeatures' => SMW_FACTBOX_CACHE | SMW_FACTBOX_PURGE_REFRESH | SMW_FACTBOX_DISPLAY_SUBOBJECT,
 				'smwgShowFactbox' => SMW_FACTBOX_NONEMPTY,
 				'outputPage'      => $outputPage,
 				'store'           => $store,
+				'language'        => $language,
 				'parserOutput'    => $this->makeParserOutput( null ),
 			],
 			[

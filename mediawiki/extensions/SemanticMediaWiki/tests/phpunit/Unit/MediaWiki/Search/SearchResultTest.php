@@ -25,7 +25,7 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getFragment' )
 			->will( $this->returnValue( 'Foo' ) );
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 
 		$this->assertInstanceOf(
 			'\Title',
@@ -43,7 +43,7 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getFragment' )
 			->will( $this->returnValue( '' ) );
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 
 		$this->assertNull(
 			$instance->getSectionTitle()
@@ -60,7 +60,7 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getFragment' )
 			->will( $this->returnValue( '' ) );
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 		$instance->setExcerpt( 'Foo ...' );
 
 		$this->assertEquals(
@@ -87,7 +87,7 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->method( 'getFragment' )
 			->will( $this->returnValue( '' ) );
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 
 		$this->assertEquals(
 			'Foo',
@@ -101,7 +101,7 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 
 		$instance->setExcerpt( '<em>Foo</em>bar', true );
 
@@ -117,12 +117,12 @@ class SearchResultTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$instance = new SearchResult( $title );
+		$instance = SearchResult::newFromTitle( $title );
 
 		$instance->setExcerpt( 'Foobar' );
 
-		$this->assertInternalType(
-			'string',
+		$this->assertEquals(
+			"<span class='searchmatch'>Foo</span>bar\n",
 			$instance->getTextSnippet( [ 'Foo' ] )
 		);
 	}

@@ -1,11 +1,9 @@
 {
 	"@metadata": {
 		"authors": [
-			"KuboF",
 			"Michawiki",
-			"Psychoslave",
-			"Robin van der Vliet",
-			"Yekrats"
+			"Yekrats",
+			"KuboF"
 		]
 	},
 	"pageforms-desc": "Formularoj por aldonado kaj redaktado de semantikaj datumoj",
@@ -72,17 +70,16 @@
 	"pf_viewform": "Rigardi kamparon",
 	"pf_editsource": "Redaktu fonton",
 	"pf_formedit_edittitle": "Redaktu $1: $2",
-	"pf_formedit_formwarning": "Averto: Ĉi paĝo [[$1|jam ekzistas]], sed ĝi ne uzas ĉi kamparon.",
-	"pf_formedit_remove": "Forigi tiun ekzempleron",
+	"pf_formedit_formwarning": "Averto: Ĉi paĝo <a href=\"$1\">jam ekzistas</a>, sed ĝi ne uzas ĉi kamparon.",
+	"pf_formedit_remove": "Forigi",
 	"pf_formedit_addanother": "Aldoni plu",
 	"pf_formedit_none": "Neniu",
 	"pf_runquery_additionalquery": "Aldona serĉomendo",
 	"pf_formerrors_header": "Estis eraroj kun via kampara enigo, jene:",
 	"pf_blank_error": "ne povas esti malplena",
-	"pf_bad_url_error": "nepre havu la ĝustan URL-formaton, komence kun 'http'",
+	"pf_bad_url_error": "nepre havas la korektan URL-formaton, komence kun 'http'",
 	"pf_bad_email_error": "devas havi validan formaton de retpoŝta adreso",
 	"pf_bad_number_error": "devas esti valida nombro",
-	"pf_bad_integer_error": "devas esti valida enjero",
 	"pf_bad_date_error": "devas esti valida dato",
 	"uploadwindow": "Alŝuta fenestro",
 	"pf_deletionlog": "Protokolo pri forigado",

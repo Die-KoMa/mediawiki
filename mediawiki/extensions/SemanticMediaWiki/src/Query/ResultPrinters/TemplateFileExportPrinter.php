@@ -5,9 +5,6 @@ namespace SMW\Query\ResultPrinters;
 use Sanitizer;
 use SMW\ApplicationFactory;
 use SMWQueryResult as QueryResult;
-use SMW\MediaWiki\Template\Template;
-use SMW\MediaWiki\Template\TemplateSet;
-use SMW\MediaWiki\Template\TemplateExpander;
 
 /**
  * Exports data as file in a format that is defined by its invoked templates.
@@ -25,6 +22,11 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 	 * @var integer
 	 */
 	private $numRows = 0;
+
+	/**
+	 * @var TemplateRenderer
+	 */
+	private $templateRenderer;
 
 	/**
 	 * @see ResultPrinter::getName
@@ -74,9 +76,10 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 
 		$params['searchlabel']->setDefault( 'templateFile' );
 
-		$params['valuesep'] = [
-			'message' => 'smw-paramdesc-sep',
-			'default' => ',',
+		$params['template arguments'] = [
+			'message' => 'smw-paramdesc-template-arguments',
+			'default' => 'legacy',
+			'values' => [ 'numbered', 'named', 'legacy' ],
 		];
 
 		$params['template'] = [
@@ -85,10 +88,9 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 			'message' => 'smw-paramdesc-template',
 		];
 
-		$params['named args'] =  [
-			'type' => 'boolean',
-			'message' => 'smw-paramdesc-named_args',
-			'default' => false,
+		$params['valuesep'] = [
+			'message' => 'smw-paramdesc-sep',
+			'default' => ',',
 		];
 
 		$params['userparam'] = [
@@ -134,12 +136,8 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 			return $this->getFileLink( $queryResult, $outputMode );
 		}
 
-		$templateExpander = new TemplateExpander(
-			$this->copyParser()
-		);
-
-		$text = $templateExpander->expand(
-			$this->newTemplateSet( $queryResult )
+		$text = $this->expandTemplates(
+			$this->getText( $queryResult )
 		);
 
 		return trim( $text, "\n" );
@@ -158,9 +156,10 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 		return $link->getText( $outputMode, $this->mLinker );
 	}
 
-	private function newTemplateSet( $queryResult ) {
+	private function getText( $queryResult ) {
 
-		$templateSet = new TemplateSet();
+		$this->templateRenderer = ApplicationFactory::getInstance()->newMwCollaboratorFactory()->newWikitextTemplateRenderer();
+		$result = '';
 
 		$link = $this->getLink(
 			$queryResult,
@@ -169,54 +168,74 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 
 		$link = $link->getText( SMW_OUTPUT_RAW, $this->mLinker );
 
+		// Extra fields include:
+		// - {{{userparam}}}
+		// - {{{querylink}}}
+
 		if ( $this->params['introtemplate'] !== '' ) {
-			$template = new Template(
+			$this->templateRenderer->addField( 'userparam', $this->params['userparam'] );
+			$this->templateRenderer->addField( 'querylink', $link );
+
+			$this->templateRenderer->packFieldsForTemplate(
 				$this->params['introtemplate']
 			);
 
-			$template->field( '#userparam', $this->params['userparam'] );
-			$template->field( '#querylink', $link );
-			$templateSet->addTemplate( $template );
+			$result .= $this->templateRenderer->render();
 		}
 
 		while ( $row = $queryResult->getNext() ) {
-			$template = new Template(
-				$this->params['template']
-			);
-
-			$template->field( '#userparam', $this->params['userparam'] );
-			$this->addFields( $template, $row );
-			$templateSet->addTemplate( $template );
+			$result .= $this->row( $queryResult, $row );
 		}
 
+		// Extra fields include:
+		// - {{{userparam}}}
+		// - {{{querylink}}}
+
 		if ( $this->params['outrotemplate'] !== '' ) {
-			$template = new Template(
+			$this->templateRenderer->addField( 'userparam', $this->params['userparam'] );
+			$this->templateRenderer->addField( 'querylink', $link );
+
+			$this->templateRenderer->packFieldsForTemplate(
 				$this->params['outrotemplate']
 			);
 
-			$template->field( '#userparam', $this->params['userparam'] );
-			$template->field( '#querylink', $link );
-			$templateSet->addTemplate( $template );
+			$result .= $this->templateRenderer->render();
 		}
 
-		return $templateSet;
+		return $result;
 	}
 
-	private function addFields( $template, array $row ) {
+	private function row( QueryResult $queryResult, array $row ) {
+
 		$this->numRows + 1;
+		$this->addFields( $row );
+
+		$this->templateRenderer->packFieldsForTemplate(
+			$this->params['template']
+		);
+
+		return $this->templateRenderer->render();
+	}
+
+	private function addFields( $row ) {
 
 		foreach ( $row as $i => $field ) {
 
 			$value = '';
 			$fieldName = '';
 
+			// {{{?Foo}}}
+			if ( $this->params['template arguments'] === 'legacy'  ) {
+				$fieldName = '?' . $field->getPrintRequest()->getLabel();
+			}
+
 			// {{{Foo}}}
-			if ( $this->params['named args'] === true ) {
+			if ( $this->params['template arguments'] === 'named' ) {
 				$fieldName = $field->getPrintRequest()->getLabel();
 			}
 
 			// {{{1}}}
-			if ( $fieldName === '' || $fieldName === '?' ) {
+			if ( $fieldName === '' || $fieldName === '?' || $this->params['template arguments'] === 'numbered' ) {
 				$fieldName = intval( $i + 1 );
 			}
 
@@ -224,10 +243,10 @@ class TemplateFileExportPrinter extends FileExportPrinter {
 				$value .= $value === '' ? $text : $this->params['valuesep'] . ' ' . $text;
 			}
 
-			$template->field( $fieldName, $value );
+			$this->templateRenderer->addField( $fieldName, $value );
 		}
 
-		$template->field( '#', $this->numRows );
+		$this->templateRenderer->addField( '#', $this->numRows );
 	}
 
 }

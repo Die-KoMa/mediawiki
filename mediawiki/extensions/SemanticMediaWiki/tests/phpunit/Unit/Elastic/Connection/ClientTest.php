@@ -20,7 +20,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 	use PHPUnitCompat;
 
 	private $elasticClient;
-	private $lockManager;
+	private $cache;
 
 	protected function setUp() {
 
@@ -32,7 +32,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->lockManager = $this->getMockBuilder( '\SMW\Elastic\Connection\LockManager' )
+		$this->cache = $this->getMockBuilder( '\Onoi\Cache\Cache' )
 			->disableOriginalConstructor()
 			->getMock();
 	}
@@ -41,34 +41,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertInstanceOf(
 			Client::class,
-			new Client( $this->elasticClient, $this->lockManager )
+			new Client( $this->elasticClient )
 		);
-	}
-
-	public function testHasMaintenanceLock() {
-
-		$this->lockManager->expects( $this->once() )
-			->method( 'hasMaintenanceLock' );
-
-		$instance = new Client(
-			$this->elasticClient,
-			$this->lockManager
-		);
-
-		$instance->hasMaintenanceLock();
-	}
-
-	public function testSetMaintenanceLock() {
-
-		$this->lockManager->expects( $this->once() )
-			->method( 'setMaintenanceLock' );
-
-		$instance = new Client(
-			$this->elasticClient,
-			$this->lockManager
-		);
-
-		$instance->setMaintenanceLock();
 	}
 
 	public function testBulkOnIllegalArgumentErrorThrowsReplicationException() {
@@ -89,7 +63,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new Client(
 			$this->elasticClient,
-			$this->lockManager,
+			$this->cache,
 			$options
 		);
 

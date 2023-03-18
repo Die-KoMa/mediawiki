@@ -1,10 +1,14 @@
 <?php
 /**
+ * File holding the PFYearInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFYearInput class.
+ *
  * @ingroup PFFormInput
  */
 class PFYearInput extends PFTextInput {
@@ -13,75 +17,74 @@ class PFYearInput extends PFTextInput {
 	}
 
 	public static function getDefaultPropTypes() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherPropTypesHandled() {
-		return [ '_dat' ];
+		return array( '_dat' );
 	}
 
 	public static function getDefaultPropTypeLists() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherPropTypeListsHandled() {
-		return [];
+		return array();
 	}
 
 	public static function getDefaultCargoTypes() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherCargoTypesHandled() {
-		return [ 'Date' ];
+		return array( 'Date' );
 	}
 
 	public static function getDefaultCargoTypeLists() {
-		return [];
+		return array();
 	}
 
 	public static function getOtherCargoTypeListsHandled() {
-		return [];
+		return array();
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
 		$other_args['size'] = 4;
 		return parent::getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args );
 	}
 
 	public static function getParameters() {
-		$params = [];
-		$params[] = [
+		$params = array();
+		$params[] = array(
 			'name' => 'mandatory',
 			'type' => 'boolean',
 			'description' => wfMessage( 'pf_forminputs_mandatory' )->text()
-		];
-		$params[] = [
+		);
+		$params[] = array(
 			'name' => 'restricted',
 			'type' => 'boolean',
 			'description' => wfMessage( 'pf_forminputs_restricted' )->text()
-		];
-		$params[] = [
+		);
+		$params[] = array(
 			'name' => 'class',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_class' )->text()
-		];
-		$params[] = [
+		);
+		$params[] = array(
 			'name' => 'default',
 			'type' => 'string',
 			'description' => wfMessage( 'pf_forminputs_default' )->text()
-		];
-		$params[] = [
+		);
+		$params[] = array(
 			'name' => 'size',
 			'type' => 'int',
 			'description' => wfMessage( 'pf_forminputs_size' )->text()
-		];
+		);
 		return $params;
 	}
 
 	/**
 	 * Returns the HTML code to be included in the output page for this input.
-	 * @return string
 	 */
 	public function getHtmlText() {
 		return self::getHTML(

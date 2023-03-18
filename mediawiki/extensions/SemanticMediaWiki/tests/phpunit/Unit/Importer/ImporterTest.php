@@ -72,7 +72,7 @@ class ImporterTest extends \PHPUnit_Framework_TestCase {
 		$instance->doImport();
 
 		$this->assertContains(
-			'skipping the import process',
+			'Skipping the import process',
 			$spyMessageReporter->getMessagesAsString()
 		);
 	}

@@ -1,10 +1,14 @@
 <?php
 /**
+ * File holding the PFCheckboxesInput class
+ *
  * @file
  * @ingroup PF
  */
 
 /**
+ * The PFCheckboxesInput class.
+ *
  * @ingroup PFFormInput
  */
 class PFCheckboxesInput extends PFMultiEnumInput {
@@ -14,26 +18,26 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 	}
 
 	public static function getDefaultPropTypeLists() {
-		return [
-			'enumeration' => []
-		];
+		return array(
+			'enumeration' => array()
+		);
 	}
 
 	public static function getOtherPropTypeListsHandled() {
-		return [];
+		return array();
 	}
 
 	public static function getDefaultCargoTypeLists() {
-		return [
-			'Enumeration' => []
-		];
+		return array(
+			'Enumeration' => array()
+		);
 	}
 
 	public static function getOtherCargoTypeListsHandled() {
-		return [];
+		return array();
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
 		global $wgPageFormsTabIndex, $wgPageFormsFieldNum, $wgPageFormsShowOnSelect;
 
 		$checkboxClass = ( $is_mandatory ) ? 'mandatoryField' : 'createboxInput';
@@ -51,7 +55,7 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 		$cur_values = PFValuesUtils::getValuesArray( $cur_value, $delimiter );
 
 		if ( ( $possible_values = $other_args['possible_values'] ) == null ) {
-			$possible_values = [];
+			$possible_values = array();
 		}
 		$text = '';
 		foreach ( $possible_values as $key => $possible_value ) {
@@ -67,11 +71,11 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 				$label = $possible_value;
 			}
 
-			$checkbox_attrs = [
+			$checkbox_attrs = array(
 				'id' => $input_id,
 				'tabindex' => $wgPageFormsTabIndex,
 				'class' => $checkboxClass,
-			];
+			);
 			if ( in_array( $possible_value, $cur_values ) ) {
 				$checkbox_attrs['checked'] = 'checked';
 			}
@@ -83,9 +87,9 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 			// Put a <label> tag around each checkbox, for CSS
 			// purposes as well as to clarify this element.
 			$text .= "\t" . Html::rawElement( 'label',
-				[ 'class' => $labelClass ],
+				array( 'class' => $labelClass ),
 				$checkbox_input . '&nbsp;' . $label
-			) . " ";
+			) . "\n";
 			$wgPageFormsTabIndex++;
 			$wgPageFormsFieldNum++;
 		}
@@ -117,15 +121,15 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 			$outerSpanClass .= ' pfShowIfChecked';
 			foreach ( $other_args['show on select'] as $div_id => $options ) {
 				if ( array_key_exists( $outerSpanID, $wgPageFormsShowOnSelect ) ) {
-					$wgPageFormsShowOnSelect[$outerSpanID][] = [ $options, $div_id ];
+					$wgPageFormsShowOnSelect[$outerSpanID][] = array( $options, $div_id );
 				} else {
-					$wgPageFormsShowOnSelect[$outerSpanID] = [ [ $options, $div_id ] ];
+					$wgPageFormsShowOnSelect[$outerSpanID] = array( array( $options, $div_id ) );
 				}
 			}
 		}
 
 		$text .= Html::hidden( $input_name . '[is_list]', 1 );
-		$outerSpanAttrs = [ 'id' => $outerSpanID, 'class' => $outerSpanClass ];
+		$outerSpanAttrs = array( 'id' => $outerSpanID, 'class' => $outerSpanClass );
 		$text = "\t" . Html::rawElement( 'span', $outerSpanAttrs, $text ) . "\n";
 
 		return $text;
@@ -133,7 +137,6 @@ class PFCheckboxesInput extends PFMultiEnumInput {
 
 	/**
 	 * Returns the HTML code to be included in the output page for this input.
-	 * @return string
 	 */
 	public function getHtmlText() {
 		return self::getHTML(

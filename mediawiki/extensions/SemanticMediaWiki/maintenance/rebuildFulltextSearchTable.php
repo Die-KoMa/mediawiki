@@ -113,14 +113,7 @@ class RebuildFulltextSearchTable extends \Maintenance {
 
 		if ( $this->hasOption( 'with-maintenance-log' ) ) {
 			$maintenanceLogger = $maintenanceFactory->newMaintenanceLogger( 'RebuildFulltextSearchTableLogger' );
-			$runtimeValues = $maintenanceHelper->getRuntimeValues();
-
-			$log = [
-				'Memory used' => $runtimeValues['memory-used'],
-				'Time used' => $runtimeValues['humanreadable-time']
-			];
-
-			$maintenanceLogger->logFromArray( $log );
+			$maintenanceLogger->log( $maintenanceHelper->getFormattedRuntimeValues() );
 		}
 
 		$maintenanceHelper->reset();

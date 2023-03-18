@@ -2,7 +2,6 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use Onoi\EventDispatcher\EventDispatcherAwareTrait;
 use SMW\ApplicationFactory;
 use SMW\DIWikiPage;
 use SMW\EventHandler;
@@ -21,8 +20,6 @@ use Wikipage;
  * @author mwjames
  */
 class ArticleDelete extends HookHandler {
-
-	use EventDispatcherAwareTrait;
 
 	/**
 	 * @var
@@ -106,16 +103,41 @@ class ArticleDelete extends HookHandler {
 		$updateDispatcherJob = $jobFactory->newUpdateDispatcherJob( $title, $parameters );
 		$updateDispatcherJob->insert();
 
+		$parserCachePurgeJob = $jobFactory->newParserCachePurgeJob(
+			$title,
+			[
+				'idlist' => [
+					$parameters['_id']
+				],
+				'origin' => 'ArticleDelete',
+
+				// Insert will only be done for when the links store is active
+				// otherwise the job wouldn't have any work to do
+				'is.enabled' => $this->getOption( 'smwgEnabledQueryDependencyLinksStore' )
+			]
+		);
+
+		$parserCachePurgeJob->insert();
+
 		$this->store->deleteSubject( $title );
 
-		$context = [
-			'context' => 'ArticleDelete',
-			'title' => $title,
-			'subject' => $subject
-		];
+		$eventHandler = EventHandler::getInstance();
+		$dispatchContext = $eventHandler->newDispatchContext();
 
-		$this->eventDispatcher->dispatch( 'InvalidateResultCache', $context );
-		$this->eventDispatcher->dispatch( 'InvalidateEntityCache', $context );
+		$dispatchContext->set( 'title', $title );
+		$dispatchContext->set( 'subject', $subject );
+		$dispatchContext->set( 'context', 'ArticleDelete' );
+
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.prefetcher.reset',
+			$dispatchContext
+		);
+
+		// Removes any related update marker
+		$eventHandler->getEventDispatcher()->dispatch(
+			'cached.update.marker.delete',
+			$dispatchContext
+		);
 	}
 
 }

@@ -8,10 +8,9 @@ use SMW\Query\Language\ValueDescription;
 use SMW\SQLStore\QueryEngine\DescriptionInterpreter;
 use SMW\SQLStore\QueryEngine\FulltextSearchTableFactory;
 use SMW\SQLStore\QueryEngine\QuerySegment;
-use SMW\SQLStore\QueryEngine\ConditionBuilder;
+use SMW\SQLStore\QueryEngine\QuerySegmentListBuilder;
 use SMWDIBlob as DIBlob;
-use SMW\SQLStore\SQLStore;
-use SMW\Store;
+use SMWSql3SmwIds;
 
 /**
  * @license GNU GPL v2+
@@ -24,14 +23,9 @@ use SMW\Store;
 class ValueDescriptionInterpreter implements DescriptionInterpreter {
 
 	/**
-	 * @var Store
+	 * @var QuerySegmentListBuilder
 	 */
-	private $store;
-
-	/**
-	 * @var ConditionBuilder
-	 */
-	private $conditionBuilder;
+	private $querySegmentListBuilder;
 
 	/**
 	 * @var ComparatorMapper
@@ -46,12 +40,10 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 	/**
 	 * @since 2.2
 	 *
-	 * @param Store $store
-	 * @param ConditionBuilder $conditionBuilder
+	 * @param QuerySegmentListBuilder $querySegmentListBuilder
 	 */
-	public function __construct( Store $store, ConditionBuilder $conditionBuilder ) {
-		$this->store = $store;
-		$this->conditionBuilder = $conditionBuilder;
+	public function __construct( QuerySegmentListBuilder $querySegmentListBuilder ) {
+		$this->querySegmentListBuilder = $querySegmentListBuilder;
 		$this->comparatorMapper = new ComparatorMapper();
 		$this->fulltextSearchTableFactory = new FulltextSearchTableFactory();
 	}
@@ -105,18 +97,17 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 
 		if ( $comparator === SMW_CMP_EQ ) {
 			$query->type = QuerySegment::Q_VALUE;
-			$dataItem = $description->getDataItem();
 
-			$oid = $this->store->getObjectIds()->getSMWPageID(
-				$dataItem->getDBkey(),
-				$dataItem->getNamespace(),
-				$dataItem->getInterwiki(),
-				$dataItem->getSubobjectName()
+			$oid = $this->querySegmentListBuilder->getStore()->getObjectIds()->getSMWPageID(
+				$description->getDataItem()->getDBkey(),
+				$description->getDataItem()->getNamespace(),
+				$description->getDataItem()->getInterwiki(),
+				$description->getDataItem()->getSubobjectName()
 			);
 
 			$query->joinfield = [ $oid ];
 		} else { // Join with SMW IDs table needed for other comparators (apply to title string).
-			$query->joinTable = SQLStore::ID_TABLE;
+			$query->joinTable = SMWSql3SmwIds::TABLE_NAME;
 			$query->joinfield = "{$query->alias}.smw_id";
 
 			$comparator = $this->comparatorMapper->mapComparator(
@@ -124,9 +115,9 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 				$value
 			);
 
-			$connection = $this->store->getConnection( 'mw.db.queryengine' );
+			$db = $this->querySegmentListBuilder->getStore()->getConnection( 'mw.db.queryengine' );
 
-			$query->where = "{$query->alias}.smw_sortkey$comparator" . $connection->addQuotes( $value );
+			$query->where = "{$query->alias}.smw_sortkey$comparator" . $db->addQuotes( $value );
 		}
 
 		return $query;
@@ -151,14 +142,14 @@ class ValueDescriptionInterpreter implements DescriptionInterpreter {
 		}
 
 		$valueMatchConditionBuilder = $this->fulltextSearchTableFactory->newValueMatchConditionBuilderByType(
-			$this->store
+			$this->querySegmentListBuilder->getStore()
 		);
 
 		if ( !$valueMatchConditionBuilder->isEnabled() || !$valueMatchConditionBuilder->hasMinTokenLength( $value ) ) {
 			return false;
 		}
 
-		if ( !$usesWidePromixity && !$valueMatchConditionBuilder->canHaveMatchCondition( $description ) ) {
+		if ( !$usesWidePromixity && !$valueMatchConditionBuilder->canApplyFulltextSearchMatchCondition( $description ) ) {
 			return false;
 		}
 

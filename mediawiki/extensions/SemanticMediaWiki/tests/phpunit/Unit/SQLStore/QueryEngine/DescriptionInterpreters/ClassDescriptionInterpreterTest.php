@@ -20,14 +20,9 @@ use SMW\Tests\TestEnvironment;
 class ClassDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 	private $querySegmentValidator;
-	private $store;
 
 	protected function setUp() {
 		parent::setUp();
-
-		$this->store = $this->getMockBuilder( '\SMW\Store' )
-			->disableOriginalConstructor()
-			->getMockForAbstractClass();
 
 		$testEnvironment = new TestEnvironment();
 		$this->querySegmentValidator = $testEnvironment->getUtilityFactory()->newValidatorFactory()->newQuerySegmentValidator();
@@ -35,13 +30,13 @@ class ClassDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 	public function testCanConstruct() {
 
-		$conditionBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\ConditionBuilder' )
+		$querySegmentListBuilder = $this->getMockBuilder( '\SMW\SQLStore\QueryEngine\QuerySegmentListBuilder' )
 			->disableOriginalConstructor()
 			->getMock();
 
 		$this->assertInstanceOf(
 			'\SMW\SQLStore\QueryEngine\DescriptionInterpreters\ClassDescriptionInterpreter',
-			new ClassDescriptionInterpreter( $this->store, $conditionBuilder )
+			new ClassDescriptionInterpreter( $querySegmentListBuilder )
 		);
 	}
 
@@ -62,23 +57,22 @@ class ClassDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
+		$store = $this->getMockBuilder( '\SMW\SQLStore\SQLStore' )
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->store->expects( $this->any() )
+		$store->expects( $this->any() )
 			->method( 'getConnection' )
 			->will( $this->returnValue( $connection ) );
 
-		$this->store->expects( $this->any() )
+		$store->expects( $this->any() )
 			->method( 'getObjectIds' )
 			->will( $this->returnValue( $objectIds ) );
 
-		$queryEngineFactory = new QueryEngineFactory( $this->store );
+		$queryEngineFactory = new QueryEngineFactory( $store );
 
 		$instance = new ClassDescriptionInterpreter(
-			$this->store,
-			$queryEngineFactory->newConditionBuilder()
+			$queryEngineFactory->newQuerySegmentListBuilder()
 		);
 
 		$this->assertTrue(

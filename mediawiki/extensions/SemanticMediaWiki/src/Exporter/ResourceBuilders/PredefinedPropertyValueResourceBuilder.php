@@ -43,7 +43,7 @@ class PredefinedPropertyValueResourceBuilder extends PropertyValueResourceBuilde
 			$diSubject->getNamespace()
 		);
 
-		$expElement = $this->exporter->newExpElement(
+		$expElement = $this->exporter->getDataItemExpElement(
 			$dataItem
 		);
 

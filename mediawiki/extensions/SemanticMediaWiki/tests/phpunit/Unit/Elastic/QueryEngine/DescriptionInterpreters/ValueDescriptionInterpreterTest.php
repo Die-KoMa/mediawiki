@@ -51,8 +51,7 @@ class ValueDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 		$this->conditionBuilder->setOptions( new Options(
 			[
-				'cjk.best.effort.proximity.match' => true,
-				'maximum.value.length' => 500
+				'cjk.best.effort.proximity.match' => true
 			]
 		) );
 
@@ -73,43 +72,6 @@ class ValueDescriptionInterpreterTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertEquals(
 			$expected,
-			(string)$condition
-		);
-	}
-
-	public function testRestrictedLength() {
-
-		$options = [
-			'property' => $this->dataItemFactory->newDIProperty( 'Bar' ),
-			'pid'   => 'P:42',
-			'field' => 'wpgID',
-			'type'  => 'must'
-		];
-
-		$this->conditionBuilder->setOptions( new Options(
-			[
-				'maximum.value.length' => 1
-			]
-		) );
-
-		$instance = new ValueDescriptionInterpreter(
-			$this->conditionBuilder
-		);
-
-		$description = $this->descriptionFactory->newValueDescription(
-			$this->dataItemFactory->newDIWikiPage( 'test' ),
-			null,
-			SMW_CMP_EQ
-		);
-
-		$condition = $instance->interpretDescription(
-			$description,
-			$options
-		);
-
-		// 4 vs. 42
-		$this->assertEquals(
-			'{"bool":{"must":{"terms":{"_id":["4"]}}}}',
 			(string)$condition
 		);
 	}
