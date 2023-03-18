@@ -140,8 +140,8 @@ with lib; {
         phpfpm.pools.mediawiki = {
           phpPackage = pkgs.php71;
           settings = {
-            "listen.owner" = config.services.nginx.user;
-            "listen.group" = config.services.nginx.user;
+            "listen.owner" = mkOverride 75 config.services.nginx.user;
+            "listen.group" = mkOverride 75 config.services.nginx.user;
           };
         };
         mediawiki = rec {
