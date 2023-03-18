@@ -137,7 +137,13 @@ with lib; {
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
-        phpfpm.pools.mediawiki.phpPackage = pkgs.php71;
+        phpfpm.pools.mediawiki = {
+          phpPackage = pkgs.php71;
+          settings = {
+            "listen.owner" = config.services.nginx.user;
+            "listen.group" = config.services.nginx.user;
+          };
+        };
         mediawiki = rec {
           enable = true;
           package = pkgs.komapedia-mediawiki;
