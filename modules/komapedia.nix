@@ -147,7 +147,7 @@ with lib; {
         mediawiki = rec {
           enable = true;
           package = pkgs.komapedia-mediawiki;
-          extensions = pipe "${package}/extensions" [
+          extensions = pipe "${package}/share/mediawiki/extensions" [
             builtins.readDir
             (filterAttrs (key: val: !hasPrefix "." key && val == "directory"))
             (mapAttrs (_: null))
