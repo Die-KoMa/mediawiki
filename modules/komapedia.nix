@@ -152,6 +152,7 @@ with lib; {
             (filterAttrs (key: val: !hasPrefix "." key && val == "directory"))
             (mapAttrs (_: null))
           ];
+          skins.VectorV2 = "${cfg.package}/share/mediawiki/skins/VectorV2";
           database = {createLocally = mkDefault false;};
           virtualHost = {
             inherit (config.die-koma.komapedia) hostName adminAddr;
