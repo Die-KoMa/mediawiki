@@ -95,7 +95,7 @@
         src = ./mediawiki;
 
         installPhase = ''
-          mkdir -p $out/share/mediawiki
+          mkdir -p $out/share/
           cp --recursive --reflink=auto ${src} $out/share/mediawiki
         '';
       };
