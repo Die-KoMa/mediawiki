@@ -136,6 +136,8 @@ with lib; {
     '';
   in
     mkIf config.die-koma.komapedia.enable {
+      users.groups.wwwrun = {};
+
       services = {
         phpfpm.pools.mediawiki = {
           phpPackage = pkgs.php71;
