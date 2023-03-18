@@ -49,6 +49,12 @@
         --branch $1 -- https://github.com/wikimedia/mediawiki.git mediawiki
       cp composer.local.json mediawiki
       pushd mediawiki
+      cat <<EOF >> .gitignore
+      !/vendor
+      !/composer.lock
+      !/composer.json
+      !/composer.local.json
+      EOF
       rm -rf skins extensions/.gitignore
       ${git}/bin/git clone --depth 1 \
         --recurse-submodules=Vector \
