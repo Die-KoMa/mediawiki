@@ -71,3 +71,7 @@ Thumbs.db
 /tags
 /.htaccess
 /.htpasswd
+!/vendor
+!/composer.lock
+!/composer.json
+!/composer.local.json

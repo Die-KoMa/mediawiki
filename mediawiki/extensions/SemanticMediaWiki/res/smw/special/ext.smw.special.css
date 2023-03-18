@@ -1,0 +1,184 @@
+/*!
+ * This file is part of the Semantic MediaWiki Extension
+ * @see https://semantic-mediawiki.org/
+ *
+ * @section LICENSE
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * @since 3.0
+ *
+ * @file
+ * @ingroup SMW
+ *
+ * @licence GNU GPL v2+
+ * @author mwjames
+ */
+
+/**
+ * Special:Admin
+ */
+.smw-admin-deprecation-notice-docu-section {
+	padding: 0.8rem;
+	background-color: #fcf8e3;
+	border-color: #faf2cc;
+	color: #8a6d3b;
+}
+
+.smw-admin-deprecation fieldset {
+	border-top: 1px solid #9E9E9E;
+	margin: 0 0 5px 0;
+	border-bottom: 0px;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.smw-admin-deprecation h4 {
+	margin-top: 0px !important;
+	padding-top: 0px !important;
+}
+
+.smw-admin-deprecation fieldset legend {
+	font-weight: bold;
+}
+
+.smw-admin-hr {
+	margin-top:20px;
+	background-color: #ddd;
+}
+
+.smw-admin-deprecation-notice-section-explanation {
+	font-size:12px;
+	font-style: italic;
+}
+
+.smw-special-filter{
+	padding: 5px 0px 0px 0px;
+}
+
+.smw-special-filter-button {
+	position: relative;
+	padding: 6px 14px;
+	color: #586069;
+	border: 1px solid #e1e4e8;
+	border-radius: 3px;
+}
+
+.smw-special-filter-button:hover {
+	background-color: #f6f8fa;
+}
+
+.smw-special-filter-button a, .smw-special-filter-button a:hover, .smw-special-filter-button a:focus, .smw-special-filter-button a:active, .smw-special-filter-button a:visited {
+	font-weight: 300;
+	line-height: 20px;
+	text-decoration: none;
+	color: #586069;
+}
+
+.smw-json-placeholder {
+    opacity:0.5;
+    position: relative;
+}
+
+.client-nojs .smw-json-placeholder {
+    opacity: 1;
+}
+
+.client-nojs .smw-json-placeholder-message {
+    display: none;
+}
+
+.smw-json-data {
+    display: none;
+}
+
+.client-nojs .smw-json-data {
+    display: block;
+}
+
+/**
+ * Tabbed admin
+ */
+.smw-admin #tab-general:checked ~ #tab-content-general,
+.smw-admin #tab-supplement:checked ~ #tab-content-supplement,
+.smw-admin #tab-maintenance:checked ~ #tab-content-maintenance,
+.smw-admin #tab-registry:checked ~ #tab-content-registry,
+.smw-admin #tab-notices:checked ~ #tab-content-notices {
+	display: block;
+}
+
+.smw-admin section {
+	border: 0px solid #aaa;
+	padding: 5px 0 0 0 !important;
+}
+
+.smw-admin input.nav-tab:checked + label.nav-label {
+	border: 1px solid #aaa;
+	border-top: 2px solid orange;
+	border-bottom: 1px solid #fff;
+}
+
+.smw-admin input.nav-tab:checked + label.nav-label.smw-tab-warning {
+	border-top: 2px solid rgb(204, 0, 0);
+}
+
+.client-nojs .smw-admin-supplementary-duplookup-content:after {
+	content: "JavaScript has been disabled but is required for the request!";
+	color: red;
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: #ddd;
+	width: 100%;
+	text-align: center;
+	padding: 10px 0 10px 0;
+}
+
+.smw-admin h3,
+.smw-admin h4,
+h3.smw-title,
+h4.smw-title,
+h3 .smw-title {
+	background: #f5f5f5;
+	padding: 2px 5px;
+	margin-top: 10px !important;
+	margin-bottom: 10px !important;
+}
+
+/**
+ * Responsive settings
+ */
+@media screen and (max-width: 800px) {
+	.smw-special-pageproperty-input {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+	}
+
+	.smw-tabs.smw-admin {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.smw-tabs.smw-admin label.nav-label {
+		text-align: unset;
+		border-top: 1px solid;
+	}
+
+	.smw-tabs.smw-admin input.nav-tab:checked + label.nav-label {
+		border-left: 0px;
+		border-right: 0px;
+	}
+}
