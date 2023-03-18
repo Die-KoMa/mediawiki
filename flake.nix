@@ -69,14 +69,15 @@
       ${git}/bin/git add mediawiki
     '';
 
-    updateScript = pkgs.writeShellScript "composer-update" ''
-      echo "Running \`composer update' in mediawiki tree"
-      pushd mediawiki
-      $COMPOSER/bin/composer update --no-dev
-      $COMPOSER/bin/composer dump-autoloads
-      popd
-      ${git}/bin/git add mediawiki
-    '';
+    updateScript = composer:
+      pkgs.writeShellScript "composer-update" ''
+        echo "Running \`composer update' in mediawiki tree"
+        pushd mediawiki
+        ${composer}/bin/composer update --no-dev
+        ${composer}/bin/composer dump-autoload
+        popd
+        ${git}/bin/git add mediawiki
+      '';
 
     komapedia-mediawiki = let
       inherit (pkgs.lib) attrNames filter filterAttrs hasPrefix head pipe;
@@ -110,16 +111,20 @@
     overlays.default = final: prev: packages;
 
     apps.x86_64-linux = let
+      update-legacy = {
+        type = "app";
+        program = "${updateScript composer1}";
+      };
       update = {
         type = "app";
-        program = "${updateScript}";
+        program = "${updateScript composer2}";
       };
       upgrade = {
         type = "app";
         program = "${upgradeScript}";
       };
     in {
-      inherit update upgrade;
+      inherit update update-legacy upgrade;
       composer = {
         type = "app";
         program = "${composer2}/bin/composer";
