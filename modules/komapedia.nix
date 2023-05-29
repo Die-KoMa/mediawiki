@@ -156,13 +156,8 @@ with lib; {
           ];
           skins.VectorV2 = "${cfg.package}/share/mediawiki/skins/VectorV2";
           database = {createLocally = mkDefault false;};
-          virtualHost = {
-            inherit (config.die-koma.komapedia) hostName adminAddr;
-          };
-        };
-        httpd = {
-          enable = mkOverride 75 false;
-          virtualHosts.${cfg.virtualHost.hostName} = mkOverride 75 null;
+          webserver = "none";
+          url = "https://${config.die-koma.komapedia.hostName}/wiki/";
         };
       };
 
