@@ -21,6 +21,7 @@ with lib; {
 
   config = let
     cfg = config.services.mediawiki;
+    stateDir = "/var/lib/mediawiki";
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
@@ -45,6 +46,9 @@ with lib; {
           name = "KoMapedia";
           passwordSender = config.die-koma.komapedia.adminAddr;
           url = "https://${config.die-koma.komapedia.hostName}/wiki/";
+          extraConfig = ''
+            $smwgConfigFileDir = "${stateDir}";
+          '';
         };
       };
 
