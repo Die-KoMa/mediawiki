@@ -48,6 +48,7 @@ with lib; {
           url = "https://${config.die-koma.komapedia.hostName}/wiki/";
           extraConfig = ''
             $smwgConfigFileDir = "${stateDir}";
+            enableSemantics('${config.die-koma.komapedia.hostName}');
           '';
         };
       };
