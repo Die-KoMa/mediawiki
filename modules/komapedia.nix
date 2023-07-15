@@ -12,16 +12,25 @@ with lib; {
       description = "Hostname for the MediaWiki";
       default = "de.komapedia.org";
     };
+    semanticsHostName = mkOption {
+      type = types.str;
+      description = "Hostname passed to `enableSemantics` (should not be changed and may therefore diverge from `hostName`";
+      default = "old.die-koma.org";
+    };
     adminAddr = mkOption {
       type = types.str;
       description = "Mail address for the admin user";
       default = "homepage@die-koma.org";
     };
+    stateDir = mkOption {
+      type = types.path;
+      description = "Path where mediawiki state is kept";
+      default = "/var/lib/mediawiki";
+    };
   };
 
   config = let
     cfg = config.services.mediawiki;
-    stateDir = "/var/lib/mediawiki";
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
@@ -46,9 +55,10 @@ with lib; {
           name = "KoMapedia";
           passwordSender = config.die-koma.komapedia.adminAddr;
           url = "https://${config.die-koma.komapedia.hostName}/wiki/";
+          uploadsDir = "${config.die-koma.komapedia.stateDir}/uploads";
           extraConfig = ''
-            $smwgConfigFileDir = "${stateDir}";
-            enableSemantics('${config.die-koma.komapedia.hostName}');
+            $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
+            enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
           '';
         };
       };
