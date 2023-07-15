@@ -1,4 +1,4 @@
-{
+{packages}: {
   config,
   pkgs,
   lib,
@@ -41,15 +41,19 @@ with lib; {
             "listen.group" = mkOverride 75 config.services.nginx.user;
           };
         };
-        mediawiki = rec {
+        mediawiki = {
           enable = true;
-          package = pkgs.komapedia-mediawiki;
-          extensions = pipe "${package}/share/mediawiki/extensions" [
-            builtins.readDir
-            (filterAttrs (key: val: !hasPrefix "." key && val == "directory"))
-            (mapAttrs (_: _: null))
-          ];
+          package = packages.komapedia-mediawiki;
+          extensions = let
+            path = ../mediawiki/extensions;
+          in
+            pipe path [
+              builtins.readDir
+              (filterAttrs (key: val: !hasPrefix "." key && val == "directory"))
+              (mapAttrs (_: _: null))
+            ];
           skins.VectorV2 = "${cfg.package}/share/mediawiki/skins/VectorV2";
+
           database = {createLocally = mkDefault false;};
           webserver = "none";
           name = "KoMapedia";
