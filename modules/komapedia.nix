@@ -43,7 +43,16 @@ with lib; {
         mediawiki = {
           enable = true;
 
-          extensions = (lib.mapAttrs (_: drv: "${drv}") extensionPackages) // {};
+          extensions =
+            (lib.mapAttrs (_: drv: "${drv}") extensionPackages)
+            // {
+              # in-tree extensions
+              Math = null;
+              ParserFunctions = null;
+              Renameuser = null;
+              ReplaceText = null;
+              VisualEditor = null;
+            };
 
           database = {createLocally = mkDefault false;};
           webserver = "none";
