@@ -1,8 +1,7 @@
 {
   writeShellScriptBin,
-  composer1,
-  composer2,
   git,
+  composer,
 }:
 writeShellScriptBin "mw-upgrade" ''
   set -euo pipefail
@@ -11,13 +10,6 @@ writeShellScriptBin "mw-upgrade" ''
     echo "usage: $0 <RELEASE_BRANCH>"
     exit 1
   fi
-
-  COMPOSER=${composer2}
-  for legacy in "REL1_28" "REL1_29" "REL1_30" "REL1_31" "REL1_32" "REL1_33" "REL1_34"; do
-    if [[ "$1" == "$legacy" ]]; then
-      COMPOSER=${composer1}
-    fi
-  done
 
   echo "Upgrade mediawiki tree using upstream release branch \`$1'"
   ${git}/bin/git rm -rf --ignore-unmatch mediawiki
@@ -40,8 +32,8 @@ writeShellScriptBin "mw-upgrade" ''
     --recurse-submodules=Timeless \
     --recurse-submodules=MonoBook \
     --branch $1 -- https://github.com/wikimedia/mediawiki-skins.git skins
-  $COMPOSER/bin/composer update --no-dev
-  $COMPOSER/bin/composer dump-autoload
+  ${composer}/bin/composer update --no-dev
+  ${composer}/bin/composer dump-autoload
   popd
   find mediawiki -name .git -exec rm -rf {} +
   ${git}/bin/git add mediawiki
