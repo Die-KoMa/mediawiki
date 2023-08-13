@@ -66,10 +66,6 @@ with lib; {
             };
           };
 
-          skins = {
-            VectorV2 = null;
-          };
-
           database = {createLocally = mkDefault false;};
           webserver = "none";
           name = "KoMapedia";
