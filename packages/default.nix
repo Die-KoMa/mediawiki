@@ -34,7 +34,13 @@
       installPhase = ''
         mkdir $out
         cp -R ${drv}/${path}/extensions/${name}/* $out
-        cp -R ${drv}/${path}/vendor $out/vendor
+        cp -R ${drv}/${path}/vendor vendor
+
+        pushd vendor/composer/
+        substituteInPlace *.json *.php --replace "/extensions/${name}/" "/"
+        popd
+
+        cp -R vendor $out/
       '';
     };
 in {
