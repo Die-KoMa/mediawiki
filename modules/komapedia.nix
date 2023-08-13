@@ -53,13 +53,9 @@ with lib; {
           uploadsDir = "${config.die-koma.komapedia.stateDir}/uploads";
           extraConfig = ''
             $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
-            enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
+            #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
           '';
         };
       };
-
-      # systemd.services.mediawiki-init.script = mkOverride 75 ''
-      #   ${pkgs.php71}/bin/php ${config.services.mediawiki.finalPackage}/share/mediawiki/maintenance/update.php --conf ${config.services.phpfpm.pools.mediawiki.phpEnv.MEDIAWIKI_CONFIG} --quick
-      # '';
     };
 }
