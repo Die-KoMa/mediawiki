@@ -50,4 +50,17 @@ in rec {
   PageForms = composerExtension "PageForms";
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
   SemanticResultFormats = composerExtension' "SemanticResultFormats" {inherit SemanticMediaWiki;};
+
+  EditSubpages = pkgs.fetchzip {
+    url = "https://extdist.wmflabs.org/dist/extensions/EditSubpages-REL1_39-67938fd.tar.gz";
+    sha256 = "sha256-GCjQlIXGbvE6mhf84UYSe6MV3cH3kbpCMQI4JIeyyL4=";
+  };
+  UserMerge = pkgs.fetchzip {
+    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-a6fd7d8.tar.gz";
+    sha256 = "sha256-84I+fUhwAvSfjIrxy4u8LoXvFlvI3TkVlIRAqVy1TvQ=";
+  };
+  Variables = pkgs.fetchzip {
+    url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-1620bdf.tar.gz";
+    sha256 = "sha256-EIYivBIevBaKM7A/Tu/7UkAnQwoVnwGRNnQ88B9yhQw=";
+  };
 }
