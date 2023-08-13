@@ -1,0 +1,10 @@
+{
+  "require": {
+    "mediawiki/semantic-result-formats": "*"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  }
+}

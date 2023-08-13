@@ -1,23 +1,39 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    composer2nix = {
+      url = "github:svanderburg/composer2nix";
+      flake = false;
+    };
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
+    ...
   }: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
-
-    eachSystem = let
-      inherit (pkgs.lib) listToAttrs nameValuePair;
-      inherit (builtins) map;
-    in
-      systems: attrs: listToAttrs (map (system: nameValuePair system attrs) systems);
+    composer2nix = import inputs.composer2nix {
+      inherit pkgs system;
+      noDev = true;
+    };
   in {
-    nixosModules.komapedia = import ./modules/komapedia.nix;
+    nixosModules.komapedia = import ./modules/komapedia.nix (self.packages."${system}");
 
-    formatter = eachSystem [system] pkgs.alejandra;
+    packages."${system}" = import ./packages {
+      inherit pkgs system composer2nix;
+      lib = pkgs.lib;
+    };
+
+    devShells."${system}".default = pkgs.mkShell {
+      nativeBuildInputs = [
+        composer2nix
+        pkgs.php
+        pkgs.phpPackages.composer
+      ];
+    };
+
+    formatter."${system}" = pkgs.alejandra;
   };
 }

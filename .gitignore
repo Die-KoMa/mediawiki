@@ -1,5 +1,3 @@
 /result
-/vendor/
-/extensions/
 *~
-/mediawiki/**/.git
+/.direnv/

@@ -1,4 +1,4 @@
-{
+extensionPackages: {
   config,
   pkgs,
   lib,
@@ -43,28 +43,7 @@ with lib; {
         mediawiki = {
           enable = true;
 
-          extensions = {
-            SemanticMediaWiki = pkgs.fetchFromGitHub {
-              owner = "SemanticMediaWiki";
-              repo = "SemanticMediaWiki";
-              rev = "5c94879171d5f741b896828c25a9f2bb07a03dff";
-              sha256 = "ZNnd3fB4MhDd4xBHivBKWwVjTT0j/Jy2X3v7LFjkrcQ=";
-            };
-
-            SemanticResultFormats = pkgs.fetchFromGitHub {
-              owner = "SemanticMediaWiki";
-              repo = "SemanticResultFormats";
-              rev = "d5196722a56f9b65475be68d1e97063d7b975cb9";
-              sha256 = "uXgNLw7484Bvns2Aa57EuFmNnfeikNzLQIf+F/KNN64=";
-            };
-
-            PageForms = pkgs.fetchFromGitHub {
-              owner = "wikimedia";
-              repo = "mediawiki-extensions-PageForms";
-              rev = "f90d67ecc2c111e82db454c71592c83384ff9704";
-              sha256 = "m9e0uQtVdQkMZLwGLb9BOC/bsUpTs0V1fg9Tcuo6xiY=";
-            };
-          };
+          extensions = (lib.mapAttrs (_: drv: "${drv}") extensionPackages) // {};
 
           database = {createLocally = mkDefault false;};
           webserver = "none";
