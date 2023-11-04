@@ -62,7 +62,24 @@ with lib; {
           uploadsDir = "${config.die-koma.komapedia.stateDir}/uploads";
           extraConfig = ''
             $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
-            #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
+            enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
+
+            $wgReadOnlyFile = "${config.die-koma.komapedia.stateDir}/readonly/msg";
+            $wgLogo = "$wgResourceBasePath/resources/assets/komapedia_logo.png";
+
+            $wgEnableEmail = true;
+            $wgEnableUserEmail = true; # UPO
+            $wgEmergencyContact = "homepage@die-koma.org";
+            $wgPasswordSender = "homepage@die-koma.org";
+
+            $wgEnotifUserTalk = true; # UPO
+            $wgEnotifWatchlist = true; # UPO
+            $wgEmailAuthentication = true;
+
+            $wgLanguageCode = "de";
+
+            # we currently don't support sending mail.
+            $wgEnableEmail = false;
           '';
         };
       };
