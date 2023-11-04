@@ -59,7 +59,7 @@ with lib; {
           name = "KoMapedia";
           passwordSender = config.die-koma.komapedia.adminAddr;
           url = "https://${config.die-koma.komapedia.hostName}/wiki/";
-          uploadsDir = "${config.die-koma.komapedia.stateDir}/uploads";
+          uploadsDir = "${config.die-koma.komapedia.stateDir}/images/";
           extraConfig = ''
             $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
             #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
