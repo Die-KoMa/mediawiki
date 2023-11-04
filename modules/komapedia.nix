@@ -62,7 +62,7 @@ with lib; {
           uploadsDir = "${config.die-koma.komapedia.stateDir}/uploads";
           extraConfig = ''
             $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
-            enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
+            #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
 
             $wgReadOnlyFile = "${config.die-koma.komapedia.stateDir}/readonly/msg";
             $wgLogo = "$wgResourceBasePath/resources/assets/komapedia_logo.png";
