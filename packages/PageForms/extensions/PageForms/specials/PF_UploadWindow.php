@@ -171,7 +171,7 @@ class PFUploadWindow extends UnlistedSpecialPage {
 			# Backwards compatibility hook
 			// Avoid PHP 7.1 warning from passing $this by reference
 			$page = $this;
-			if ( !Hooks::run( 'UploadForm:initial', [ &$page ] ) ) {
+			if ( !MediaWikiServices::getInstance()->getHookContainer()->run( 'UploadForm:initial', [ &$page ] ) ) {
 				wfDebug( "Hook 'UploadForm:initial' broke output of the upload form" );
 				return;
 			}
@@ -298,6 +298,7 @@ class PFUploadWindow extends UnlistedSpecialPage {
 	protected function uploadWarning( $warnings ) {
 		$sessionKey = $this->mUpload->tryStashFile( $this->getUser() )->getStatusValue()->getValue()->getFileKey();
 
+		$linkRenderer = $this->getLinkRenderer();
 		$warningHtml = '<h2>' . $this->msg( 'uploadwarning' )->escaped() . "</h2>\n"
 			. '<ul class="warningbox">';
 		foreach ( $warnings as $warning => $args ) {
@@ -308,6 +309,31 @@ class PFUploadWindow extends UnlistedSpecialPage {
 
 				if ( $warning == 'exists' ) {
 					$msg = self::getExistsWarning( $args );
+				} elseif ( $warning == 'no-change' ) {
+					$file = $args;
+					$filename = $file->getTitle()->getPrefixedText();
+					$msg = "\t<li>" . $this->msg( 'fileexists-no-change', $filename )->parse() . "</li>\n";
+				} elseif ( $warning == 'duplicate-version' ) {
+					$file = $args[0];
+					$count = count( $args );
+					$filename = $file->getTitle()->getPrefixedText();
+					$message = $this->msg( 'fileexists-duplicate-version' )
+						->params( $filename )
+						->numParams( $count );
+					$msg = "\t<li>" . $message->parse() . "</li>\n";
+				} elseif ( $warning == 'was-deleted' ) {
+					# If the file existed before and was deleted, warn the user of this
+					$ltitle = SpecialPage::getTitleFor( 'Log' );
+					$llink = $linkRenderer->makeKnownLink(
+						$ltitle,
+						$this->msg( 'deletionlog' )->text(),
+						[],
+						[
+							'type' => 'delete',
+							'page' => Title::makeTitle( NS_FILE, $args )->getPrefixedText(),
+						]
+					);
+					$msg = "\t<li>" . $this->msg( 'filewasdeleted' )->rawParams( $llink )->parse() . "</li>\n";
 				} elseif ( $warning == 'duplicate' ) {
 					$msg = $this->getDupeWarning( $args );
 				} elseif ( $warning == 'duplicate-archive' ) {
@@ -371,9 +397,10 @@ class PFUploadWindow extends UnlistedSpecialPage {
 			return $this->showUploadForm( $this->getUploadForm( $statusText ) );
 		}
 
+		$hookContainer = MediaWikiServices::getInstance()->getHookContainer();
 		// Avoid PHP 7.1 warning from passing $this by reference
 		$page = $this;
-		if ( !Hooks::run( 'UploadForm:BeforeProcessing', [ &$page ] ) ) {
+		if ( !$hookContainer->run( 'UploadForm:BeforeProcessing', [ &$page ] ) ) {
 			wfDebug( "Hook 'UploadForm:BeforeProcessing' broke processing the file.\n" );
 			// This code path is deprecated. If you want to break upload processing
 			// do so by hooking into the appropriate hooks in UploadBase::verifyUpload
@@ -433,7 +460,7 @@ class PFUploadWindow extends UnlistedSpecialPage {
 
 		$basename = str_replace( '_', ' ', $basename );
 
-		$output = <<<END
+		$text = <<<END
 		<script type="text/javascript">
 		var input = parent.window.jQuery( parent.document.getElementById( "{$this->mInputID}" ) );
 		var classes = input.attr( "class" ).split( /\s+/ );
@@ -469,16 +496,20 @@ class PFUploadWindow extends UnlistedSpecialPage {
 			}
 			input.change();
 		}
-		parent.jQuery.fancybox.close( true );
+
+		// Close the upload window, now that everything is completed.
+		// A little bit of a @hack - instead of calling all of the
+		// window-closing code, we just "click" on the close button,
+		// which takes care of the rest.
+		parent.window.jQuery( '.popupform-close' ).click();
 	</script>
 
 END;
-		// $this->getOutput()->addHTML( $output );
-		print $output;
+		print $text;
 
 		// Avoid PHP 7.1 warning from passing $this by reference
 		$page = $this;
-		Hooks::run( 'SpecialUploadComplete', [ &$page ] );
+		$hookContainer->run( 'SpecialUploadComplete', [ &$page ] );
 	}
 
 	/**

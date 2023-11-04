@@ -33,6 +33,8 @@
  * |query string=namespace=User&preload=UserStub}}
  */
 
+use MediaWiki\MediaWikiServices;
+
 class PFFormInputParserFunction {
 	/**
 	 * static variable to guarantee that JavaScript for autocompletion
@@ -188,13 +190,13 @@ class PFFormInputParserFunction {
 				return Html::element( 'div', [ 'class' => 'error' ], $e->getMessage() );
 			}
 			$formInputAttrs['data-possible-forms'] = implode( '|', $allForms );
-			$formInputAttrs['data-form-label'] = PFUtils::getFormDropdownLabel();
+			$formInputAttrs['data-form-label'] = wfMessage( 'pf-formstart-formlabel' )->escaped();
 		} elseif ( count( $listOfForms ) == 1 ) {
 			$inFormName = str_replace( '\,', ',', $inFormName );
 			$formContents .= Html::hidden( "form", $inFormName );
 		} else {
 			$formInputAttrs['data-possible-forms'] = implode( '|', $listOfForms );
-			$formInputAttrs['data-form-label'] = PFUtils::getFormDropdownLabel();
+			$formInputAttrs['data-form-label'] = wfMessage( 'pf-formstart-formlabel' )->escaped();
 		}
 
 		// Recreate the passed-in query string as a set of hidden
@@ -214,7 +216,7 @@ class PFFormInputParserFunction {
 		$formInputAttrs['data-button-label'] = ( $inButtonStr != '' ) ? $inButtonStr : wfMessage( 'pf_formstart_createoredit' )->escaped();
 		$formContents .= Html::element( 'div', $formInputAttrs, null );
 
-		Hooks::run( 'PageForms::FormInputEnd', [ $params, &$formContents ] );
+		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::FormInputEnd', [ $params, &$formContents ] );
 
 		$str = "\t" . Html::rawElement( 'form', [
 				'name' => 'createbox',

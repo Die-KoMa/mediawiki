@@ -32,7 +32,7 @@ class PFFormStart extends SpecialPage {
 		$params = $req->getVal( 'params' );
 
 		// If the query string did not contain a form name, try the URL.
-		if ( !$form_name ) {
+		if ( $form_name == '' && $query !== null ) {
 			$queryparts = explode( '/', $query, 2 );
 			$form_name = isset( $queryparts[0] ) ? $queryparts[0] : '';
 			// If a target was specified, it means we should
@@ -40,13 +40,6 @@ class PFFormStart extends SpecialPage {
 			if ( isset( $queryparts[1] ) ) {
 				$target_name = $queryparts[1];
 				$this->doRedirect( $form_name, $target_name, $params );
-			}
-
-			// Get namespace from the URL, if it's there.
-			$namespace_label_loc = strpos( $form_name, "/Namespace:" );
-			if ( $namespace_label_loc !== false ) {
-				$target_namespace = substr( $form_name, $namespace_label_loc + 11 );
-				$form_name = substr( $form_name, 0, $namespace_label_loc );
 			}
 		}
 
@@ -121,7 +114,7 @@ END;
 					return;
 				}
 				$formInputAttrs['data-possible-forms'] = implode( '|', $allForms );
-				$formInputAttrs['data-form-label'] = PFUtils::getFormDropdownLabel();
+				$formInputAttrs['data-form-label'] = wfMessage( 'pf-formstart-formlabel' )->escaped();
 			} else {
 				$formInputAttrs['data-autofocus'] = true;
 			}

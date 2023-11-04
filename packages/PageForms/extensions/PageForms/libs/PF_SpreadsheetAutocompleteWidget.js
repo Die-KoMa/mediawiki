@@ -36,8 +36,8 @@ OO.mixinClass( pf.spreadsheetAutocompleteWidget, OO.ui.mixin.LookupElement );
 /**
  * @inheritdoc
  */
-pf.spreadsheetAutocompleteWidget.prototype.getLookupRequest = function () {
-    var
+pf.spreadsheetAutocompleteWidget.prototype.getLookupRequest = function() {
+	var
 		value = this.getValue(),
 		deferred = $.Deferred(),
 		api,
@@ -88,14 +88,14 @@ pf.spreadsheetAutocompleteWidget.prototype.getLookupRequest = function () {
 /**
  * @inheritdoc
  */
- pf.spreadsheetAutocompleteWidget.prototype.getLookupCacheDataFromResponse = function ( response ) {
+ pf.spreadsheetAutocompleteWidget.prototype.getLookupCacheDataFromResponse = function( response ) {
 	return response || [];
 };
 
 /**
  * @inheritdoc
  */
- pf.spreadsheetAutocompleteWidget.prototype.getLookupMenuOptionsFromData = function ( data ) {
+ pf.spreadsheetAutocompleteWidget.prototype.getLookupMenuOptionsFromData = function( data ) {
 	var item,
 		items = [];
 
@@ -124,12 +124,12 @@ pf.spreadsheetAutocompleteWidget.prototype.getLookupRequest = function () {
 			name = this.config.autocompletesettings,
 			edgValues = mw.config.get('edgValues'),
 			valueFilter;
-        data = {};
+		data = {};
 		if ( wgPageFormsEDSettings !== null && wgPageFormsEDSettings[name].title !== undefined && wgPageFormsEDSettings[name].title !== "" ) {
 			data.title = edgValues[wgPageFormsEDSettings[name].title];
 			if (data.title !== undefined && data.title !== null) {
 				let i = 0;
-				data.title.forEach(function () {
+				data.title.forEach(function() {
 					var wgPageFormsAutocompleteOnAllChars = mw.config.get( 'wgPageFormsAutocompleteOnAllChars' );
 					if ( wgPageFormsAutocompleteOnAllChars ) {
 						valueFilter = data.title[i].toLowerCase().includes(self.getValue().toLowerCase());
@@ -163,25 +163,25 @@ pf.spreadsheetAutocompleteWidget.prototype.getLookupRequest = function () {
  * @return {Mixed} HtmlSnipppet
  *
  */
-pf.spreadsheetAutocompleteWidget.prototype.highlightText = function ( suggestion ) {
+pf.spreadsheetAutocompleteWidget.prototype.highlightText = function( suggestion ) {
 	var searchTerm = this.getValue();
 	if ( searchTerm[0] == ' ' ) {
 		searchTerm = searchTerm.slice(1);
 	}
-    var searchRegexp = new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
-        searchTerm.replace(/([\^\$\(\)\[\]\{\}\*\.\+\?\|\\])/gi, "\\$1") +
-        ")(?![^<>]*>)(?![^&;]+;)", "gi");
-    var itemLabel = suggestion;
-    var loc = itemLabel.search(searchRegexp);
-    var t;
-    if (loc >= 0) {
-        t = itemLabel.slice(0, Math.max(0, loc)) +
-            '<strong>' + itemLabel.substr(loc, searchTerm.length) + '</strong>' +
-            itemLabel.slice(loc + searchTerm.length);
-    } else {
-        t = itemLabel;
-    }
-    return new OO.ui.HtmlSnippet(t);
+	var searchRegexp = new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
+		searchTerm.replace(/([\^\$\(\)\[\]\{\}\*\.\+\?\|\\])/gi, "\\$1") +
+		")(?![^<>]*>)(?![^&;]+;)", "gi");
+	var itemLabel = suggestion;
+	var loc = itemLabel.search(searchRegexp);
+	var t;
+	if (loc >= 0) {
+		t = itemLabel.slice(0, Math.max(0, loc)) +
+			'<strong>' + itemLabel.substr(loc, searchTerm.length) + '</strong>' +
+			itemLabel.slice(loc + searchTerm.length);
+	} else {
+		t = itemLabel;
+	}
+	return new OO.ui.HtmlSnippet(t);
 };
 /**
  * Provides an OOUI's MenuOptionWidget with a "No Matches" label
@@ -223,13 +223,13 @@ pf.spreadsheetAutocompleteWidget.prototype.checkIfAnyWordStartsWithInputValue = 
  *
  */
 pf.spreadsheetAutocompleteWidget.prototype.getDependentFieldOpts = function( data_y, dep_on_field ) {
-    var dep_field_opts = {};
-    var $baseElement;
+	var dep_field_opts = {};
+	var $baseElement;
 	$baseElement = $('td[data-y="'+data_y+'"][origname="'+dep_on_field+'"]');
-    dep_field_opts.base_value = $baseElement.html();
-    dep_field_opts.base_prop = mw.config.get('wgPageFormsFieldProperties')[dep_on_field] ||
+	dep_field_opts.base_value = $baseElement.html();
+	dep_field_opts.base_prop = mw.config.get('wgPageFormsFieldProperties')[dep_on_field] ||
 		$baseElement.attr('name');
-    dep_field_opts.prop = this.config['autocompletesettings'];
+	dep_field_opts.prop = this.config['autocompletesettings'];
 
-    return dep_field_opts;
+	return dep_field_opts;
 }

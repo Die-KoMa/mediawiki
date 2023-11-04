@@ -225,7 +225,7 @@ END;
 
 END;
 		// @TODO - remove this hook? It seems useless.
-		Hooks::run( 'PageForms::PrintRedirectForm', [ $is_save, !$is_save, false, &$text ] );
+		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::PrintRedirectForm', [ $is_save, !$is_save, false, &$text ] );
 		return $text;
 	}
 
@@ -265,7 +265,7 @@ END;
 			'ext.pageforms.checkboxes',
 			'ext.pageforms.select2',
 			'ext.pageforms.rating',
-			'ext.pageforms.fancybox',
+			'ext.pageforms.popupformedit',
 			'ext.pageforms.fullcalendar',
 			'jquery.makeCollapsible'
 		];
@@ -276,7 +276,6 @@ END;
 			"ext.pageforms.checkboxes.styles",
 			'ext.pageforms.select2.styles',
 			'ext.pageforms.rating.styles',
-			'ext.pageforms.fancybox.styles',
 			"ext.pageforms.forminput.styles"
 		];
 
@@ -288,7 +287,7 @@ END;
 		$output->addModuleStyles( $mainModuleStyles );
 
 		$otherModules = [];
-		Hooks::run( 'PageForms::AddRLModules', [ &$otherModules ] );
+		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::AddRLModules', [ &$otherModules ] );
 		// @phan-suppress-next-line PhanEmptyForeach
 		foreach ( $otherModules as $rlModule ) {
 			$output->addModules( $rlModule );
@@ -317,12 +316,6 @@ END;
 			throw new MWException( wfMessage( 'pf-noforms-error' )->parse() );
 		}
 		return $form_names;
-	}
-
-	public static function getFormDropdownLabel() {
-		$namespaceStrings = self::getContLang()->getNamespaces();
-		$formNSString = $namespaceStrings[PF_NS_FORM];
-		return $formNSString . wfMessage( 'colon-separator' )->escaped();
 	}
 
 	/**

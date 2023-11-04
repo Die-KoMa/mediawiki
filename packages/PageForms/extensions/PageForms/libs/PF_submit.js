@@ -6,7 +6,7 @@
 
 /*global validateAll */
 
-( function ( $, mw ) {
+( function( $, mw ) {
 
 	'use strict';
 
@@ -195,16 +195,18 @@
 		return false;
 	}
 
-	mw.pageFormsActualizeVisualEditorFields = function( callback ) {
+	mw.pageFormsActivateVEFields = function( callback ) {
 		var visualEditors = $.fn.getVEInstances();
-		if( visualEditors.length > 0 ) {
+		if ( visualEditors.length > 0 ) {
 			var savingQueue = [];
 			$(visualEditors).each( function( i, ve ) {
 				savingQueue.push( ve.target.updateContent() );
 			});
-			$.when.apply( $, savingQueue ).then( function () {
+			$.when.apply( $, savingQueue ).then( function() {
 				callback();
 			});
+		} else {
+			callback();
 		}
 	};
 
@@ -215,7 +217,7 @@
 			$sacButtons.click( handleSaveAndContinue );
 
 			$form
-			.on( 'keyup', 'input,select,textarea', function ( event ) {
+			.on( 'keyup', 'input,select,textarea', function( event ) {
 				if ( event.which < 32 ){
 					return true;
 				}
@@ -223,25 +225,27 @@
 				return setChanged( event );
 			} )
 			.on( 'change', 'input,select,textarea', setChanged )
-			.on( 'click', '.multipleTemplateAdder,.removeButton,.rearrangerImage', setChanged )
-			.on( 'mousedown', '.rearrangerImage',setChanged );
+			.on( 'click', '.multipleTemplateAdder', setChanged )
+			.on( 'mousedown', '.instanceRearranger,.removeButton', setChanged );
 
 			// Run only when VEForAll extension is present
 			$( document ).on( 'VEForAllLoaded', function() {
 				// Special submit form & other actions handling when VEForAll editor is present
 				if ( $('.visualeditor').length > 0 ) {
-					// Interrupt "Save page" and "Show changes" actions
-					var $formButtons = $( '#wpSave, #wpDiff' );
+					// Interrupt "Save page", "Show preview" and "Show changes" actions
+					var $formButtons = $( '#wpSave, #wpPreview, #wpDiff' );
 					var canSubmit = false;
 
 					if ( $formButtons.length > 0 ) {
-						$formButtons.each( function ( i, button ) {
-							$( button ).on( 'click', function ( event ) {
+						$formButtons.each( function( i, button ) {
+							$( button ).on( 'click', function( event ) {
 								if ( !canSubmit ) {
 									event.preventDefault();
-									mw.pageFormsActualizeVisualEditorFields( function () {
-										canSubmit = true;
-										$( button ).find("[type='submit']").click();
+									mw.pageFormsActivateVEFields( function() {
+										if ( validateAll() ) {
+											canSubmit = true;
+											$( button ).find("[type='submit']").click();
+										}
 									} );
 								}
 							} );
@@ -249,7 +253,7 @@
 					}
 					// Interrupt "Save and continue" action
 					$sacButtons.off('click', handleSaveAndContinue).click( function( event ) {
-						mw.pageFormsActualizeVisualEditorFields( function() {
+						mw.pageFormsActivateVEFields( function() {
 							handleSaveAndContinue( event );
 						});
 					});

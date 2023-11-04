@@ -5,7 +5,7 @@ use OOUI\BlankTheme;
 
 /**
  * @covers \PFFormPrinter
- *
+ * @group Database
  * @author Himeshi De Silva
  */
 class PFFormPrinterTest extends MediaWikiIntegrationTestCase {
@@ -47,9 +47,7 @@ class PFFormPrinterTest extends MediaWikiIntegrationTestCase {
 				$existing_page_content = null,
 				$page_name = 'TestStringForFormPageTitle',
 				$page_name_formula = null,
-				$is_query = false,
-				$is_embedded = false,
-				$is_autocreate = false,
+				PFFormPrinter::CONTEXT_REGULAR,
 				$autocreate_query = [],
 				$user = self::getTestUser()->getUser()
 			);
@@ -69,7 +67,7 @@ class PFFormPrinterTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider method
 	 */
-	public function pageSectionDataProvider() {
+	public static function pageSectionDataProvider() {
 		$provider = [];
 
 		// #1 form definition without other parameters
@@ -118,7 +116,7 @@ class PFFormPrinterTest extends MediaWikiIntegrationTestCase {
 			'form_definition' => "====section 4====
 								 {{{section|section 4|level=4|hidden}}}" ],
 		[
-			'expected_form_text' => "<input type=\"hidden\" name=\"_section[section 4]\"/>",
+			'expected_form_text' => "<input type=\"hidden\" name=\"_section[section 4]\">",
 			'expected_page_text' => "====section 4====" ]
 		];
 

@@ -1,6 +1,7 @@
 <?php
 /**
  * @author Stephan Gambke
+ * @author Yaron Koren
  * @file
  * @ingroup PageForms
  */
@@ -221,7 +222,7 @@ class PFAutoeditAPI extends ApiBase {
 			$this->mOptions['target'] = $target->getPrefixedText();
 		}
 
-		Hooks::run( 'PageForms::SetTargetName', [ &$this->mOptions['target'], $hookQuery ] );
+		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::SetTargetName', [ &$this->mOptions['target'], $hookQuery ] );
 
 		// set html return status. If all goes well, this will not be changed
 		$this->mStatus = 200;
@@ -401,13 +402,14 @@ class PFAutoeditAPI extends ApiBase {
 		$out = $this->getOutput();
 		$previewOutput = $editor->getPreviewText();
 
-		Hooks::run( 'EditPage::showEditForm:initial', [ $editor, $out ] );
+		$hookContainer = MediaWikiServices::getInstance()->getHookContainer();
+		$hookContainer->run( 'EditPage::showEditForm:initial', [ $editor, $out ] );
 
 		$out->setRobotPolicy( 'noindex,nofollow' );
 
 		// This hook seems slightly odd here, but makes things more
 		// consistent for extensions.
-		Hooks::run( 'OutputPageBeforeHTML', [ $out, $previewOutput ] );
+		$hookContainer->run( 'OutputPageBeforeHTML', [ $out, $previewOutput ] );
 
 		$out->addHTML( Html::rawElement( 'div', [ 'id' => 'wikiPreview' ], $previewOutput ) );
 
@@ -429,7 +431,8 @@ class PFAutoeditAPI extends ApiBase {
 
 		$user = $this->getUser();
 
-		$permManager = MediaWikiServices::getInstance()->getPermissionManager();
+		$services = MediaWikiServices::getInstance();
+		$permManager = $services->getPermissionManager();
 		$permErrors = $permManager->getPermissionErrors( 'edit', $user, $title );
 
 		// if this title needs to be created, user needs create rights
@@ -456,9 +459,15 @@ class PFAutoeditAPI extends ApiBase {
 		if ( $this->tokenOk( $request ) ) {
 			$ctx = RequestContext::getMain();
 			$tempTitle = $ctx->getTitle();
-			$ctx->setTitle( $title );
+			// We add an @ before the setTitle() calls to silence
+			// the "Unexpected clearActionName after getActionName"
+			// PHP notice that MediaWiki outputs.
+			// @todo Make a real fix for this.
+			// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
+			@$ctx->setTitle( $title );
 			$status = $editor->internalAttemptSave( $resultDetails, $isBot );
-			$ctx->setTitle( $tempTitle );
+			// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
+			@$ctx->setTitle( $tempTitle );
 		} else {
 			throw new MWException( $this->msg( 'session_fail_preview' )->parse() );
 		}
@@ -469,7 +478,7 @@ class PFAutoeditAPI extends ApiBase {
 				// show normal Edit page
 
 				// remove Preview and Diff standard buttons from editor page
-				Hooks::register( 'EditPageBeforeEditButtons', static function ( &$editor, &$buttons, &$tabindex ){
+				$services->getHookContainer()->register( 'EditPageBeforeEditButtons', static function ( &$editor, &$buttons, &$tabindex ) {
 					foreach ( array_keys( $buttons ) as $key ) {
 						if ( $key !== 'save' ) {
 							unset( $buttons[$key] );
@@ -520,7 +529,7 @@ class PFAutoeditAPI extends ApiBase {
 				// Give extensions a chance to modify URL query on create
 				$sectionanchor = null;
 				$extraQuery = null;
-				Hooks::run( 'ArticleUpdateBeforeRedirect', [ $editor->getArticle(), &$sectionanchor, &$extraQuery ] );
+				MediaWikiServices::getInstance()->getHookContainer()->run( 'ArticleUpdateBeforeRedirect', [ $editor->getArticle(), &$sectionanchor, &$extraQuery ] );
 
 				// @phan-suppress-next-line PhanImpossibleCondition
 				if ( $extraQuery ) {
@@ -560,7 +569,7 @@ class PFAutoeditAPI extends ApiBase {
 				$sectionanchor = $resultDetails['sectionanchor'];
 
 				// Give extensions a chance to modify URL query on update
-				Hooks::run( 'ArticleUpdateBeforeRedirect', [ $editor->getArticle(), &$sectionanchor, &$extraQuery ] );
+				MediaWikiServices::getInstance()->getHookContainer()->run( 'ArticleUpdateBeforeRedirect', [ $editor->getArticle(), &$sectionanchor, &$extraQuery ] );
 
 				// @phan-suppress-next-line PhanTypePossiblyInvalidDimOffset
 				if ( $resultDetails['redirect'] ) {
@@ -598,9 +607,17 @@ class PFAutoeditAPI extends ApiBase {
 			case EditPage::AS_BLANK_ARTICLE:
 				// user tried to create a blank page
 				$this->logMessage( 'User tried to create a blank page', self::DEBUG );
+				try {
+					$contextTitle = $editor->getContextTitle();
+				} catch ( Exception $e ) {
+					// getContextTitle() throws an exception
+					// if there's no context title - this
+					// happens when using the one-stop process.
+					throw new RuntimeException( 'Error: Saving this form would result in a blank page.' );
+				}
 
-				$this->getOutput()->redirect( $editor->getContextTitle()->getFullURL() );
-				$this->getResult()->addValue( null, 'redirect', $editor->getContextTitle()->getFullURL() );
+				$this->getOutput()->redirect( $contextTitle->getFullURL() );
+				$this->getResult()->addValue( null, 'redirect', $contextTitle->getFullURL() );
 
 				return false;
 
@@ -908,43 +925,36 @@ class PFAutoeditAPI extends ApiBase {
 		$oldRequest = $wgRequest;
 		$pageExists = false;
 
-		// preload data if not explicitly excluded and if the preload page exists
-		if ( !isset( $this->mOptions['preload'] ) || $this->mOptions['preload'] !== false ) {
-			if ( isset( $this->mOptions['preload'] ) && is_string( $this->mOptions['preload'] ) ) {
-				$preloadTitle = Title::newFromText( $this->mOptions['preload'] );
-			} else {
-				$preloadTitle = Title::newFromText( $targetName );
+		if ( $targetTitle !== null && $targetTitle->exists() ) {
+			if ( !$isFormSubmitted || $this->mIsAutoEdit ) {
+				$preloadContent = PFUtils::getPageText( $targetTitle, RevisionRecord::RAW );
 			}
+			$pageExists = true;
+		} elseif ( isset( $this->mOptions['preload'] ) && is_string( $this->mOptions['preload'] ) ) {
+			$preloadTitle = Title::newFromText( $this->mOptions['preload'] );
 
 			if ( $preloadTitle !== null && $preloadTitle->exists() ) {
 				// the content of the page that was specified to be used for preloading
 				$preloadContent = PFUtils::getPageText( $preloadTitle, RevisionRecord::RAW );
-
-				$pageExists = true;
-
 			} else {
-				if ( isset( $this->mOptions['preload'] ) ) {
-					$this->logMessage( $this->msg( 'pf_autoedit_invalidpreloadspecified', $this->mOptions['preload'] )->parse(), self::WARNING );
-				}
+				$this->logMessage( $this->msg( 'pf_autoedit_invalidpreloadspecified', $this->mOptions['preload'] )->parse(), self::WARNING );
 			}
 		}
 
 		// Allow extensions to set/change the preload text, for new
 		// pages.
 		if ( !$pageExists ) {
-			Hooks::run( 'PageForms::EditFormPreloadText', [ &$preloadContent, $targetTitle, $formTitle ] );
+			MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::EditFormPreloadText', [ &$preloadContent, $targetTitle, $formTitle ] );
 		} else {
-			Hooks::run( 'PageForms::EditFormInitialText', [ &$preloadContent, $targetTitle, $formTitle ] );
+			MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::EditFormInitialText', [ &$preloadContent, $targetTitle, $formTitle ] );
 		}
 
 		// Flag to keep track of formHTML() runs.
 		$formHtmlHasRun = false;
 
-		if ( $preloadContent !== '' ) {
-			// @HACK - we need to set this for the preload to take
-			// effect in the form.
-			$pageExists = true;
+		$formContext = $this->mIsAutoEdit ? PFFormPrinter::CONTEXT_AUTOEDIT : PFFormPrinter::CONTEXT_REGULAR;
 
+		if ( $preloadContent !== '' ) {
 			// Spoof $wgRequest for PFFormPrinter::formHTML().
 			$session = RequestContext::getMain()->getRequest()->getSession();
 			$wgRequest = new FauxRequest( $this->mOptions, true, $session );
@@ -958,8 +968,7 @@ class PFAutoeditAPI extends ApiBase {
 					// reason.
 					$formContent, ( $isFormSubmitted && !$this->mIsAutoEdit ), $pageExists,
 					$formArticleId, $preloadContent, $targetName, $targetNameFormula,
-					$is_query = false, $is_embedded = false, $is_autocreate = false,
-					$autocreate_query = [], $this->getUser()
+					$formContext, $autocreate_query = [], $this->getUser()
 				);
 			$formHtmlHasRun = true;
 
@@ -991,8 +1000,7 @@ class PFAutoeditAPI extends ApiBase {
 				$wgPageFormsFormPrinter->formHTML(
 					$formContent, $isFormSubmitted, $pageExists,
 					$formArticleId, $preloadContent, $targetName, $targetNameFormula,
-					$is_query = false, $is_embedded = false, $is_autocreate = false,
-					$autocreate_query = [], $this->getUser()
+					$formContext, $autocreate_query = [], $this->getUser()
 				);
 			// Restore original request.
 			$wgRequest = $oldRequest;
@@ -1019,7 +1027,7 @@ class PFAutoeditAPI extends ApiBase {
 			}
 
 			// Lets other code process additional form-definition syntax
-			Hooks::run( 'PageForms::WritePageData', [ $this->mOptions['form'], Title::newFromText( $this->mOptions['target'] ), &$targetContent ] );
+			MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::WritePageData', [ $this->mOptions['form'], Title::newFromText( $this->mOptions['target'] ), &$targetContent ] );
 
 			$editor = $this->setupEditPage( $targetContent );
 

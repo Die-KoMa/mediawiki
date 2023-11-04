@@ -1,12 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Vlad5250"
+			"Winston Sung"
 		]
 	},
 	"pageforms-desc": "Obrasci za pravljenje i uređivanje wikistranica",
 	"specialpages-group-pf_group": "Semantički obrasci",
-	"apihelp-pfautocomplete-description": "Automatsko dovršavanje koje rabi proširenje »Stranični obrasci«.",
 	"apihelp-pfautocomplete-summary": "Automatsko dovršavanje koje rabi proširenje »Stranični obrasci«.",
 	"createproperty": "Pravljenje svojstva",
 	"pf-createproperty-with-name": "Pravljenje svojstva: $1",
@@ -20,6 +19,7 @@
 	"createtemplate": "Pravljenje šablona",
 	"pf-createtemplate-with-name": "Pravljenje šablona: $1",
 	"pf_createtemplate_namelabel": "Ime šablona:",
+	"pf-formstart-formlabel": "Oblik:",
 	"uploadwindow": "Prozor za postavljanje",
 	"pf-simpleupload": "Postavi",
 	"pf_deletionlog": "Evidencija brisanja",

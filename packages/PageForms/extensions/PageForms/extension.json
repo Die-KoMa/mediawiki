@@ -1,7 +1,7 @@
 {
 	"name": "PageForms",
 	"namemsg": "pageforms-name",
-	"version": "5.6.1",
+	"version": "5.6.3",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -96,7 +96,6 @@
 		"PFFormEdit": "specials/PF_FormEdit.php",
 		"PFRunQuery": "specials/PF_RunQuery.php",
 		"PFUploadForm": "specials/PF_UploadForm.php",
-		"PFUploadSourceField": "specials/PF_UploadSourceField.php",
 		"PFUploadWindow": "specials/PF_UploadWindow.php",
 		"PFTemplateField": "includes/PF_TemplateField.php",
 		"PFForm": "includes/PF_Form.php",
@@ -107,6 +106,7 @@
 		"PFFormUtils": "includes/PF_FormUtils.php",
 		"PFUtils": "includes/PF_Utils.php",
 		"PFValuesUtils": "includes/PF_ValuesUtils.php",
+		"PFMappingUtils": "includes/PF_MappingUtils.php",
 		"PFHooks": "includes/PF_Hooks.php",
 		"PFFormLinker": "includes/PF_FormLinker.php",
 		"PFPageSchemas": "includes/PF_PageSchemas.php",
@@ -197,6 +197,7 @@
 				"pf_pipe_error",
 				"pf_start_end_date_error",
 				"pf_start_end_datetime_error",
+				"pf-datetimepicker-localtime",
 				"pf-wizard-back",
 				"pf-wizard-continue"
 			],
@@ -219,19 +220,6 @@
 				"desktop",
 				"mobile"
 			]
-		},
-		"ext.pageforms.fancybox": {
-			"scripts": "libs/FancyBox/jquery.fancybox.js",
-			"dependencies": [
-				"ext.pageforms.browser"
-			],
-			"targets": [
-				"desktop",
-				"mobile"
-			]
-		},
-		"ext.pageforms.fancybox.styles": {
-			"styles": "skins/FancyBox/jquery.fancybox.css"
 		},
 		"ext.pageforms.jstree": {
 			"scripts": [
@@ -678,11 +666,12 @@
 		"ArticlePurge": "PFFormUtils::purgeCache",
 		"ParserFirstCallInit": "PFHooks::registerFunctions",
 		"MakeGlobalVariablesScript": "PFHooks::setGlobalJSVariables",
-		"PageSchemasRegisterHandlers": "PFPageSchemas::registerClass",
+		"PageSchemasRegisterHandlers": "PFHooks::registerPageSchemasClass",
 		"EditPage::importFormData": "PFHooks::showFormPreview",
 		"PageSaveComplete": "PFHooks::setPostEditCookie",
 		"MultiContentSave": "PFFormUtils::purgeCacheOnSave",
 		"HtmlPageLinkRendererEnd": "PFFormLinker::setBrokenLink",
+		"AdminLinks": "PFHooks::addToAdminLinks",
 		"CargoTablesActionLinks": "PFHooks::addToCargoTablesLinks",
 		"CargoTablesSetAllowedActions": "PFHooks::addToCargoTablesColumns",
 		"CargoTablesSetActionLinks": "PFHooks::addToCargoTablesRow",
@@ -703,6 +692,7 @@
 		"PageFormsAutocompleteCacheTimeout": null,
 		"PageFormsRenameEditTabs": false,
 		"PageFormsRenameMainEditTab": false,
+		"PageFormsMainFormsMinimum": 0.01,
 		"PageFormsListSeparator":  ",",
 		"PageForms24HourTime": false,
 		"PageFormsCacheFormDefinitions": false,

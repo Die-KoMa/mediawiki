@@ -63,7 +63,7 @@ OO.mixinClass( pf.AutocompleteWidget, OO.ui.mixin.LookupElement );
 /**
  * @inheritdoc
  */
-pf.AutocompleteWidget.prototype.getLookupRequest = function () {
+pf.AutocompleteWidget.prototype.getLookupRequest = function() {
 	var
 		value = this.getValue(),
 		deferred = $.Deferred(),
@@ -88,13 +88,13 @@ pf.AutocompleteWidget.prototype.getLookupRequest = function () {
 /**
  * @inheritdoc
  */
-pf.AutocompleteWidget.prototype.getLookupCacheDataFromResponse = function ( response ) {
+pf.AutocompleteWidget.prototype.getLookupCacheDataFromResponse = function( response ) {
 	return response || [];
 };
 /**
  * @inheritdoc
  */
-pf.AutocompleteWidget.prototype.getLookupMenuOptionsFromData = function ( data ) {
+pf.AutocompleteWidget.prototype.getLookupMenuOptionsFromData = function( data ) {
 	var i,
 		item,
 		items = [];
@@ -117,15 +117,15 @@ pf.AutocompleteWidget.prototype.getLookupMenuOptionsFromData = function ( data )
 	for ( i = 0; i < data.length; i++ ) {
 		item = new OO.ui.MenuOptionWidget( {
 			// this data will be passed to onLookupMenuChoose when item is selected
-			data: data[ i ].title,
-			label: this.highlightText( data[ i ].title )
+			data: data[ i ].title.toString(),
+			label: this.highlightText( data[ i ].title.toString() )
 		} );
 		items.push( item );
 	}
 	return items;
 };
 
-pf.AutocompleteWidget.prototype.highlightText = function ( suggestion ) {
+pf.AutocompleteWidget.prototype.highlightText = function( suggestion ) {
 	var searchTerm = this.getValue();
 	var searchRegexp = new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
 		searchTerm.replace(/([\^\$\(\)\[\]\{\}\*\.\+\?\|\\])/gi, "\\$1") +

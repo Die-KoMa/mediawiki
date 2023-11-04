@@ -5,20 +5,20 @@ let
     "composer/installers" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "composer-installers-d20a64ed3c94748397ff5973488761b22f6d3f19";
+        name = "composer-installers-c29dc4b93137acb82734f672c37e029dfbd95b35";
         src = fetchurl {
-          url = "https://api.github.com/repos/composer/installers/zipball/d20a64ed3c94748397ff5973488761b22f6d3f19";
-          sha256 = "1rkcf3cmxg7k802lazknhmx9vpwr306s8zhpc5cjmac7vkcwv3qc";
+          url = "https://api.github.com/repos/composer/installers/zipball/c29dc4b93137acb82734f672c37e029dfbd95b35";
+          sha256 = "05d2dbfdlf5fbycl7gj6wr4c63dwlq3minm7fg2ampb2ynazc5cr";
         };
       };
     };
     "mediawiki/page-forms" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-page-forms-f90d67ecc2c111e82db454c71592c83384ff9704";
+        name = "mediawiki-page-forms-a17165713eeebfc6fcc125eb2d1bd3a371b4d303";
         src = fetchurl {
-          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/f90d67ecc2c111e82db454c71592c83384ff9704";
-          sha256 = "1j3jppaqhgp7hsnaz38ypj5sy5krh9kx077zzv6dq6ffs4n9d7ij";
+          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/a17165713eeebfc6fcc125eb2d1bd3a371b4d303";
+          sha256 = "0674y13i61p08wwp4a1x00birk6zxx675a872wp14gqh6yqpl3pr";
         };
       };
     };

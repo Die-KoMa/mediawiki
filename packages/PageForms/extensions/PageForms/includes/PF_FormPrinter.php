@@ -17,6 +17,12 @@ use MediaWiki\MediaWikiServices;
 
 class PFFormPrinter {
 
+	public const CONTEXT_REGULAR = 0;
+	public const CONTEXT_QUERY = 1;
+	public const CONTEXT_EMBEDDED_QUERY = 2;
+	public const CONTEXT_AUTOEDIT = 3;
+	public const CONTEXT_AUTOCREATE = 4;
+
 	public $mSemanticTypeHooks;
 	public $mCargoTypeHooks;
 	public $mInputTypeHooks;
@@ -32,6 +38,8 @@ class PFFormPrinter {
 	private $mDefaultInputForCargoTypeList;
 	private $mPossibleInputsForCargoType;
 	private $mPossibleInputsForCargoTypeList;
+
+	private static $mParsedValues = [];
 
 	public function __construct() {
 		global $wgPageFormsDisableOutsideServices;
@@ -87,7 +95,7 @@ class PFFormPrinter {
 		// All-purpose setup hook.
 		// Avoid PHP 7.1 warning from passing $this by reference.
 		$formPrinterRef = $this;
-		Hooks::run( 'PageForms::FormPrinterSetup', [ &$formPrinterRef ] );
+		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::FormPrinterSetup', [ &$formPrinterRef ] );
 	}
 
 	public function setSemanticTypeHook( $type, $is_list, $class_name, $default_args ) {
@@ -699,7 +707,7 @@ END;
 		// parsed twice.
 		if ( array_key_exists( 'is_list', $value ) ) {
 			unset( $value['is_list'] );
-			return str_replace( [ '<', '>' ], [ '&lt;', '&gt;' ], implode( "$delimiter ", $value ) );
+			return implode( "$delimiter ", $value );
 		}
 
 		// if it has 1 or 2 elements, assume it's a checkbox; if it has
@@ -809,14 +817,12 @@ END;
 	 * only a page formula exists).
 	 * @param string $form_def
 	 * @param bool $form_submitted
-	 * @param bool $source_is_page
+	 * @param bool $page_exists
 	 * @param string|null $form_id
 	 * @param string|null $existing_page_content
 	 * @param string|null $page_name
 	 * @param string|null $page_name_formula
-	 * @param bool $is_query
-	 * @param bool $is_embedded
-	 * @param bool $is_autocreate true when called by #formredlink with "create page"
+	 * @param int $form_context
 	 * @param array $autocreate_query query parameters from #formredlink
 	 * @param User|null $user
 	 * @return array
@@ -826,14 +832,12 @@ END;
 	function formHTML(
 		$form_def,
 		$form_submitted,
-		$source_is_page,
+		$page_exists,
 		$form_id = null,
 		$existing_page_content = null,
 		$page_name = null,
 		$page_name_formula = null,
-		$is_query = false,
-		$is_embedded = false,
-		$is_autocreate = false,
+		$form_context = self::CONTEXT_REGULAR,
 		$autocreate_query = [],
 		$user = null
 	) {
@@ -846,6 +850,7 @@ END;
 
 		// Initialize some variables.
 		$wiki_page = new PFWikiPage();
+		$source_is_page = $page_exists || $existing_page_content != null;
 		$wgPageFormsTabIndex = 0;
 		$wgPageFormsFieldNum = 0;
 		$source_page_matches_this_form = false;
@@ -853,6 +858,10 @@ END;
 		$generated_page_name = $page_name_formula ?? '';
 		$new_text = "";
 		$original_page_content = $existing_page_content;
+		$is_query = ( $form_context == self::CONTEXT_QUERY || $form_context == self::CONTEXT_EMBEDDED_QUERY );
+		$is_embedded = $form_context == self::CONTEXT_EMBEDDED_QUERY;
+		$is_autoedit = $form_context == self::CONTEXT_AUTOEDIT;
+		$is_autocreate = $form_context == self::CONTEXT_AUTOCREATE;
 
 		// Disable all form elements if user doesn't have edit
 		// permission - two different checks are needed, because
@@ -860,7 +869,7 @@ END;
 		// HACK - sometimes we don't know the page name in advance, but
 		// we still need to set a title here for testing permissions.
 		if ( $is_embedded ) {
-			// If this is an embedded form (probably a 'RunQuery'),
+			// If this is an embedded form,
 			// just use the name of the actual page we're on.
 			global $wgTitle;
 			$this->mPageTitle = $wgTitle;
@@ -889,6 +898,7 @@ END;
 		) {
 			$this->showDeletionLog( $wgOut );
 		}
+		$hookContainer = MediaWikiServices::getInstance()->getHookContainer();
 		// Unfortunately, we can't just call userCan() or its
 		// equivalent here because it seems to ignore the setting
 		// "$wgEmailConfirmToEdit = true;". Instead, we'll just get the
@@ -901,7 +911,7 @@ END;
 				$permissionErrors = [ [ 'readonlytext', [ MediaWikiServices::getInstance()->getReadOnlyMode()->getReason() ] ] ];
 			}
 			$userCanEditPage = count( $permissionErrors ) == 0;
-			Hooks::run( 'PageForms::UserCanEditPage', [ $this->mPageTitle, &$userCanEditPage ] );
+			$hookContainer->run( 'PageForms::UserCanEditPage', [ $this->mPageTitle, &$userCanEditPage ] );
 		}
 
 		// Start off with a loading spinner - this will be removed by
@@ -935,7 +945,12 @@ END;
 				Html::element( 'a', [ 'href' => '#' ], 'Expand all collapsed parts of the form' ) ) . "\n";
 		}
 
-		$parser = PFUtils::getParser()->getFreshParser();
+		if ( method_exists( ParserFactory::class, 'getInstance' ) ) {
+			// MW 1.39+
+			$parser = MediaWikiServices::getInstance()->getParserFactory()->getInstance();
+		} else {
+			$parser = PFUtils::getParser()->getFreshParser();
+		}
 		if ( !$parser->getOptions() ) {
 			$parser->setOptions( ParserOptions::newFromUser( $user ) );
 		}
@@ -1027,7 +1042,10 @@ END;
 					} else {
 						$previous_template_name = '';
 					}
-					$template_name = str_replace( '_', ' ', $parser->recursiveTagParse( $tag_components[1] ) );
+					if ( count( $tag_components ) < 2 ) {
+						throw new MWException( 'Error: a template name must be specified in each "for template" tag.' );
+					}
+					$template_name = str_replace( '_', ' ', self::getParsedValue( $parser, $tag_components[1] ) );
 					$is_new_template = ( $template_name != $previous_template_name );
 					if ( $is_new_template ) {
 						$template = PFTemplate::newFromName( $template_name );
@@ -1173,8 +1191,10 @@ END;
 					}
 					// If the user is editing a page, and that page contains a call to
 					// the template being processed, get the current field's value
-					// from the template call
-					if ( $source_is_page && ( $tif->getFullTextInPage() != '' ) && !$form_submitted ) {
+					// from the template call.
+					// Do the same thing if it's a new page but there's a "preload" -
+					// unless a value for this field was already set in the query string.
+					if ( ( $page_exists || $cur_value == '' ) && ( $tif->getFullTextInPage() != '' ) && !$form_submitted && !$is_autoedit ) {
 						if ( $tif->hasValueFromPageForField( $field_name ) ) {
 							// Get value, and remove it,
 							// so that at the end we
@@ -1220,7 +1240,7 @@ END;
 							$new_text = $freeTextInput->getHtmlText();
 							if ( $form_field->hasFieldArg( 'edittools' ) ) {
 								// borrowed from EditPage::showEditTools()
-								$edittools_text = $parser->recursiveTagParse( wfMessage( 'edittools', [ 'content' ] )->text() );
+								$edittools_text = self::getParsedValue( $parser, wfMessage( 'edittools', [ 'content' ] )->text() );
 
 								$new_text .= <<<END
 		<div class="mw-editTools">
@@ -1318,10 +1338,10 @@ END;
 						// @TODO - should it be $cur_value for both cases? Or should the
 						// hook perhaps modify both variables?
 						if ( $form_submitted ) {
-							Hooks::run( 'PageForms::CreateFormField', [ &$form_field, &$cur_value_in_template, true ] );
+							$hookContainer->run( 'PageForms::CreateFormField', [ &$form_field, &$cur_value_in_template, true ] );
 						} else {
 							$this->createFormFieldTranslateTag( $template, $tif, $form_field, $cur_value );
-							Hooks::run( 'PageForms::CreateFormField', [ &$form_field, &$cur_value, false ] );
+							$hookContainer->run( 'PageForms::CreateFormField', [ &$form_field, &$cur_value, false ] );
 						}
 						// if this is not part of a 'multiple' template, increment the
 						// global tab index (used for correct tabbing)
@@ -1444,7 +1464,7 @@ END;
 						} elseif ( count( $sub_components ) == 2 ) {
 							switch ( $sub_components[0] ) {
 							case 'label':
-								$input_label = $parser->recursiveTagParse( $sub_components[1] );
+								$input_label = self::getParsedValue( $parser, $sub_components[1] );
 								break;
 							case 'class':
 								$attr['class'] = $sub_components[1];
@@ -1835,7 +1855,7 @@ END;
 		// Get free text, and add to page data, as well as retroactively
 		// inserting it into the form.
 
-		if ( $source_is_page ) {
+		if ( $page_exists ) {
 			// If the page is the source, free_text will just be
 			// whatever in the page hasn't already been inserted
 			// into the form.
@@ -1860,7 +1880,7 @@ END;
 
 		$page_text = '';
 
-		Hooks::run( 'PageForms::BeforeFreeTextSubst',
+		$hookContainer->run( 'PageForms::BeforeFreeTextSubst',
 			[ &$free_text, $existing_page_content, &$page_text ] );
 
 		// Now that we have the free text, we can create the full page
@@ -1914,14 +1934,14 @@ END;
 
 		$form_text .= "\t</form>\n";
 		$parser->replaceLinkHolders( $form_text );
-		Hooks::run( 'PageForms::RenderingEnd', [ &$form_text ] );
+		$hookContainer->run( 'PageForms::RenderingEnd', [ &$form_text ] );
 
 		// Send the autocomplete values to the browser, along with the
 		// mappings of which values should apply to which fields.
 		// If doing a replace, the page text is actually the modified
 		// original page.
 		if ( !$is_embedded ) {
-			$form_page_title = $parser->recursiveTagParse( str_replace( "{{!}}", "|", $form_page_title ) );
+			$form_page_title = self::getParsedValue( $parser, str_replace( "{{!}}", "|", $form_page_title ) );
 		} else {
 			$form_page_title = null;
 		}
@@ -2103,6 +2123,22 @@ END;
 			// 48 bits for "node"
 			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
 		);
+	}
+
+	/**
+	 * Cache parsed values as much as possible, to avoid computing-
+	 * intensive parsing.
+	 *
+	 * @param Parser $parser
+	 * @param string $value
+	 * @return string
+	 */
+	public static function getParsedValue( $parser, $value ) {
+		if ( !array_key_exists( $value, self::$mParsedValues ) ) {
+			self::$mParsedValues[$value] = $parser->recursiveTagParse( $value );
+		}
+
+		return self::$mParsedValues[$value];
 	}
 
 }
