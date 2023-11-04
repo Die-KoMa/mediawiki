@@ -78,6 +78,24 @@ with lib; {
 
             $wgLanguageCode = "de";
 
+            # Allow Display names to differ from the url
+            $wgRestrictDisplayTitle = false;
+
+            # Allow adiitional file extensions
+            $wgFileExtensions[] = 'pdf';
+            $wgFileExtensions[] = 'tex';
+            $wgFileExtensions[] = 'txt';
+            $wgFileExtensions[] = 'svg';
+            $wgFileExtensions[] = 'zip';
+
+            # disable registration
+            $wgGroupPermissions['*']['createaccount'] = false;
+
+            $wgGroupPermissions['bureaucrat']['usermerge'] = true;
+            $wgGroupPermissions['bureaucrat']['hideuser'] = true;
+            $wgShowExceptionDetails = true;
+            $wgShowDBErrorBacktrace = true;
+
             # we currently don't support sending mail.
             $wgEnableEmail = false;
           '';
