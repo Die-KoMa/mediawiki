@@ -58,7 +58,7 @@ with lib; {
           webserver = "none";
           name = "KoMapedia";
           passwordSender = config.die-koma.komapedia.adminAddr;
-          url = "https://${config.die-koma.komapedia.hostName}/wiki/";
+          url = "https://${config.die-koma.komapedia.hostName}";
           uploadsDir = "${config.die-koma.komapedia.stateDir}/images/";
           extraConfig = ''
             $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
