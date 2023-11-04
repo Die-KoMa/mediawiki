@@ -96,6 +96,9 @@ with lib; {
             $wgShowExceptionDetails = true;
             $wgShowDBErrorBacktrace = true;
 
+            $wgArticlePath = "/wiki/$1";
+            $wgUsePathInfo = true;
+
             # we currently don't support sending mail.
             $wgEnableEmail = false;
           '';
