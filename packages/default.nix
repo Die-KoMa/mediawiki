@@ -63,4 +63,8 @@ in rec {
     url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-7153f4d.tar.gz";
     sha256 = "sha256-JWGRWChAJYkWAoETCr3ZXxXdND4C0R5Io8Ti4MD1wM4=";
   };
+  NativeSvgHandler = pkgs.fetchzip {
+    url = "https://extdist.wmflabs.org/dist/extensions/NativeSvgHandler-REL1_39-95310ed.tar.gz";
+    sha256 = "sha256-EUrHF1JBR3bc3kwwYv6rvPseG0rl/YyBp4GjI5q+ETo=";
+  };
 }
