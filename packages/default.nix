@@ -52,15 +52,15 @@ in rec {
   SemanticResultFormats = composerExtension' "SemanticResultFormats" {inherit SemanticMediaWiki;};
 
   EditSubpages = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/EditSubpages-REL1_39-67938fd.tar.gz";
-    sha256 = "sha256-GCjQlIXGbvE6mhf84UYSe6MV3cH3kbpCMQI4JIeyyL4=";
+    url = "https://extdist.wmflabs.org/dist/extensions/EditSubpages-REL1_39-e462ff9.tar.gz";
+    sha256 = "sha256-Q0sAaCaF4HOdspxGR97DL16i7WFGv1Ha//ToK/Sq+kc=";
   };
   UserMerge = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-a6fd7d8.tar.gz";
-    sha256 = "sha256-84I+fUhwAvSfjIrxy4u8LoXvFlvI3TkVlIRAqVy1TvQ=";
+    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-55fe954.tar.gz";
+    sha256 = "sha256-pQgb5It3nyoL1XOuJo0mURxHXFh4EiXdSm4f4npY4yw=";
   };
   Variables = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-1620bdf.tar.gz";
-    sha256 = "sha256-EIYivBIevBaKM7A/Tu/7UkAnQwoVnwGRNnQ88B9yhQw=";
+    url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-7153f4d.tar.gz";
+    sha256 = "sha256-JWGRWChAJYkWAoETCr3ZXxXdND4C0R5Io8Ti4MD1wM4=";
   };
 }
