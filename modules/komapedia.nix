@@ -32,12 +32,14 @@ with lib; {
   config = let
     cfg = config.services.mediawiki;
 
-    mediawikiConfig = config.services.phpfpm.pools.mediawiki.phpEnv.MEDIAWIKI_CONFIG;
+    pool = config.services.phpfpm.pools.mediawiki;
+    php = pool.phpPackage;
+    mediawikiConfig = pool.phpEnv.MEDIAWIKI_CONFIG;
     jobrunner = pkgs.writeShellScript "mw-jobrunner" ''
       RUN_JOBS="${cfg.finalPackage}/share/mediawiki/maintenance/runJobs.php --conf ${mediawikiConfig} --maxtime=3600"
       while true; do
-        ${pkgs.php}/bin/php $RUN_JOBS --type="enotifNotify"
-        ${pkgs.php}/bin/php $RUN_JOBS --wait --maxjobs=20
+        ${php}/bin/php $RUN_JOBS --type="enotifNotify"
+        ${php}/bin/php $RUN_JOBS --wait --maxjobs=20
         sleep 10
       done
     '';
@@ -49,7 +51,18 @@ with lib; {
             "listen.owner" = mkOverride 75 config.services.nginx.user;
             "listen.group" = mkOverride 75 config.services.nginx.user;
           };
+          phpPackage = pkgs.php81.withExtensions ({
+            all,
+            enabled,
+          }:
+            enabled ++ [all.memcached]);
         };
+
+        memcached = {
+          enable = true;
+          maxMemory = 128; # MediaWiki requires >= 80
+        };
+
         mediawiki = {
           enable = true;
 
@@ -91,7 +104,7 @@ with lib; {
             # Allow Display names to differ from the url
             $wgRestrictDisplayTitle = false;
 
-            # Allow adiitional file extensions
+            # Allow additional file extensions
             $wgFileExtensions[] = 'pdf';
             $wgFileExtensions[] = 'tex';
             $wgFileExtensions[] = 'txt';
@@ -111,6 +124,12 @@ with lib; {
 
             # we currently don't support sending mail.
             $wgEnableEmail = false;
+
+            # Caching
+            $wgMainCacheType = CACHE_MEMCACHED;
+            $smwgMainCacheType = CACHE_MEMCACHED;
+            $smwgQueryResultCacheType = CACHE_MEMCACHED;
+            $smwgEnabledQueryDependencyLinksStore = true;
           '';
         };
       };
