@@ -56,8 +56,8 @@ in rec {
     sha256 = "sha256-Q0sAaCaF4HOdspxGR97DL16i7WFGv1Ha//ToK/Sq+kc=";
   };
   UserMerge = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-55fe954.tar.gz";
-    sha256 = "sha256-pQgb5It3nyoL1XOuJo0mURxHXFh4EiXdSm4f4npY4yw=";
+    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-42e84e1.tar.gz";
+    sha256 = "sha256-ZSDBE2gWwr/T5KQFNImGVIC80Kn5j8KOtjsWdqAHju4=";
   };
   Variables = pkgs.fetchzip {
     url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-7153f4d.tar.gz";
