@@ -31,6 +31,16 @@ with lib; {
 
   config = let
     cfg = config.services.mediawiki;
+
+    mediawikiConfig = config.services.phpfpm.pools.mediawiki.phpEnv.MEDIAWIKI_CONFIG;
+    jobrunner = pkgs.writeShellScript "mw-jobrunner" ''
+      RUN_JOBS="${cfg.finalPackage}/share/mediawiki/maintenance/runJobs.php --conf ${mediawikiConfig} --maxtime=3600"
+      while true; do
+        ${pkgs.php}/bin/php $RUN_JOBS --type="enotifNotify"
+        ${pkgs.php}/bin/php $RUN_JOBS --wait --maxjobs=20
+        sleep 10
+      done
+    '';
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
@@ -103,6 +113,21 @@ with lib; {
             $wgEnableEmail = false;
           '';
         };
+      };
+
+      systemd.services.mw-jobqueue = {
+        description = "MediaWiki Job runner";
+
+        serviceConfig = {
+          ExecStart = jobrunner;
+          Nice = 10;
+          ProtectSystem = "full";
+          User = "mediawiki";
+          OOMScoreAdjust = 200;
+          StandardOutput = "journal";
+        };
+
+        wantedBy = ["multi-user.target"];
       };
     };
 }
