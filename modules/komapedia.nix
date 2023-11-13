@@ -127,6 +127,7 @@ with lib; {
 
             # Caching
             $wgMainCacheType = CACHE_MEMCACHED;
+            $wgSessionCacheType = CACHE_DB;  # must be a persistent storage.
             $smwgMainCacheType = CACHE_MEMCACHED;
             $smwgQueryResultCacheType = CACHE_MEMCACHED;
             $smwgEnabledQueryDependencyLinksStore = true;
