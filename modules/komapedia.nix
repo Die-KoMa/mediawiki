@@ -56,6 +56,10 @@ with lib; {
             enabled,
           }:
             enabled ++ [all.memcached]);
+          phpOptions = ''
+            post_max_size = 100M
+            upload_max_filesize = 100M
+          '';
         };
 
         memcached = {
