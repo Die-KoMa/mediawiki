@@ -126,6 +126,12 @@ with lib; {
             $wgArticlePath = "/wiki/$1";
             $wgUsePathInfo = true;
 
+            # Enable subpages in the main namespace
+            $wgNamespacesWithSubpages[NS_MAIN] = true;
+
+            # Enable subpages in the template namespace
+            $wgNamespacesWithSubpages[NS_TEMPLATE] = true;
+
             # we currently don't support sending mail.
             $wgEnableEmail = false;
 
