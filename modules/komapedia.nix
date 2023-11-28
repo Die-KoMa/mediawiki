@@ -132,6 +132,9 @@ with lib; {
             # Enable subpages in the template namespace
             $wgNamespacesWithSubpages[NS_TEMPLATE] = true;
 
+            # Enable string parser functions
+            $wgPFEnableStringFunctions = true;
+
             # we currently don't support sending mail.
             $wgEnableEmail = false;
 
