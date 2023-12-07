@@ -56,12 +56,12 @@ in rec {
     sha256 = "sha256-Q0sAaCaF4HOdspxGR97DL16i7WFGv1Ha//ToK/Sq+kc=";
   };
   UserMerge = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-42e84e1.tar.gz";
-    sha256 = "sha256-ZSDBE2gWwr/T5KQFNImGVIC80Kn5j8KOtjsWdqAHju4=";
+    url = "https://extdist.wmflabs.org/dist/extensions/UserMerge-REL1_39-89621f4.tar.gz";
+    sha256 = "sha256-+Xjh6YWnaBER8v1LOhQaWZNg2EMwkeZq8isPp9u9fBI=";
   };
   Variables = pkgs.fetchzip {
-    url = "https://extdist.wmflabs.org/dist/extensions/Variables-REL1_39-7153f4d.tar.gz";
-    sha256 = "sha256-JWGRWChAJYkWAoETCr3ZXxXdND4C0R5Io8Ti4MD1wM4=";
+    url = "https://extdist.wmflabs.org/dist/extensions/MyVariables-REL1_39-687de66.tar.gz";
+    sha256 = "sha256-sgsGKJWsR6EkXq710D0TSJ+lE+1sZ71SAhOJX7xt7OY=";
   };
   NativeSvgHandler = pkgs.fetchzip {
     url = "https://extdist.wmflabs.org/dist/extensions/NativeSvgHandler-REL1_39-95310ed.tar.gz";
