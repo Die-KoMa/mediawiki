@@ -63,6 +63,14 @@
       '';
     };
 in rec {
+  mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
+    version = "1.39.5";
+    src = pkgs.fetchurl {
+      url = "https://releases.wikimedia.org/mediawiki/${lib.versions.majorMinor version}/mediawiki-${version}.tar.gz";
+      hash = "sha256-eFsJxBhRRPmvRnjFi1nzEv3zhyyveC/n2IFkkth+05w=";
+    };
+  });
+
   PageForms = composerExtension "PageForms";
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
   SemanticResultFormats = composerExtension' "SemanticResultFormats" {inherit SemanticMediaWiki;};

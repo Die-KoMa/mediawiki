@@ -100,11 +100,11 @@ with lib; {
             "listen.owner" = mkOverride 75 config.services.nginx.user;
             "listen.group" = mkOverride 75 config.services.nginx.user;
           };
-          phpPackage = pkgs.php81.withExtensions ({
+          phpPackage = lib.mkForce (pkgs.php81.withExtensions ({
             all,
             enabled,
           }:
-            enabled ++ [all.memcached]);
+            enabled ++ [all.memcached]));
           phpOptions = ''
             post_max_size = 100M
             upload_max_filesize = 100M
@@ -119,8 +119,10 @@ with lib; {
         mediawiki = {
           enable = true;
 
+          package = extensionPackages.mediawiki;
+
           extensions =
-            (lib.mapAttrs (_: drv: "${drv}") extensionPackages)
+            (lib.mapAttrs (_: drv: "${drv}") (lib.filterAttrs (k: _: k != "mediawiki") extensionPackages))
             // {
               # in-tree extensions
               Math = null;
