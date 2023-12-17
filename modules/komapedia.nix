@@ -7,25 +7,48 @@ extensionPackages: {
 with lib; {
   options.die-koma.komapedia = {
     enable = mkEnableOption "Configure the KoMaPedia MediaWiki";
+
     hostName = mkOption {
       type = types.str;
       description = "Hostname for the MediaWiki";
       default = "de.komapedia.org";
     };
+
     semanticsHostName = mkOption {
       type = types.str;
       description = "Hostname passed to `enableSemantics` (should not be changed and may therefore diverge from `hostName`";
       default = "old.die-koma.org";
     };
+
     adminAddr = mkOption {
       type = types.str;
       description = "Mail address for the admin user";
       default = "homepage@die-koma.org";
     };
+
     stateDir = mkOption {
       type = types.path;
       description = "Path where mediawiki state is kept";
       default = "/var/lib/mediawiki";
+    };
+
+    poweredBy = mkOption {
+      type = types.attrsOf (types.submodule {
+        options = {
+          link = mkOption {
+            description = "Link for the logo";
+            type = types.str;
+          };
+          logo = mkOption {
+            description = "Logo image";
+            type = types.str;
+          };
+          alt = mkOption {
+            description = "Alt text for the logo";
+            type = types.str;
+          };
+        };
+      });
     };
   };
 
@@ -43,6 +66,18 @@ with lib; {
         sleep 10
       done
     '';
+
+    mkLogo = category: key: value: ''
+      $wgFooterIcons['${category}']['${key}'] = [
+        "src" => "${value.logo}",
+        "url" => "${value.link}",
+        "alt" => "${value.alt}",
+        "height" => "31",
+        "width" => "88",
+      ];
+    '';
+
+    poweredBy = concatStringsSep "\n" (mapAttrsToList (mkLogo "poweredby") config.die-koma.komapedia.poweredBy);
   in
     mkIf config.die-koma.komapedia.enable {
       services = {
@@ -87,64 +122,67 @@ with lib; {
           passwordSender = config.die-koma.komapedia.adminAddr;
           url = "https://${config.die-koma.komapedia.hostName}";
           uploadsDir = "${config.die-koma.komapedia.stateDir}/images/";
-          extraConfig = ''
-            $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
-            #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
+          extraConfig = concatStringsSep "\n" [
+            ''
+              $smwgConfigFileDir = "${config.die-koma.komapedia.stateDir}";
+              #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
 
-            $wgReadOnlyFile = "${config.die-koma.komapedia.stateDir}/readonly/msg";
-            $wgLogo = "$wgResourceBasePath/resources/assets/komapedia_logo.png";
+              $wgReadOnlyFile = "${config.die-koma.komapedia.stateDir}/readonly/msg";
+              $wgLogo = "$wgResourceBasePath/resources/assets/komapedia_logo.png";
 
-            $wgEnableEmail = true;
-            $wgEnableUserEmail = true; # UPO
-            $wgEmergencyContact = "homepage@die-koma.org";
-            $wgPasswordSender = "homepage@die-koma.org";
+              $wgEnableEmail = true;
+              $wgEnableUserEmail = true; # UPO
+              $wgEmergencyContact = "homepage@die-koma.org";
+              $wgPasswordSender = "homepage@die-koma.org";
 
-            $wgEnotifUserTalk = true; # UPO
-            $wgEnotifWatchlist = true; # UPO
-            $wgEmailAuthentication = true;
+              $wgEnotifUserTalk = true; # UPO
+              $wgEnotifWatchlist = true; # UPO
+              $wgEmailAuthentication = true;
 
-            $wgLanguageCode = "de";
+              $wgLanguageCode = "de";
 
-            # Allow Display names to differ from the url
-            $wgRestrictDisplayTitle = false;
+              # Allow Display names to differ from the url
+              $wgRestrictDisplayTitle = false;
 
-            # Allow additional file extensions
-            $wgFileExtensions[] = 'pdf';
-            $wgFileExtensions[] = 'tex';
-            $wgFileExtensions[] = 'txt';
-            $wgFileExtensions[] = 'svg';
-            $wgFileExtensions[] = 'zip';
+              # Allow additional file extensions
+              $wgFileExtensions[] = 'pdf';
+              $wgFileExtensions[] = 'tex';
+              $wgFileExtensions[] = 'txt';
+              $wgFileExtensions[] = 'svg';
+              $wgFileExtensions[] = 'zip';
 
-            # disable registration
-            $wgGroupPermissions['*']['createaccount'] = false;
+              # disable registration
+              $wgGroupPermissions['*']['createaccount'] = false;
 
-            $wgGroupPermissions['bureaucrat']['usermerge'] = true;
-            $wgGroupPermissions['bureaucrat']['hideuser'] = true;
-            $wgShowExceptionDetails = true;
-            $wgShowDBErrorBacktrace = true;
+              $wgGroupPermissions['bureaucrat']['usermerge'] = true;
+              $wgGroupPermissions['bureaucrat']['hideuser'] = true;
+              $wgShowExceptionDetails = true;
+              $wgShowDBErrorBacktrace = true;
 
-            $wgArticlePath = "/wiki/$1";
-            $wgUsePathInfo = true;
+              $wgArticlePath = "/wiki/$1";
+              $wgUsePathInfo = true;
 
-            # Enable subpages in the main namespace
-            $wgNamespacesWithSubpages[NS_MAIN] = true;
+              # Enable subpages in the main namespace
+              $wgNamespacesWithSubpages[NS_MAIN] = true;
 
-            # Enable subpages in the template namespace
-            $wgNamespacesWithSubpages[NS_TEMPLATE] = true;
+              # Enable subpages in the template namespace
+              $wgNamespacesWithSubpages[NS_TEMPLATE] = true;
 
-            # Enable string parser functions
-            $wgPFEnableStringFunctions = true;
+              # Enable string parser functions
+              $wgPFEnableStringFunctions = true;
 
-            # we currently don't support sending mail.
-            $wgEnableEmail = false;
+              # we currently don't support sending mail.
+              $wgEnableEmail = false;
 
-            # Caching
-            $wgMainCacheType = CACHE_MEMCACHED;
-            $wgSessionCacheType = CACHE_DB;  # must be a persistent storage.
-            $smwgMainCacheType = CACHE_MEMCACHED;
-            $smwgQueryResultCacheType = CACHE_MEMCACHED;
-            $smwgEnabledQueryDependencyLinksStore = true;
-          '';
+              # Caching
+              $wgMainCacheType = CACHE_MEMCACHED;
+              $wgSessionCacheType = CACHE_DB;  # must be a persistent storage.
+              $smwgMainCacheType = CACHE_MEMCACHED;
+              $smwgQueryResultCacheType = CACHE_MEMCACHED;
+              $smwgEnabledQueryDependencyLinksStore = true;
+            ''
+            poweredBy
+          ];
         };
       };
 
