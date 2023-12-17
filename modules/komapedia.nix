@@ -39,13 +39,27 @@ with lib; {
             description = "Link for the logo";
             type = types.str;
           };
+
           logo = mkOption {
             description = "Logo image";
             type = types.str;
           };
+
           alt = mkOption {
             description = "Alt text for the logo";
             type = types.str;
+          };
+
+          height = mkOption {
+            description = "Height of the logo";
+            default = 31;
+            type = types.int;
+          };
+
+          width = mkOption {
+            description = "Width of the logo";
+            default = 88;
+            type = types.int;
           };
         };
       });
@@ -72,8 +86,8 @@ with lib; {
         "src" => "${value.logo}",
         "url" => "${value.link}",
         "alt" => "${value.alt}",
-        "height" => "31",
-        "width" => "88",
+        "height" => "${toString value.height}",
+        "width" => "${toString value.width}",
       ];
     '';
 
