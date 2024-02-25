@@ -191,6 +191,7 @@ with lib; {
               $wgEnableEmail = false;
 
               # Caching
+              $wgMemCachedServers = [ "${config.services.memcached.listen}:${toString config.services.memcached.port}" ];
               $wgMainCacheType = CACHE_MEMCACHED;
               $wgSessionCacheType = CACHE_DB;  # must be a persistent storage.
               $smwgMainCacheType = CACHE_MEMCACHED;
