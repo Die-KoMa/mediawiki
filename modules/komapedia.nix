@@ -190,6 +190,9 @@ with lib; {
               # we currently don't support sending mail.
               $wgEnableEmail = false;
 
+              # it's time to arrive in 2022
+              $wgDefaultSkin = 'vector-2022';
+
               # Caching
               $wgMemCachedServers = [ "${config.services.memcached.listen}:${toString config.services.memcached.port}" ];
               $wgMainCacheType = CACHE_MEMCACHED;
