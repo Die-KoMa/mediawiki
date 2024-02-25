@@ -192,6 +192,7 @@ with lib; {
 
               # it's time to arrive in 2022
               $wgDefaultSkin = 'vector-2022';
+              $wgVectorDefaultSidebarVisibleForAnonymousUser = true;  # but show the sidebar for anonymous users
 
               # Caching
               $wgMemCachedServers = [ "${config.services.memcached.listen}:${toString config.services.memcached.port}" ];
