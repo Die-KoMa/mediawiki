@@ -165,7 +165,7 @@ with lib; {
               $wgFileExtensions[] = 'tex';
               $wgFileExtensions[] = 'txt';
               $wgFileExtensions[] = 'svg';
-              $wgFileExtensions[] = 'zip';
+              $wgFileExtensions[] = 'webp';
 
               # disable registration
               $wgGroupPermissions['*']['createaccount'] = false;
