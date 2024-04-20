@@ -191,7 +191,7 @@ with lib; {
               $wgEnableEmail = false;
 
               # it's time to arrive in 2022
-              $wgDefaultSkin = 'vector-2022';
+              $wgDefaultSkin = 'timeless';
               $wgVectorDefaultSidebarVisibleForAnonymousUser = true;  # but show the sidebar for anonymous users
 
               # Caching
