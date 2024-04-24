@@ -34,6 +34,6 @@
       ];
     };
 
-    formatter."${system}" = pkgs.alejandra;
+    formatter."${system}" = pkgs.treefmt;
   };
 }

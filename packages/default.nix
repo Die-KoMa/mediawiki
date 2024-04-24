@@ -3,32 +3,47 @@
   lib,
   system,
   ...
-}: let
-  jsonForExtension = kind: name: builtins.fromJSON (builtins.readFile (./. + "/${name}/extensions/${name}/${kind}.json"));
-  metaForExtension = name: let
-    json = jsonForExtension "extension" name;
-  in {
-    pname = json.name;
-    inherit (json) version;
-    meta = lib.optionalAttrs (json.license-name == "GPL-2.0-or-later") {
-      license = lib.licenses.gpl2Plus;
+}:
+let
+  jsonForExtension =
+    kind: name:
+    builtins.fromJSON (builtins.readFile (./. + "/${name}/extensions/${name}/${kind}.json"));
+  metaForExtension =
+    name:
+    let
+      json = jsonForExtension "extension" name;
+    in
+    {
+      pname = json.name;
+      inherit (json) version;
+      meta = lib.optionalAttrs (json.license-name == "GPL-2.0-or-later") {
+        license = lib.licenses.gpl2Plus;
+      };
     };
-  };
-  pathForExtension = name: let
-    json = jsonForExtension "composer" name;
-    dir = lib.replaceStrings ["/"] ["-"] json.name;
-  in "share/php/${dir}";
-  composerExtension = name: composerExtension' name {};
-  composerExtension' = name: fixups: let
-    drv = import (./. + "/${name}") {
-      inherit pkgs system;
-      noDev = true;
-    };
-    meta = metaForExtension name;
-    path = pathForExtension name;
+  pathForExtension =
+    name:
+    let
+      json = jsonForExtension "composer" name;
+      dir = lib.replaceStrings [ "/" ] [ "-" ] json.name;
+    in
+    "share/php/${dir}";
+  composerExtension = name: composerExtension' name { };
+  composerExtension' =
+    name: fixups:
+    let
+      drv = import (./. + "/${name}") {
+        inherit pkgs system;
+        noDev = true;
+      };
+      meta = metaForExtension name;
+      path = pathForExtension name;
 
-    replacements = lib.concatStringsSep " " (lib.mapAttrsToList (name: path: ''--replace "__DIR__ . '/../..' . '/extensions/${name}/" "'${path}/"'') fixups);
-  in
+      replacements = lib.concatStringsSep " " (
+        lib.mapAttrsToList (
+          name: path: ''--replace "__DIR__ . '/../..' . '/extensions/${name}/" "'${path}/"''
+        ) fixups
+      );
+    in
     pkgs.stdenv.mkDerivation {
       inherit (meta) pname version meta;
 
@@ -46,14 +61,16 @@
         cp -R vendor $out/
       '';
     };
-  extdistExtension = src: let
-    components = lib.splitString "/" src;
-    filename = lib.last components;
-    bare = lib.removeSuffix ".tar.gz" filename;
-    parts = lib.splitString "-" bare;
-    pname = lib.head parts;
-    version = lib.concatStringsSep "-" (lib.tail parts);
-  in
+  extdistExtension =
+    src:
+    let
+      components = lib.splitString "/" src;
+      filename = lib.last components;
+      bare = lib.removeSuffix ".tar.gz" filename;
+      parts = lib.splitString "-" bare;
+      pname = lib.head parts;
+      version = lib.concatStringsSep "-" (lib.tail parts);
+    in
     pkgs.stdenv.mkDerivation {
       inherit pname version src;
 
@@ -62,7 +79,8 @@
         tar --strip-components=1 --one-top-level=$out -xf $src
       '';
     };
-in rec {
+in
+rec {
   mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
     version = "1.39.5";
     src = pkgs.fetchurl {
@@ -73,7 +91,7 @@ in rec {
 
   PageForms = composerExtension "PageForms";
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
-  SemanticResultFormats = composerExtension' "SemanticResultFormats" {inherit SemanticMediaWiki;};
+  SemanticResultFormats = composerExtension' "SemanticResultFormats" { inherit SemanticMediaWiki; };
 
   EditSubpages = extdistExtension ./EditSubpages-REL1_39-e462ff9.tar.gz;
   UserMerge = extdistExtension ./UserMerge-REL1_39-adcd648.tar.gz;
