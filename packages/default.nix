@@ -79,4 +79,6 @@ in rec {
   UserMerge = extdistExtension ./UserMerge-REL1_39-adcd648.tar.gz;
   Variables = extdistExtension ./Variables-REL1_39-c1dea98.tar.gz;
   NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_39-95310ed.tar.gz;
+  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_39-c20af38.tar.gz;
+  Description2 = extdistExtension ./Description2-REL1_39-e3334bc.tar.gz;
 }

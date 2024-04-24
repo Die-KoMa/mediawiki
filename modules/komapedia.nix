@@ -201,6 +201,9 @@ with lib; {
               $smwgMainCacheType = CACHE_MEMCACHED;
               $smwgQueryResultCacheType = CACHE_MEMCACHED;
               $smwgEnabledQueryDependencyLinksStore = true;
+
+              # better OpenGraph descriptions
+              $wgEnableMetaDescriptionFunctions = true;
             ''
             poweredBy
           ];
