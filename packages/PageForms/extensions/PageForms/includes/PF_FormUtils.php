@@ -599,6 +599,9 @@ END;
 
 		// Update list of form definitions
 		$listOfFormKeys = $cache->get( $cacheKeyForList );
+		if ( !is_array( $listOfFormKeys ) ) {
+			$listOfFormKeys = [];
+		}
 		// The list of values is used by self::purge, keys are ignored.
 		// This way we automatically override duplicates.
 		$listOfFormKeys[$cacheKeyForForm] = $cacheKeyForForm;
@@ -665,13 +668,7 @@ END;
 	 */
 	public static function purgeCacheOnSave( RenderedRevision $renderedRevision ) {
 		$articleID = $renderedRevision->getRevision()->getPageId();
-		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
-			// MW 1.36+
-			$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromID( $articleID );
-		} else {
-			// MW 1.35
-			$wikiPage = WikiPage::newFromID( $articleID );
-		}
+		$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromID( $articleID );
 		if ( $wikiPage == null ) {
 			// @TODO - should this ever happen?
 			return true;

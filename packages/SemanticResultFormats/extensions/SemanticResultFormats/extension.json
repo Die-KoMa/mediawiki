@@ -1,6 +1,6 @@
 {
     "name": "SemanticResultFormats",
-	"version": "4.0.2",
+	"version": "4.2.1",
 	"author": [
 		"James Hong Kong",
 		"Stephan Gambke",
@@ -28,8 +28,11 @@
 	"ExtensionFunctions": [
 		"SemanticResultFormats::onExtensionFunction"
 	],
+	"AutoloadClasses": {
+		"SRF\\Carousel": "formats/carousel/Carousel.php"
+	},
 	"AutoloadNamespaces": {
-		"SRF\\": "formats/carousel"
+		"SRF\\DataTables\\": "formats/datatables"
 	},
 	"QUnitTestModule": {
 		"localBasePath": "",
@@ -53,7 +56,7 @@
 			"ext.srf",
 			"ext.srf.util",
 			"ext.srf.eventcalendar",
-			"ext.srf.datatables",
+			"ext.srf.datatables.v2.format",
 			"ext.srf.carousel.module",
 			"ext.srf.carousel",
 			"ext.srf.widgets",

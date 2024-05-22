@@ -36,6 +36,10 @@ class PFCreateTemplate extends SpecialPage {
 		$options = new SMWRequestOptions();
 		$options->limit = 500;
 		$used_properties = PFUtils::getSMWStore()->getPropertiesSpecial( $options );
+		if ( $used_properties instanceof SMW\SQLStore\PropertiesCollector ) {
+			// SMW 1.9+
+			$used_properties = $used_properties->runCollector();
+		}
 		foreach ( $used_properties as $property ) {
 			// Skip over properties that are errors. (This
 			// shouldn't happen, but it sometimes does.)
@@ -49,6 +53,10 @@ class PFCreateTemplate extends SpecialPage {
 		}
 
 		$unused_properties = PFUtils::getSMWStore()->getUnusedPropertiesSpecial( $options );
+		if ( $unused_properties instanceof SMW\SQLStore\UnusedPropertiesCollector ) {
+			// SMW 1.9+
+			$unused_properties = $unused_properties->runCollector();
+		}
 		foreach ( $unused_properties as $property ) {
 			// Skip over properties that are errors. (This
 			// shouldn't happen, but it sometimes does.)
@@ -269,10 +277,10 @@ END;
 
 	static function printTemplateStyleInput( $htmlFieldName, $curSelection = null ) {
 		if ( !$curSelection ) {
-			$curSelection = 'standard';
+			$curSelection = 'table';
 		}
 		$text = "<p class=\"pfCreateTemplateStyle\">" . wfMessage( 'pf_createtemplate_outputformat' )->escaped() . "\n";
-		$text .= self::printTemplateStyleButton( 'standard', 'pf_createtemplate_standardformat', $htmlFieldName, $curSelection );
+		$text .= self::printTemplateStyleButton( 'table', 'pf_createtemplate_standardformat', $htmlFieldName, $curSelection );
 		$text .= self::printTemplateStyleButton( 'infobox', 'pf_createtemplate_infoboxformat', $htmlFieldName, $curSelection );
 		$text .= self::printTemplateStyleButton( 'plain', 'pf_createtemplate_plainformat', $htmlFieldName, $curSelection );
 		$text .= self::printTemplateStyleButton( 'sections', 'pf_createtemplate_sectionsformat', $htmlFieldName, $curSelection );

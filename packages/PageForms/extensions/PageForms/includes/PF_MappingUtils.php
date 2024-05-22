@@ -320,6 +320,8 @@ class PFMappingUtils {
 		bool $doReverseLookup = false
 	) {
 		$labels = [];
+		$pageNamesForValues = [];
+		$allTitles = [];
 		foreach ( $values as $value ) {
 			if ( trim( $value ) === "" ) {
 				continue;
@@ -352,11 +354,13 @@ class PFMappingUtils {
 			if ( $titleInstance === null ) {
 				continue;
 			}
-			$displayTitle = self::getDisplayTitles( [ $titleInstance ] );
-			$displayTitle = reset( $displayTitle );
-			$labels[ $value ] = ( $displayTitle && strtolower( trim( $displayTitle ) ) !== trim( strtolower( $value ) ) )
-				? $displayTitle
-				: $value;
+			$pageNamesForValues[$value] = $titleInstance->getPrefixedText();
+			$allTitles[] = $titleInstance;
+		}
+
+		$allDisplayTitles = self::getDisplayTitles( $allTitles );
+		foreach ( $pageNamesForValues as $value => $pageName ) {
+			$labels[$value] = $allDisplayTitles[$pageName] ?? $value;
 		}
 		return $labels;
 	}
@@ -375,14 +379,8 @@ class PFMappingUtils {
 				$titles[ $k ] = $title;
 			}
 		}
-		$services = MediaWikiServices::getInstance();
-		if ( method_exists( $services, 'getPageProps' ) ) {
-			// MW 1.36+
-			$pageProps = $services->getPageProps();
-		} else {
-			$pageProps = PageProps::getInstance();
-		}
-		$properties = $pageProps->getProperties( $titles, [ 'displaytitle', 'defaultsort' ] );
+		$properties = MediaWikiServices::getInstance()->getPageProps()
+			->getProperties( $titles, [ 'displaytitle', 'defaultsort' ] );
 		foreach ( $titles as $title ) {
 			if ( array_key_exists( $title->getArticleID(), $properties ) ) {
 				$titleprops = $properties[$title->getArticleID()];

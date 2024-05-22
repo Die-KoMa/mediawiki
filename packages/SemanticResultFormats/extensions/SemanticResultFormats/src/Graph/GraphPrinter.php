@@ -114,7 +114,7 @@ class GraphPrinter extends ResultPrinter {
 		$registry = \ExtensionRegistry::getInstance();
 		return (
 			// <graphviz> can be provided by Diagrams.
-			!$registry->isLoaded( 'Diagrams' ) ||
+			!$registry->isLoaded( 'Diagrams' ) &&
 			!class_exists( 'GraphViz' ) && !class_exists( '\\MediaWiki\\Extension\\GraphViz\\GraphViz' )
 		) && !(
 			// <graphviz can also be added by External Data in Tag emulation mode.
@@ -341,14 +341,7 @@ class GraphPrinter extends ResultPrinter {
 
 		$params['graphfields'] = [
 			'default' => false,
-			'message' => 'srf-paramdesc-graph-fields',
-			'manipluatedefault' => false,
-			'type' => 'boolean'
-		];
-
-		$params['graphfields'] = [
-			'default' => false,
-			'message' => 'srf-paramdesc-graph-fields',
+			'message' => 'srf-paramdesc-graphfields',
 			'manipluatedefault' => false,
 			'type' => 'boolean'
 		];

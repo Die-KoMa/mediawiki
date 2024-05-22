@@ -1,11 +1,4 @@
-{
-  composerEnv,
-  fetchurl,
-  fetchgit ? null,
-  fetchhg ? null,
-  fetchsvn ? null,
-  noDev ? false,
-}:
+{composerEnv, fetchurl, fetchgit ? null, fetchhg ? null, fetchsvn ? null, noDev ? false}:
 
 let
   packages = {
@@ -22,15 +15,15 @@ let
     "mediawiki/page-forms" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-page-forms-a17165713eeebfc6fcc125eb2d1bd3a371b4d303";
+        name = "mediawiki-page-forms-b3be227fa9650f1a165ab1cc549100f643646714";
         src = fetchurl {
-          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/a17165713eeebfc6fcc125eb2d1bd3a371b4d303";
-          sha256 = "0674y13i61p08wwp4a1x00birk6zxx675a872wp14gqh6yqpl3pr";
+          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/b3be227fa9650f1a165ab1cc549100f643646714";
+          sha256 = "1ylimjm2nzdp0cys8lpsryzl1lnrxgamdr96ianc7crw6g3q0s7a";
         };
       };
     };
   };
-  devPackages = { };
+  devPackages = {};
 in
 composerEnv.buildPackage {
   inherit packages devPackages noDev;
@@ -38,5 +31,5 @@ composerEnv.buildPackage {
   src = composerEnv.filterSrc ./.;
   executable = true;
   symlinkDependencies = false;
-  meta = { };
+  meta = {};
 }

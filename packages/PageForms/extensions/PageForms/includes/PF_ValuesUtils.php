@@ -61,7 +61,7 @@ class PFValuesUtils {
 	 */
 	public static function getCategoriesForPage( $title ) {
 		$categories = [];
-		$db = wfGetDB( DB_REPLICA );
+		$db = PFUtils::getReadDB();
 		$titlekey = $title->getArticleID();
 		if ( $titlekey == 0 ) {
 			// Something's wrong - exit
@@ -87,7 +87,7 @@ class PFValuesUtils {
 	 */
 	public static function getAllCategories() {
 		$categories = [];
-		$db = wfGetDB( DB_REPLICA );
+		$db = PFUtils::getReadDB();
 		$res = $db->select(
 			'category',
 			'cat_title',
@@ -247,7 +247,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			$fieldAlias = str_replace( '_', ' ', $fieldName );
 		}
 		foreach ( $queryResults as $row ) {
-			if ( !array_key_exists( $fieldAlias, $row ) ) {
+			if ( !isset( $row[$fieldAlias] ) ) {
 				continue;
 			}
 			// Cargo HTML-encodes everything - decode the quotes and
@@ -273,7 +273,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		}
 		global $wgPageFormsUseDisplayTitle;
 
-		$db = wfGetDB( DB_REPLICA );
+		$db = PFUtils::getReadDB();
 		$top_category = str_replace( ' ', '_', $top_category );
 		$categories = [ $top_category ];
 		$checkcategories = [ $top_category ];
@@ -451,15 +451,9 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		}
 
 		if ( $wgPageFormsUseDisplayTitle ) {
-			$services = MediaWikiServices::getInstance();
-			if ( method_exists( $services, 'getPageProps' ) ) {
-				// MW 1.36+
-				$pageProps = $services->getPageProps();
-			} else {
-				$pageProps = PageProps::getInstance();
-			}
-			$properties = $pageProps->getProperties( $titles,
-				[ 'displaytitle', 'defaultsort' ] );
+			$properties = MediaWikiServices::getInstance()->getPageProps()->getProperties(
+				$titles, [ 'displaytitle', 'defaultsort' ]
+			);
 			foreach ( $titles as $title ) {
 				if ( array_key_exists( $title->getArticleID(), $properties ) ) {
 					$titleprops = $properties[$title->getArticleID()];
@@ -568,7 +562,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			$namespaceConditions[] = "page_namespace = $matchingNamespaceCode";
 		}
 
-		$db = wfGetDB( DB_REPLICA );
+		$db = PFUtils::getReadDB();
 		$conditions = [];
 		$conditions[] = implode( ' OR ', $namespaceConditions );
 		$tables = [ 'page' ];
@@ -861,7 +855,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		}
 		$return_values = [];
 		foreach ( $data->pfautocomplete as $val ) {
-			$return_values[] = (array)$val;
+			$return_values[] = $val->title;
 		}
 		return $return_values;
 	}
@@ -877,7 +871,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 	public static function getSQLConditionForAutocompleteInColumn( $column, $substring, $replaceSpaces = true ) {
 		global $wgPageFormsAutocompleteOnAllChars;
 
-		$db = wfGetDB( DB_REPLICA );
+		$db = PFUtils::getReadDB();
 
 		// CONVERT() is also supported in PostgreSQL, but it doesn't
 		// seem to work the same way.

@@ -1,7 +1,7 @@
 {
 	"name": "PageForms",
 	"namemsg": "pageforms-name",
-	"version": "5.6.3",
+	"version": "5.7.2",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -30,7 +30,7 @@
 		"PFHooks::initialize"
 	],
 	"requires": {
-		"MediaWiki": ">= 1.35.0"
+		"MediaWiki": ">= 1.36.0"
 	},
 	"GroupPermissions": {
 		"*": {
@@ -198,6 +198,7 @@
 				"pf_start_end_date_error",
 				"pf_start_end_datetime_error",
 				"pf-datetimepicker-localtime",
+				"pf-formedit-nodata",
 				"pf-wizard-back",
 				"pf-wizard-continue"
 			],

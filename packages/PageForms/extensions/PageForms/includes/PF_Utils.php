@@ -11,6 +11,8 @@ use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Linker\LinkTarget;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionRecord;
+use Wikimedia\Rdbms\DBConnRef;
+use Wikimedia\Rdbms\IDatabase;
 
 class PFUtils {
 
@@ -105,12 +107,7 @@ class PFUtils {
 	 * @return string|null
 	 */
 	public static function getPageText( $title, $audience = RevisionRecord::FOR_PUBLIC ) {
-		if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
-			// MW 1.36+
-			$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-		} else {
-			$wikiPage = new WikiPage( $title );
-		}
+		$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
 		$content = $wikiPage->getContent( $audience );
 		if ( $content instanceof TextContent ) {
 			return $content->getText();
@@ -216,14 +213,16 @@ END;
 			$form_body
 		);
 
-		$text .= <<<END
-	<script type="text/javascript">
+		$script = <<<END
 	window.onload = function() {
 		document.editform.submit();
 	}
-	</script>
 
 END;
+
+		$nonce = RequestContext::getMain()->getOutput()->getCSP()->getNonce();
+		$text .= Html::inlineScript( $script, $nonce );
+
 		// @TODO - remove this hook? It seems useless.
 		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::PrintRedirectForm', [ $is_save, !$is_save, false, &$text ] );
 		return $text;
@@ -299,7 +298,7 @@ END;
 	 * @return string[]
 	 */
 	public static function getAllForms() {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = self::getReadDB();
 		$res = $dbr->select( 'page',
 			'page_title',
 			[ 'page_namespace' => PF_NS_FORM,
@@ -485,5 +484,23 @@ END;
 		}
 		$tableSchema = $tableSchemas[$cargoTable];
 		return $tableSchema->mFieldDescriptions[$cargoField] ?? null;
+	}
+
+	/**
+	 * Provides database for read access
+	 *
+	 * @return IDatabase|DBConnRef
+	 */
+	public static function getReadDB() {
+		$lbFactory = MediaWikiServices::getInstance()->getDBLoadBalancerFactory();
+		if ( method_exists( $lbFactory, 'getReplicaDatabase' ) ) {
+			// MW 1.40+
+			// The correct type \Wikimedia\Rdbms\IReadableDatabase cannot be used
+			// as the return type, as that class only exists since 1.40.
+			// @phan-suppress-next-line PhanTypeMismatchReturnSuperType
+			return $lbFactory->getReplicaDatabase();
+		} else {
+			return $lbFactory->getMainLB()->getConnection( DB_REPLICA );
+		}
 	}
 }

@@ -115,12 +115,7 @@ return [
 	'ext.srf' => $moduleTemplate + [
 		'scripts' => 'resources/ext.srf.js',
 		'styles'  => [
-			'resources/ext.srf.css',
-
-			// Someone broke the CSS loading (Suspect bug 46401) in 1.22
-			// until this is fixed force styles to be loaded at the very start
-			// to avoid display clutter
-			'formats/calendar/resources/ext.srf.formats.eventcalendar.css',
+			'resources/ext.srf.css'
 		],
 		'dependencies' => 'ext.smw.api',
 		'position' => 'top',
@@ -461,6 +456,7 @@ return [
 	// Chart specific declarations
 	'ext.srf.jqplot.chart' => $formatModule + [
 		'scripts' => [
+			'jqplot/resources/ext.srf.jqplot.chart.bubble.js',
 			'jqplot/resources/ext.srf.jqplot.chart.bar.js',
 			'jqplot/resources/ext.srf.jqplot.chart.pie.js',
 			'jqplot/resources/ext.srf.jqplot.chart.js',
@@ -965,15 +961,18 @@ return [
 		],
 	],
 
-	// DataTables implementation
-	'ext.srf.datatables' => $formatModule + [
-		'scripts' => 'datatables/resources/ext.srf.formats.datatables.js',
-		'styles'  => 'datatables/resources/ext.srf.formats.datatables.css',
+	'ext.srf.datatables.v2.format' => $formatModule + [
+		'scripts' => [
+			'datatables/resources/ext.srf.formats.datatables.js',
+		],
+		'styles'  => [
+			 'datatables/resources/ext.srf.formats.datatables.css'
+		],
 		'dependencies' => [
-			'jquery.dataTables',
-			'jquery.dataTables.extras',
-			'jquery.ui',
-			'ext.smw.dataItem',
+			'ext.srf.datatables.v2.module',
+			'mediawiki.cookie',
+			'oojs-ui-core',
+			'oojs-ui-widgets',
 			'ext.smw.api',
 			'ext.srf.api',
 			'ext.srf.util',
@@ -1011,20 +1010,18 @@ return [
 			'srf-ui-datatables-label-multiselect-column-selectedtext',
 			'srf-ui-datatables-label-placeholder-column-search',
 			'srf-ui-datatables-label-content-cache',
-			'srf-ui-datatables-label-content-server'
+			'srf-ui-datatables-label-content-server',
+			'srf-ui-datatables-searchpanes-noajax'
 		]
 	],
 
-	// DataTables bootstrap
-	'ext.srf.datatables.bootstrap' => $moduleTemplate + [
-		'scripts' => 'resources/jquery/datatables/jquery.dataTables.bootstrap.js',
-		'styles'  => 'resources/jquery/datatables/jquery.dataTables.bootstrap.css'
-	],
-
-	// DataTables basic
-	'ext.srf.datatables.basic' => $moduleTemplate + [
+	'ext.srf.datatables.v2.module' => $moduleTemplate + [
+		'scripts' => [
+			'resources/jquery/datatables/datatables.min.js',
+			'resources/jquery/datatables/jquery.dataTables.extras.js',
+		],
 		'styles'  => [
-			'resources/jquery/datatables/datatables.min.css'
+			'resources/jquery/datatables/datatables.min.css',
 		]
 	],
 

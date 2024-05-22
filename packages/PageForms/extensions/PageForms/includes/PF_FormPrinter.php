@@ -771,7 +771,7 @@ END;
 					if ( $wgAmericanDates == true ) {
 						$new_value = "$month $day, $year";
 					} else {
-						$new_value = "$year/$month/$day";
+						$new_value = "$year-$month-$day";
 					}
 					// If there's a day, include whatever
 					// time information we have.
@@ -958,6 +958,7 @@ END;
 		// This is needed in order to make sure $parser->mLinkHolders
 		// is set.
 		$parser->clearState();
+		$parser->setOutputType( Parser::OT_HTML );
 
 		$form_def = PFFormUtils::getFormDefinition( $parser, $form_def, $form_id );
 
@@ -1100,7 +1101,7 @@ END;
 					if ( count( $tag_components ) > 1 ) {
 						throw new MWException( '<div class="error">Error in form definition: \'end template\' tag cannot contain any additional parameters.</div>' );
 					}
-					if ( $source_is_page ) {
+					if ( $source_is_page && !$is_autoedit ) {
 						// Add any unhandled template fields
 						// in the page as hidden variables.
 						$form_text .= PFFormUtils::unhandledFieldsHTML( $tif );
@@ -1297,7 +1298,8 @@ END;
 							// $generated_page_name = str_replace('.', '_', $generated_page_name);
 							$generated_page_name = str_replace( ' ', '_', $generated_page_name );
 							$escaped_input_name = str_replace( ' ', '_', $form_field->getInputName() );
-							$generated_page_name = str_ireplace( "<$escaped_input_name>", $cur_value_in_template, $generated_page_name );
+							$generated_page_name = str_ireplace( "<$escaped_input_name>",
+								$cur_value_in_template ?? '', $generated_page_name );
 							// Once the substitution is done, replace underlines back
 							// with spaces.
 							$generated_page_name = str_replace( '_', ' ', $generated_page_name );
@@ -1855,7 +1857,7 @@ END;
 		// Get free text, and add to page data, as well as retroactively
 		// inserting it into the form.
 
-		if ( $page_exists ) {
+		if ( $source_is_page ) {
 			// If the page is the source, free_text will just be
 			// whatever in the page hasn't already been inserted
 			// into the form.
@@ -1919,12 +1921,7 @@ END;
 			// This variable is called $mwWikiPage and not
 			// something simpler, to avoid confusion with the
 			// variable $wiki_page, which is of type PFWikiPage.
-			if ( method_exists( MediaWikiServices::class, 'getWikiPageFactory' ) ) {
-				// MW 1.36+
-				$mwWikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $this->mPageTitle );
-			} else {
-				$mwWikiPage = WikiPage::factory( $this->mPageTitle );
-			}
+			$mwWikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $this->mPageTitle );
 			$form_text .= Html::hidden( 'wpEdittime', $mwWikiPage->getTimestamp() );
 			$form_text .= Html::hidden( 'editRevId', 0 );
 			$form_text .= Html::hidden( 'wpEditToken', $user->getEditToken() );
@@ -2135,7 +2132,7 @@ END;
 	 */
 	public static function getParsedValue( $parser, $value ) {
 		if ( !array_key_exists( $value, self::$mParsedValues ) ) {
-			self::$mParsedValues[$value] = $parser->recursiveTagParse( $value );
+			self::$mParsedValues[$value] = trim( $parser->recursiveTagParse( $value ) );
 		}
 
 		return self::$mParsedValues[$value];
