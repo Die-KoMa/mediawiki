@@ -33,6 +33,9 @@
         ];
       };
 
+      # build everything as part of nix flake check
+      checks = self.packages;
+
       formatter."${system}" = pkgs.treefmt;
     };
 }
