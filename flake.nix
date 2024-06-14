@@ -7,33 +7,32 @@
     };
   };
 
-  outputs = inputs @ {
-    self,
-    nixpkgs,
-    ...
-  }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {inherit system;};
-    composer2nix = import inputs.composer2nix {
-      inherit pkgs system;
-      noDev = true;
-    };
-  in {
-    nixosModules.komapedia = import ./modules/komapedia.nix (self.packages."${system}");
+  outputs =
+    inputs@{ self, nixpkgs, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+      composer2nix = import inputs.composer2nix {
+        inherit pkgs system;
+        noDev = true;
+      };
+    in
+    {
+      nixosModules.komapedia = import ./modules/komapedia.nix (self.packages."${system}");
 
-    packages."${system}" = import ./packages {
-      inherit pkgs system composer2nix;
-      lib = pkgs.lib;
-    };
+      packages."${system}" = import ./packages {
+        inherit pkgs system composer2nix;
+        lib = pkgs.lib;
+      };
 
-    devShells."${system}".default = pkgs.mkShell {
-      nativeBuildInputs = [
-        composer2nix
-        pkgs.php
-        pkgs.phpPackages.composer
-      ];
-    };
+      devShells."${system}".default = pkgs.mkShell {
+        nativeBuildInputs = [
+          composer2nix
+          pkgs.php
+          pkgs.phpPackages.composer
+        ];
+      };
 
-    formatter."${system}" = pkgs.treefmt;
-  };
+      formatter."${system}" = pkgs.treefmt;
+    };
 }

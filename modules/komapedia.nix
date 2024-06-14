@@ -1,10 +1,12 @@
-extensionPackages: {
+extensionPackages:
+{
   config,
   pkgs,
   lib,
   ...
 }:
-with lib; {
+with lib;
+{
   options.die-koma.komapedia = {
     enable = mkEnableOption "Configure the KoMaPedia MediaWiki";
 
@@ -33,66 +35,71 @@ with lib; {
     };
 
     poweredBy = mkOption {
-      type = types.attrsOf (types.submodule {
-        options = {
-          link = mkOption {
-            description = "Link for the logo";
-            type = types.str;
-          };
+      type = types.attrsOf (
+        types.submodule {
+          options = {
+            link = mkOption {
+              description = "Link for the logo";
+              type = types.str;
+            };
 
-          logo = mkOption {
-            description = "Logo image";
-            type = types.str;
-          };
+            logo = mkOption {
+              description = "Logo image";
+              type = types.str;
+            };
 
-          alt = mkOption {
-            description = "Alt text for the logo";
-            type = types.str;
-          };
+            alt = mkOption {
+              description = "Alt text for the logo";
+              type = types.str;
+            };
 
-          height = mkOption {
-            description = "Height of the logo";
-            default = 31;
-            type = types.int;
-          };
+            height = mkOption {
+              description = "Height of the logo";
+              default = 31;
+              type = types.int;
+            };
 
-          width = mkOption {
-            description = "Width of the logo";
-            default = 88;
-            type = types.int;
+            width = mkOption {
+              description = "Width of the logo";
+              default = 88;
+              type = types.int;
+            };
           };
-        };
-      });
+        }
+      );
     };
   };
 
-  config = let
-    cfg = config.services.mediawiki;
+  config =
+    let
+      cfg = config.services.mediawiki;
 
-    pool = config.services.phpfpm.pools.mediawiki;
-    php = pool.phpPackage;
-    mediawikiConfig = pool.phpEnv.MEDIAWIKI_CONFIG;
-    jobrunner = pkgs.writeShellScript "mw-jobrunner" ''
-      RUN_JOBS="${cfg.finalPackage}/share/mediawiki/maintenance/runJobs.php --conf ${mediawikiConfig} --maxtime=3600"
-      while true; do
-        ${php}/bin/php $RUN_JOBS --type="enotifNotify"
-        ${php}/bin/php $RUN_JOBS --wait --maxjobs=20
-        sleep 10
-      done
-    '';
+      pool = config.services.phpfpm.pools.mediawiki;
+      php = pool.phpPackage;
+      mediawikiConfig = pool.phpEnv.MEDIAWIKI_CONFIG;
+      jobrunner = pkgs.writeShellScript "mw-jobrunner" ''
+        RUN_JOBS="${cfg.finalPackage}/share/mediawiki/maintenance/runJobs.php --conf ${mediawikiConfig} --maxtime=3600"
+        while true; do
+          ${php}/bin/php $RUN_JOBS --type="enotifNotify"
+          ${php}/bin/php $RUN_JOBS --wait --maxjobs=20
+          sleep 10
+        done
+      '';
 
-    mkLogo = category: key: value: ''
-      $wgFooterIcons['${category}']['${key}'] = [
-        "src" => "${value.logo}",
-        "url" => "${value.link}",
-        "alt" => "${value.alt}",
-        "height" => "${toString value.height}",
-        "width" => "${toString value.width}",
-      ];
-    '';
+      mkLogo = category: key: value: ''
+        $wgFooterIcons['${category}']['${key}'] = [
+          "src" => "${value.logo}",
+          "url" => "${value.link}",
+          "alt" => "${value.alt}",
+          "height" => "${toString value.height}",
+          "width" => "${toString value.width}",
+        ];
+      '';
 
-    poweredBy = concatStringsSep "\n" (mapAttrsToList (mkLogo "poweredby") config.die-koma.komapedia.poweredBy);
-  in
+      poweredBy = concatStringsSep "\n" (
+        mapAttrsToList (mkLogo "poweredby") config.die-koma.komapedia.poweredBy
+      );
+    in
     mkIf config.die-koma.komapedia.enable {
       services = {
         phpfpm.pools.mediawiki = {
@@ -100,11 +107,9 @@ with lib; {
             "listen.owner" = mkOverride 75 config.services.nginx.user;
             "listen.group" = mkOverride 75 config.services.nginx.user;
           };
-          phpPackage = lib.mkForce (pkgs.php81.withExtensions ({
-            all,
-            enabled,
-          }:
-            enabled ++ [all.memcached]));
+          phpPackage = lib.mkForce (
+            pkgs.php81.withExtensions ({ all, enabled }: enabled ++ [ all.memcached ])
+          );
           phpOptions = ''
             post_max_size = 100M
             upload_max_filesize = 100M
@@ -132,7 +137,9 @@ with lib; {
               VisualEditor = null;
             };
 
-          database = {createLocally = mkDefault false;};
+          database = {
+            createLocally = mkDefault false;
+          };
           webserver = "none";
           name = "KoMapedia";
           passwordSender = config.die-koma.komapedia.adminAddr;
@@ -222,7 +229,7 @@ with lib; {
           StandardOutput = "journal";
         };
 
-        wantedBy = ["multi-user.target"];
+        wantedBy = [ "multi-user.target" ];
       };
     };
 }
