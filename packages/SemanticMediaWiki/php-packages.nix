@@ -202,10 +202,10 @@ let
     "symfony/css-selector" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "symfony-css-selector-0934c9f1d433776f25c629bdc93f3e157d139e08";
+        name = "symfony-css-selector-ea43887e9afd2029509662d4f95e8b5ef6fc9bbb";
         src = fetchurl {
-          url = "https://api.github.com/repos/symfony/css-selector/zipball/0934c9f1d433776f25c629bdc93f3e157d139e08";
-          sha256 = "1jn4d85i97mzrm2pjnq3ccpc75hyvigmxy0m5vgz67c4b8gad9mm";
+          url = "https://api.github.com/repos/symfony/css-selector/zipball/ea43887e9afd2029509662d4f95e8b5ef6fc9bbb";
+          sha256 = "1l35g6by3aan0j97663zgwha0xjb0pfmpgrinsllwckyy8819m27";
         };
       };
     };
