@@ -107,69 +107,12 @@ class PFMappingUtils {
 				break;
 			case 'displaytitle':
 				$isReverseLookup = ( array_key_exists( 'reverselookup', $args ) && ( $args['reverselookup'] == 'true' ) );
-				$mappedValues = self::getLabelsFromDisplayTitle( $values, $isReverseLookup );
+				$mappedValues = self::getLabelsForTitles( $values, $isReverseLookup );
 				// @todo - why just array_values ?
 				break;
 		}
 		$res = ( $mappedValues !== null ) ? self::disambiguateLabels( $mappedValues ) : $values;
 		return $res;
-	}
-
-	/**
-	 * Map a template field value into sequential array of labels.
-	 * Used when mapping submitted to possible values.
-	 * Works with both local and remote autocompletion.
-	 *
-	 * @param string|null $valueString
-	 * @param string|null $delimiter
-	 * @param array $args
-	 * @param bool $form_submitted
-	 * @return string[]
-	 */
-	public static function valueStringToLabels(
-		?string $valueString,
-		?string $delimiter,
-		array $args = [],
-		bool $form_submitted = false
-	) {
-		if ( $valueString == null ) {
-			return [];
-		} else {
-			$valueString = trim( $valueString );
-			$possibleValues = ( array_key_exists( 'possible_values', $args ) )
-			? $args['possible_values']
-			: null;
-			if ( strlen( $valueString ) === 0 || $possibleValues === null ) {
-				return [ $valueString ];
-			}
-		}
-		if ( $delimiter !== null ) {
-			$values = array_map( 'trim', explode( $delimiter, $valueString ) );
-		} else {
-			$values = [ $valueString ];
-		}
-
-		$labels = [];
-		// Remote autocompletion? Don't try mapping
-		// current to possible values
-		$valMax = PFValuesUtils::getMaxValuesToRetrieve();
-		$mode = ( $form_submitted && count( $possibleValues ) >= $valMax ) ? 'remote' : 'local';
-		if ( $mode == 'local' ) {
-			foreach ( $values as $value ) {
-				if ( $value != '' ) {
-					if ( array_key_exists( $value, $possibleValues ) ) {
-						$labels[] = $possibleValues[$value];
-					} else {
-						$labels[] = $value;
-					}
-				}
-			}
-		} elseif ( $mode == 'remote' ) {
-			$mappedValues = self::getMappedValuesForInput( $values, $args );
-			$labels = array_values( $mappedValues );
-		}
-		return $labels;
-		// Always return an array
 	}
 
 	/**
@@ -315,7 +258,7 @@ class PFMappingUtils {
 	 * @param bool $doReverseLookup
 	 * @return array
 	 */
-	public static function getLabelsFromDisplayTitle(
+	public static function getLabelsForTitles(
 		array $values,
 		bool $doReverseLookup = false
 	) {
@@ -360,8 +303,16 @@ class PFMappingUtils {
 
 		$allDisplayTitles = self::getDisplayTitles( $allTitles );
 		foreach ( $pageNamesForValues as $value => $pageName ) {
-			$labels[$value] = $allDisplayTitles[$pageName] ?? $value;
+			if ( isset( $allDisplayTitles[ $pageName ] )
+				&& strtolower( $allDisplayTitles[ $pageName ] ) !== strtolower( $value )
+			) {
+				$displayValue = sprintf( '%s (%s)', $allDisplayTitles[ $pageName ], $value );
+			} else {
+				$displayValue = $value;
+			}
+			$labels[$value] = $displayValue;
 		}
+
 		return $labels;
 	}
 
@@ -404,7 +355,7 @@ class PFMappingUtils {
 	 * @return string
 	 */
 	private static function removeNSPrefixFromLabel( string $label ) {
-		$labelArr = explode( ':',  trim( $label ) );
+		$labelArr = explode( ':', trim( $label ) );
 		if ( count( $labelArr ) > 1 ) {
 			$prefix = array_shift( $labelArr );
 			$res = implode( ':', $labelArr );

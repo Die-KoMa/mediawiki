@@ -566,7 +566,7 @@ END;
 
 			$inputType = $formField->getInputType();
 			$gridParamValues = [ 'name' => $templateField->getFieldName() ];
-			list( $autocompletedatatype, $autocompletesettings ) = $this->getSpreadsheetAutocompleteAttributes( $formFieldArgs );
+			[ $autocompletedatatype, $autocompletesettings ] = $this->getSpreadsheetAutocompleteAttributes( $formFieldArgs );
 			if ( $formField->getLabel() !== null ) {
 				$gridParamValues['label'] = $formField->getLabel();
 			}
@@ -1101,10 +1101,10 @@ END;
 					if ( count( $tag_components ) > 1 ) {
 						throw new MWException( '<div class="error">Error in form definition: \'end template\' tag cannot contain any additional parameters.</div>' );
 					}
-					if ( $source_is_page && !$is_autoedit ) {
+					if ( $source_is_page ) {
 						// Add any unhandled template fields
 						// in the page as hidden variables.
-						$form_text .= PFFormUtils::unhandledFieldsHTML( $tif );
+						$form_text .= PFFormUtils::unhandledFieldsHTML( $tif, $is_autoedit );
 					}
 					// Remove this tag from the $section variable.
 					$section = substr_replace( $section, '', $brackets_loc, $brackets_end_loc + 3 - $brackets_loc );
@@ -1305,16 +1305,16 @@ END;
 							$generated_page_name = str_replace( '_', ' ', $generated_page_name );
 						}
 						if ( defined( 'CARGO_VERSION' ) && $form_field->hasFieldArg( 'mapping cargo table' ) &&
-						$form_field->hasFieldArg( 'mapping cargo field' ) && $form_field->hasFieldArg( 'mapping cargo value field' ) ) {
-								$mappingCargoTable = $form_field->getFieldArg( 'mapping cargo table' );
-								$mappingCargoField = $form_field->getFieldArg( 'mapping cargo field' );
-								$mappingCargoValueField = $form_field->getFieldArg( 'mapping cargo value field' );
-								if ( !$form_submitted && $cur_value !== null && $cur_value !== '' ) {
-									$cur_value = $this->getCargoBasedMapping( $cur_value, $mappingCargoTable, $mappingCargoField, $mappingCargoValueField, $form_field );
-								}
-								if ( $form_submitted && $cur_value_in_template !== null && $cur_value_in_template !== '' ) {
-									$cur_value_in_template = $this->getCargoBasedMapping( $cur_value_in_template, $mappingCargoTable, $mappingCargoValueField, $mappingCargoField, $form_field );
-								}
+							$form_field->hasFieldArg( 'mapping cargo field' ) && $form_field->hasFieldArg( 'mapping cargo value field' ) ) {
+							$mappingCargoTable = $form_field->getFieldArg( 'mapping cargo table' );
+							$mappingCargoField = $form_field->getFieldArg( 'mapping cargo field' );
+							$mappingCargoValueField = $form_field->getFieldArg( 'mapping cargo value field' );
+							if ( !$form_submitted && $cur_value !== null && $cur_value !== '' ) {
+								$cur_value = $this->getCargoBasedMapping( $cur_value, $mappingCargoTable, $mappingCargoField, $mappingCargoValueField, $form_field );
+							}
+							if ( $form_submitted && $cur_value_in_template !== null && $cur_value_in_template !== '' ) {
+								$cur_value_in_template = $this->getCargoBasedMapping( $cur_value_in_template, $mappingCargoTable, $mappingCargoValueField, $mappingCargoField, $form_field );
+							}
 						}
 						if ( $cur_value !== '' &&
 							( $form_field->hasFieldArg( 'mapping template' ) ||
@@ -1331,7 +1331,7 @@ END;
 									$delimiter = null;
 								}
 							}
-							$cur_value = $form_field->valueStringToLabels( $cur_value, $delimiter );
+							$cur_value = $form_field->valueStringToLabels( $cur_value, $delimiter, $form_submitted );
 						}
 
 						// Call hooks - unfortunately this has to be split into two
@@ -1465,15 +1465,15 @@ END;
 							}
 						} elseif ( count( $sub_components ) == 2 ) {
 							switch ( $sub_components[0] ) {
-							case 'label':
-								$input_label = self::getParsedValue( $parser, $sub_components[1] );
-								break;
-							case 'class':
-								$attr['class'] = $sub_components[1];
-								break;
-							case 'style':
-								$attr['style'] = Sanitizer::checkCSS( $sub_components[1] );
-								break;
+								case 'label':
+									$input_label = self::getParsedValue( $parser, $sub_components[1] );
+									break;
+								case 'class':
+									$attr['class'] = $sub_components[1];
+									break;
+								case 'style':
+									$attr['style'] = Sanitizer::checkCSS( $sub_components[1] );
+									break;
 							}
 						}
 					}

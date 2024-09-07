@@ -47,7 +47,7 @@ class PFFormLinker {
 		// Allow outside code to set/change the preloaded text.
 		MediaWikiServices::getInstance()->getHookContainer()->run( 'PageForms::EditFormPreloadText', [ &$preloadContent, $title, $formTitle ] );
 
-		list( $formText, $pageText, $formPageTitle, $generatedPageName ) =
+		[ $formText, $pageText, $formPageTitle, $generatedPageName ] =
 			$wgPageFormsFormPrinter->formHTML(
 				$formDefinition, false, false, null, $preloadContent,
 				'Some very long page name that will hopefully never get created ABCDEF123',
@@ -68,14 +68,7 @@ class PFFormLinker {
 		$params['user_id'] = $userID;
 		$params['page_text'] = $pageText;
 		$job = new PFCreatePageJob( $title, $params );
-
-		$jobs = [ $job ];
-		if ( method_exists( MediaWikiServices::class, 'getJobQueueGroup' ) ) {
-			// MW 1.37+
-			MediaWikiServices::getInstance()->getJobQueueGroup()->push( $jobs );
-		} else {
-			JobQueueGroup::singleton()->push( $jobs );
-		}
+		MediaWikiServices::getInstance()->getJobQueueGroup()->push( $job );
 	}
 
 	/**

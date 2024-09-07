@@ -18,7 +18,6 @@
 	/**
 	 * Inheritance class for the pf.select2 constructor
 	 *
-	 *
 	 * @class
 	 */
 	pf.select2 = pf.select2 || {};
@@ -420,11 +419,21 @@
 				if (data.pfautocomplete !== undefined) {
 					$( '#loading-' + input_id ).hide();
 					data.pfautocomplete.forEach( function(item) {
-						item.id = item.title;
 						if (item.displaytitle !== undefined) {
-							item.text = item.displaytitle;
+							var displayTitle;
+							if (item.title === item.displaytitle) {
+								displayTitle = item.title;
+							} else {
+								var containsTitleInParentheses = item.displaytitle.indexOf("(" + item.title + ")") !== -1;
+								displayTitle = containsTitleInParentheses
+									? item.displaytitle
+									: item.displaytitle + " (" + item.title + ")";
+							}
+							item.text = displayTitle;
+							item.id = displayTitle
 						} else {
 							item.text = item.title;
+							item.id = item.title;
 						}
 					});
 					return {results: data.pfautocomplete};

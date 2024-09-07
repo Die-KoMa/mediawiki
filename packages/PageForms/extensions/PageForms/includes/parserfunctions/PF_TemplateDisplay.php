@@ -171,7 +171,7 @@ class PFTemplateDisplay {
 		$mappingFormat = new CargoMapsFormat( $parser->getOutput() );
 
 		try {
-			list( $lat, $lon ) = CargoUtils::parseCoordinatesString( $coordinatesStr );
+			[ $lat, $lon ] = CargoUtils::parseCoordinatesString( $coordinatesStr );
 		} catch ( MWException $e ) {
 			return '';
 		}
@@ -251,20 +251,7 @@ class PFTemplateDisplay {
 
 	private static function fileText( $value ) {
 		$title = Title::newFromText( $value, NS_FILE );
-		if ( $title == null || !$title->exists() ) {
-			return $value;
-		}
-
-		if ( $title->isRedirect() ) {
-			$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-
-			$title = $wikiPage->getRedirectTarget();
-			if ( !$title->exists() ) {
-				return $title->getText();
-			}
-		}
-
-		$file = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()->newFile( $title );
+		$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title );
 		return Linker::makeThumbLinkObj(
 			$title,
 			$file,

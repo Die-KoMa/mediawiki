@@ -1,6 +1,6 @@
 {
 	"name": "SemanticMediaWiki",
-	"version": "4.1.3",
+	"version": "4.2.0",
 	"author": [
 		"[https://korrekt.org Markus Krötzsch]",
 		"[https://EntropyWins.wtf/mediawiki Jeroen De Dauw]",
@@ -76,6 +76,7 @@
 		"SMWAdmin": "SMW\\MediaWiki\\Specials\\SpecialAdmin",
 		"PendingTaskList": "SMW\\MediaWiki\\Specials\\SpecialPendingTaskList",
 		"Ask": "SMW\\MediaWiki\\Specials\\SpecialAsk",
+		"FacetedSearch": "SMW\\MediaWiki\\Specials\\SpecialFacetedSearch",
 		"Browse": "SMW\\MediaWiki\\Specials\\SpecialBrowse",
 		"Concepts": "SMW\\SpecialConcepts",
 		"PageProperty": "SMW\\MediaWiki\\Specials\\SpecialPageProperty",

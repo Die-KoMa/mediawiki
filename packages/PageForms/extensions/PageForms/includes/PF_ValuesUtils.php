@@ -515,7 +515,19 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 	public static function getAllPagesForNamespace( $namespaceStr, $substring = null ) {
 		global $wgLanguageCode, $wgPageFormsUseDisplayTitle;
 
-		$namespaceNames = explode( ',', $namespaceStr );
+		if ( $namespaceStr === '_contentNamespaces' ) {
+			global $wgContentNamespaces;
+			$queriedNamespaces = $wgContentNamespaces;
+			$namespaceConditions = array_map( static function ( $ns ) {
+				return "page_namespace = $ns";
+			}, $queriedNamespaces );
+			$namespaceNames = [];
+		} else {
+			$namespaceNames = explode( ',', $namespaceStr );
+			$queriedNamespaces = [];
+			$namespaceConditions = [];
+
+		}
 
 		$allNamespaces = PFUtils::getContLang()->getNamespaces();
 
@@ -523,9 +535,6 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			$englishLang = MediaWikiServices::getInstance()->getLanguageFactory()->getLanguage( 'en' );
 			$allEnglishNamespaces = $englishLang->getNamespaces();
 		}
-
-		$queriedNamespaces = [];
-		$namespaceConditions = [];
 
 		foreach ( $namespaceNames as $namespace_name ) {
 			$namespace_name = self::standardizeNamespace( $namespace_name );
@@ -567,7 +576,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		$conditions[] = implode( ' OR ', $namespaceConditions );
 		$tables = [ 'page' ];
 		$columns = [ 'page_title' ];
-		if ( count( $namespaceNames ) > 1 ) {
+		if ( count( $namespaceConditions ) > 1 ) {
 			$columns[] = 'page_namespace';
 		}
 		if ( $wgPageFormsUseDisplayTitle ) {
@@ -661,7 +670,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			if ( count( $arr ) == 3 ) {
 				$names_array = self::getValuesForCargoField( $arr[0], $arr[1], $arr[2] );
 			} else {
-				list( $table_name, $field_name ) = explode( '|', $source_name, 2 );
+				[ $table_name, $field_name ] = explode( '|', $source_name, 2 );
 				$names_array = self::getAllValuesForCargoField( $table_name, $field_name );
 			}
 			// Remove blank/null values from the array.
@@ -708,6 +717,9 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		} elseif ( array_key_exists( 'values from namespace', $field_args ) ) {
 			$autocompleteFieldType = 'namespace';
 			$autocompletionSource = $field_args['values from namespace'];
+		} elseif ( array_key_exists( 'values from content namespaces', $field_args ) ) {
+			$autocompleteFieldType = 'namespace';
+			$autocompletionSource = "_contentNamespaces";
 		} elseif ( array_key_exists( 'values from url', $field_args ) ) {
 			$autocompleteFieldType = 'external_url';
 			$autocompletionSource = $field_args['values from url'];
@@ -754,7 +766,10 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 	public static function getRemoteDataTypeAndPossiblySetAutocompleteValues( $autocompleteFieldType, $autocompletionSource, $field_args, $autocompleteSettings ) {
 		global $wgPageFormsMaxLocalAutocompleteValues, $wgPageFormsAutocompleteValues;
 
-		if ( $autocompleteFieldType == 'external_url' || $autocompleteFieldType == 'wikidata' ) {
+		if ( $autocompleteFieldType == 'external_url'
+			|| $autocompleteFieldType == 'wikidata'
+			|| array_key_exists( 'reverselookup', $field_args )
+		) {
 			// Autocompletion from URL is always done remotely.
 			return $autocompleteFieldType;
 		}
@@ -794,7 +809,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 	 * @return string[]
 	 */
 	public static function setAutocompleteValues( $field_args, $is_list ) {
-		list( $autocompleteFieldType, $autocompletionSource ) =
+		[ $autocompleteFieldType, $autocompletionSource ] =
 			self::getAutocompletionTypeAndSource( $field_args );
 		$autocompleteSettings = $autocompletionSource;
 		if ( $is_list ) {
@@ -819,16 +834,19 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 	 *
 	 * @param string[]|string $value
 	 * @param string $delimiter
+	 * @param bool $formatWithDisplayTitles
 	 * @return string[]
 	 */
-	public static function getValuesArray( $value, $delimiter ) {
+	public static function getValuesArray( $value, $delimiter, $formatWithDisplayTitles = false ) {
 		if ( is_array( $value ) ) {
 			return $value;
 		} elseif ( $value == null ) {
 			return [];
 		} else {
-			// Remove extra spaces.
-			return array_map( 'trim', explode( $delimiter, $value ) );
+			$values = array_map( 'trim', explode( $delimiter, $value ) );
+			return $formatWithDisplayTitles
+				? array_values( PFMappingUtils::getLabelsForTitles( $values ) )
+				: $values;
 		}
 	}
 
@@ -912,7 +930,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 
 		$rawQuery = $rawQuery . "|named args=yes|link=none|limit=$wgPageFormsMaxAutocompleteValues|searchlabel=";
 		$rawQueryArray = explode( "|", $rawQuery );
-		list( $queryString, $processedParams, $printouts ) = SMWQueryProcessor::getComponentsFromFunctionParams( $rawQueryArray, false );
+		[ $queryString, $processedParams, $printouts ] = SMWQueryProcessor::getComponentsFromFunctionParams( $rawQueryArray, false );
 		SMWQueryProcessor::addThisPrintout( $printouts, $processedParams );
 		$processedParams = SMWQueryProcessor::getProcessedParams( $processedParams, $printouts );
 

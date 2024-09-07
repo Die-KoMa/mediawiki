@@ -95,7 +95,7 @@ class PFTokensInput extends PFFormInput {
 				$delimiter = ',';
 			}
 		} else {
-			list( $autocompleteSettings, $remoteDataType, $delimiter ) = PFValuesUtils::setAutocompleteValues( $other_args, true );
+			[ $autocompleteSettings, $remoteDataType, $delimiter ] = PFValuesUtils::setAutocompleteValues( $other_args, true );
 		}
 
 		if ( is_array( $cur_value ) ) {
@@ -154,7 +154,7 @@ class PFTokensInput extends PFFormInput {
 
 		// This code adds predefined tokens in the form of <options>
 
-		$cur_values = PFValuesUtils::getValuesArray( $cur_value, $delimiter );
+		$cur_values = PFValuesUtils::getValuesArray( $cur_value, $delimiter, true );
 		$optionsText = '';
 
 		$possible_values = $other_args['possible_values'];

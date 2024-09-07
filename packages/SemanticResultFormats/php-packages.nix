@@ -1,21 +1,14 @@
-{
-  composerEnv,
-  fetchurl,
-  fetchgit ? null,
-  fetchhg ? null,
-  fetchsvn ? null,
-  noDev ? false,
-}:
+{composerEnv, fetchurl, fetchgit ? null, fetchhg ? null, fetchsvn ? null, noDev ? false}:
 
 let
   packages = {
     "composer/installers" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "composer-installers-c29dc4b93137acb82734f672c37e029dfbd95b35";
+        name = "composer-installers-12fb2dfe5e16183de69e784a7b84046c43d97e8e";
         src = fetchurl {
-          url = "https://api.github.com/repos/composer/installers/zipball/c29dc4b93137acb82734f672c37e029dfbd95b35";
-          sha256 = "05d2dbfdlf5fbycl7gj6wr4c63dwlq3minm7fg2ampb2ynazc5cr";
+          url = "https://api.github.com/repos/composer/installers/zipball/12fb2dfe5e16183de69e784a7b84046c43d97e8e";
+          sha256 = "0mvfi9rn5m6j4gmbi15jas3rd6gvgvipf5anhmxx4mqslc7pggx8";
         };
       };
     };
@@ -82,10 +75,10 @@ let
     "justinrainbow/json-schema" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "justinrainbow-json-schema-fbbe7e5d79f618997bc3332a6f49246036c45793";
+        name = "justinrainbow-json-schema-feb2ca6dd1cebdaf1ed60a4c8de2e53ce11c4fd8";
         src = fetchurl {
-          url = "https://api.github.com/repos/jsonrainbow/json-schema/zipball/fbbe7e5d79f618997bc3332a6f49246036c45793";
-          sha256 = "0yhhv8chrnn2bk21v5b9jn3wbzm6vs415xbxl5rl6y5kkmvf6wng";
+          url = "https://api.github.com/repos/jsonrainbow/json-schema/zipball/feb2ca6dd1cebdaf1ed60a4c8de2e53ce11c4fd8";
+          sha256 = "13gy5lh8cza7kwsn7s8960114icjz52lk1ja28kxf4v67yc1qswq";
         };
       };
     };
@@ -112,10 +105,10 @@ let
     "mediawiki/semantic-media-wiki" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-semantic-media-wiki-b5e2afe11991fe21a335cb90426de24b85bc9fe7";
+        name = "mediawiki-semantic-media-wiki-0a8af7546b81f6dcab3f336f14023c8e7aea3805";
         src = fetchurl {
-          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/b5e2afe11991fe21a335cb90426de24b85bc9fe7";
-          sha256 = "1jggiiai70lnfjps8p3001lhn1hsd3yrzxj1bny6wx00rp88p1rb";
+          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/0a8af7546b81f6dcab3f336f14023c8e7aea3805";
+          sha256 = "02pg2rjfnhj4ddcy7c1kikyg4mz8cjp4rp7l7f03911dlss86jdr";
         };
       };
     };
@@ -212,10 +205,10 @@ let
     "seld/jsonlint" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "seld-jsonlint-9bb7db07b5d66d90f6ebf542f09fc67d800e5259";
+        name = "seld-jsonlint-1748aaf847fc731cfad7725aec413ee46f0cc3a2";
         src = fetchurl {
-          url = "https://api.github.com/repos/Seldaek/jsonlint/zipball/9bb7db07b5d66d90f6ebf542f09fc67d800e5259";
-          sha256 = "1m33fpb161pnq544iwkwi040zj9qyxivb2qx9d363hzqg76xm6qi";
+          url = "https://api.github.com/repos/Seldaek/jsonlint/zipball/1748aaf847fc731cfad7725aec413ee46f0cc3a2";
+          sha256 = "0a7llwd5vv6s6nxxldpljanznjb1y0y3fbmh0m16k9dw7psf3f2z";
         };
       };
     };
@@ -242,10 +235,10 @@ let
     "symfony/polyfill-php80" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "symfony-polyfill-php80-87b68208d5c1188808dd7839ee1e6c8ec3b02f1b";
+        name = "symfony-polyfill-php80-77fa7995ac1b21ab60769b7323d600a991a90433";
         src = fetchurl {
-          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/87b68208d5c1188808dd7839ee1e6c8ec3b02f1b";
-          sha256 = "1pn6dzj8b3h8851w3y6mj5qrwklwky5w71v4m455553qlga5cfr7";
+          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/77fa7995ac1b21ab60769b7323d600a991a90433";
+          sha256 = "03y0jzb5z1d2jdxcw1mhcbb9psp1iabmvaflwib68vzncvh6fscl";
         };
       };
     };
@@ -270,7 +263,7 @@ let
       };
     };
   };
-  devPackages = { };
+  devPackages = {};
 in
 composerEnv.buildPackage {
   inherit packages devPackages noDev;
@@ -278,5 +271,5 @@ composerEnv.buildPackage {
   src = composerEnv.filterSrc ./.;
   executable = true;
   symlinkDependencies = false;
-  meta = { };
+  meta = {};
 }

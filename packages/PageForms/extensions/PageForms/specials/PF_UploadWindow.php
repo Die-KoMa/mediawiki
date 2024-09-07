@@ -226,21 +226,17 @@ class PFUploadWindow extends UnlistedSpecialPage {
 		if ( !$this->mTokenOk && !$this->mCancelUpload
 			&& ( $this->mUpload && $this->mUploadClicked )
 		) {
-			$form->addPreText( $this->msg( 'session_fail_preview' )->parse() );
+			$form->addPreHtml( $this->msg( 'session_fail_preview' )->parse() );
 		}
 
 		# Add upload error message
-		$form->addPreText( $message );
+		$form->addPreHtml( $message );
 
 		# Add footer to form
 		if ( !$this->msg( 'uploadfooter' )->isDisabled() ) {
 			$output = $this->getOutput();
-			if ( method_exists( $output, 'parseAsInterface' ) ) {
-				$uploadFooter = $output->parseAsInterface( $this->msg( 'uploadfooter' )->plain() );
-			} else {
-				$uploadFooter = $output->parse( $this->msg( 'uploadfooter' )->plain() );
-			}
-			$form->addPostText( '<div id="mw-upload-footer-message">' . $uploadFooter . "</div>\n" );
+			$uploadFooter = $output->parseAsInterface( $this->msg( 'uploadfooter' )->plain() );
+			$form->addPostHtml( '<div id="mw-upload-footer-message">' . $uploadFooter . "</div>\n" );
 		}
 
 		return $form;
@@ -302,54 +298,54 @@ class PFUploadWindow extends UnlistedSpecialPage {
 		$warningHtml = '<h2>' . $this->msg( 'uploadwarning' )->escaped() . "</h2>\n"
 			. '<ul class="warningbox">';
 		foreach ( $warnings as $warning => $args ) {
-				// Unlike the other warnings, this one can be worked around.
-				if ( $warning == 'badfilename' ) {
-					$this->mDesiredDestName = Title::makeTitle( NS_FILE, $args )->getText();
-				}
+			// Unlike the other warnings, this one can be worked around.
+			if ( $warning == 'badfilename' ) {
+				$this->mDesiredDestName = Title::makeTitle( NS_FILE, $args )->getText();
+			}
 
-				if ( $warning == 'exists' ) {
-					$msg = self::getExistsWarning( $args );
-				} elseif ( $warning == 'no-change' ) {
-					$file = $args;
-					$filename = $file->getTitle()->getPrefixedText();
-					$msg = "\t<li>" . $this->msg( 'fileexists-no-change', $filename )->parse() . "</li>\n";
-				} elseif ( $warning == 'duplicate-version' ) {
-					$file = $args[0];
-					$count = count( $args );
-					$filename = $file->getTitle()->getPrefixedText();
-					$message = $this->msg( 'fileexists-duplicate-version' )
-						->params( $filename )
-						->numParams( $count );
-					$msg = "\t<li>" . $message->parse() . "</li>\n";
-				} elseif ( $warning == 'was-deleted' ) {
-					# If the file existed before and was deleted, warn the user of this
-					$ltitle = SpecialPage::getTitleFor( 'Log' );
-					$llink = $linkRenderer->makeKnownLink(
-						$ltitle,
-						$this->msg( 'deletionlog' )->text(),
-						[],
-						[
-							'type' => 'delete',
-							'page' => Title::makeTitle( NS_FILE, $args )->getPrefixedText(),
-						]
-					);
-					$msg = "\t<li>" . $this->msg( 'filewasdeleted' )->rawParams( $llink )->parse() . "</li>\n";
-				} elseif ( $warning == 'duplicate' ) {
-					$msg = $this->getDupeWarning( $args );
-				} elseif ( $warning == 'duplicate-archive' ) {
-					$msg = "\t<li>" . $this->msg(
-						'file-deleted-duplicate',
-						[ Title::makeTitle( NS_FILE, $args )->getPrefixedText() ]
-					)->parse() . "</li>\n";
-				} else {
-					if ( is_bool( $args ) ) {
-						$args = [];
-					} elseif ( !is_array( $args ) ) {
-						$args = [ $args ];
-					}
-					$msg = "\t<li>" . $this->msg( $warning, $args )->parse() . "</li>\n";
+			if ( $warning == 'exists' ) {
+				$msg = self::getExistsWarning( $args );
+			} elseif ( $warning == 'no-change' ) {
+				$file = $args;
+				$filename = $file->getTitle()->getPrefixedText();
+				$msg = "\t<li>" . $this->msg( 'fileexists-no-change', $filename )->parse() . "</li>\n";
+			} elseif ( $warning == 'duplicate-version' ) {
+				$file = $args[0];
+				$count = count( $args );
+				$filename = $file->getTitle()->getPrefixedText();
+				$message = $this->msg( 'fileexists-duplicate-version' )
+					->params( $filename )
+					->numParams( $count );
+				$msg = "\t<li>" . $message->parse() . "</li>\n";
+			} elseif ( $warning == 'was-deleted' ) {
+				# If the file existed before and was deleted, warn the user of this
+				$ltitle = SpecialPage::getTitleFor( 'Log' );
+				$llink = $linkRenderer->makeKnownLink(
+					$ltitle,
+					$this->msg( 'deletionlog' )->text(),
+					[],
+					[
+						'type' => 'delete',
+						'page' => Title::makeTitle( NS_FILE, $args )->getPrefixedText(),
+					]
+				);
+				$msg = "\t<li>" . $this->msg( 'filewasdeleted' )->rawParams( $llink )->parse() . "</li>\n";
+			} elseif ( $warning == 'duplicate' ) {
+				$msg = $this->getDupeWarning( $args );
+			} elseif ( $warning == 'duplicate-archive' ) {
+				$msg = "\t<li>" . $this->msg(
+					'file-deleted-duplicate',
+					[ Title::makeTitle( NS_FILE, $args )->getPrefixedText() ]
+				)->parse() . "</li>\n";
+			} else {
+				if ( is_bool( $args ) ) {
+					$args = [];
+				} elseif ( !is_array( $args ) ) {
+					$args = [ $args ];
 				}
-				$warningHtml .= $msg;
+				$msg = "\t<li>" . $this->msg( $warning, $args )->parse() . "</li>\n";
+			}
+			$warningHtml .= $msg;
 		}
 		$warningHtml .= "</ul>\n";
 		$warningHtml .= $this->msg( 'uploadwarning-text' )->parseAsBlock();
@@ -389,11 +385,7 @@ class PFUploadWindow extends UnlistedSpecialPage {
 		$status = $this->mUpload->fetchFile();
 		$output = $this->getOutput();
 		if ( !$status->isOK() ) {
-			if ( method_exists( $output, 'parseAsInterface' ) ) {
-				$statusText = $output->parseAsInterface( $status->getWikiText() );
-			} else {
-				$statusText = $output->parse( $status->getWikiText() );
-			}
+			$statusText = $output->parseAsInterface( $status->getWikiText() );
 			return $this->showUploadForm( $this->getUploadForm( $statusText ) );
 		}
 
@@ -435,11 +427,7 @@ class PFUploadWindow extends UnlistedSpecialPage {
 		}
 		$status = $this->mUpload->performUpload( $this->mComment, $pageText, $this->mWatchThis, $this->getUser() );
 		if ( !$status->isGood() ) {
-			if ( method_exists( $output, 'parseAsInterface' ) ) {
-				$statusText = $output->parseAsInterface( $status->getWikiText() );
-			} else {
-				$statusText = $output->parse( $status->getWikiText() );
-			}
+			$statusText = $output->parseAsInterface( $status->getWikiText() );
 			return $this->uploadError( $statusText );
 		}
 
@@ -556,28 +544,26 @@ END;
 	 * @return bool
 	 */
 	protected function watchCheck() {
-		if ( MediaWikiServices::getInstance()->getUserOptionsLookup()
-			->getOption( $this->getUser(), 'watchdefault' ) ) {
+		$services = MediaWikiServices::getInstance();
+		$lookup = $services->getUserOptionsLookup();
+		$user = $this->getUser();
+
+		if ( $lookup->getOption( $user, 'watchdefault' ) ) {
 			// Watch all edits!
 			return true;
 		}
 
-		$local = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
+		$local = $services->getRepoGroup()->getLocalRepo()
 			->newFile( $this->mDesiredDestName );
 		if ( $local && $local->exists() ) {
 			// We're uploading a new version of an existing file.
 			// No creation, so don't watch it if we're not already.
-			if ( method_exists( \MediaWiki\Watchlist\WatchlistManager::class, 'isWatched' ) ) {
-				// MediaWiki 1.37+
-				return MediaWikiServices::getInstance()->getWatchlistManager()
-					->isWatched( $this->getUser(), $local->getTitle() );
-			} else {
-				return $this->getUser()->isWatched( $local->getTitle() );
-			}
+			return $services->getWatchlistManager()
+				->isWatched( $user, $local->getTitle() );
 		}
+
 		// New page should get watched if that's our option.
-		return MediaWikiServices::getInstance()->getUserOptionsLookup()
-			->getOption( $this->getUser(), 'watchcreations' );
+		return $lookup->getOption( $user, 'watchcreations' );
 	}
 
 	/**
