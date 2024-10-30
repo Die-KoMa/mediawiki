@@ -595,7 +595,7 @@ class PFFormField {
 		}
 	}
 
-	function getCurrentValue( $template_instance_query_values, $form_submitted, $source_is_page, $all_instances_printed, &$val_modifier = null ) {
+	function getCurrentValue( $template_instance_query_values, $form_submitted, $source_is_page, $all_instances_printed, &$val_modifier = null, $is_autoedit = false ) {
 		// Get the value from the request, if
 		// it's there, and if it's not an array.
 		$field_name = $this->template_field->getFieldName();
@@ -669,7 +669,7 @@ class PFFormField {
 
 						// This part is needed to map the values back to the original page titles.
 						// The form is submitted with "displaytitle (title)" format, so we need to map it back.
-						if ( in_array( 'remote autocompletion', $this->getFieldArgs() ) ) {
+						if ( $this->hasFieldArg( 'remote autocompletion' ) ) {
 							$hasList = $cur_values['is_list'] ?? false;
 							// The key containing the actual title of the page
 							$cur_values = array_keys( PFMappingUtils::getLabelsForTitles( $cur_values, true ) );
@@ -683,7 +683,7 @@ class PFFormField {
 							$cur_values[$key] = $val;
 						}
 					}
-					return PFFormPrinter::getStringFromPassedInArray( $cur_values, $delimiter );
+					return PFFormPrinter::getStringFromPassedInArray( $cur_values, $delimiter, $is_autoedit );
 				} else {
 					$field_query_val = trim( $field_query_val );
 					if ( $map_field && $this->mPossibleValues !== null ) {
@@ -767,6 +767,12 @@ class PFFormField {
 				}
 			}
 		}
+
+		// Most form input types expect a string, and not an array.
+		if ( count( $labels ) == 1 ) {
+			return $labels[0];
+		}
+
 		return $labels;
 	}
 

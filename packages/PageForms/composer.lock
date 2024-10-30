@@ -154,16 +154,16 @@
         },
         {
             "name": "mediawiki/page-forms",
-            "version": "5.8",
+            "version": "5.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wikimedia/mediawiki-extensions-PageForms.git",
-                "reference": "6ae070587e3ab05b2831a0002f5f53fe90cb024c"
+                "reference": "c739ae0a31f95821a57d5cfe53a828f9c32d2d3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/6ae070587e3ab05b2831a0002f5f53fe90cb024c",
-                "reference": "6ae070587e3ab05b2831a0002f5f53fe90cb024c",
+                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/c739ae0a31f95821a57d5cfe53a828f9c32d2d3c",
+                "reference": "c739ae0a31f95821a57d5cfe53a828f9c32d2d3c",
                 "shasum": ""
             },
             "require": {
@@ -210,9 +210,9 @@
                 "wiki"
             ],
             "support": {
-                "source": "https://github.com/wikimedia/mediawiki-extensions-PageForms/tree/5.8"
+                "source": "https://github.com/wikimedia/mediawiki-extensions-PageForms/tree/5.8.1"
             },
-            "time": "2024-07-31T19:19:41+00:00"
+            "time": "2024-10-02T16:37:17+00:00"
         }
     ],
     "packages-dev": [],

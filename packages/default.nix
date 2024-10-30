@@ -93,10 +93,11 @@ rec {
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
   SemanticResultFormats = composerExtension' "SemanticResultFormats" { inherit SemanticMediaWiki; };
 
-  EditSubpages = extdistExtension ./EditSubpages-REL1_39-16f0d08.tar.gz;
-  UserMerge = extdistExtension ./UserMerge-REL1_39-e512588.tar.gz;
-  Variables = extdistExtension ./Variables-REL1_39-c1dea98.tar.gz;
-  NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_39-9fb045b.tar.gz;
-  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_39-1a324ad.tar.gz;
-  Description2 = extdistExtension ./Description2-REL1_39-be99e2d.tar.gz;
+  EditSubpages = extdistExtension ./EditSubpages-REL1_39.tar.gz;
+  UserMerge = extdistExtension ./UserMerge-REL1_39.tar.gz;
+  Variables = extdistExtension ./Variables-REL1_39.tar.gz;
+  NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_39.tar.gz;
+  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_39.tar.gz;
+  Description2 = extdistExtension ./Description2-REL1_39.tar.gz;
+  Interwiki = extdistExtension ./Interwiki-REL1_39.tar.gz;
 }

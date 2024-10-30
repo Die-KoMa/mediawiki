@@ -225,20 +225,20 @@ let
     "symfony/css-selector" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "symfony-css-selector-ea43887e9afd2029509662d4f95e8b5ef6fc9bbb";
+        name = "symfony-css-selector-4f7f3c35fba88146b56d0025d20ace3f3901f097";
         src = fetchurl {
-          url = "https://api.github.com/repos/symfony/css-selector/zipball/ea43887e9afd2029509662d4f95e8b5ef6fc9bbb";
-          sha256 = "1l35g6by3aan0j97663zgwha0xjb0pfmpgrinsllwckyy8819m27";
+          url = "https://api.github.com/repos/symfony/css-selector/zipball/4f7f3c35fba88146b56d0025d20ace3f3901f097";
+          sha256 = "1ha6znpb231v8n5cm22898giiad2ify3lrrn95qwqal7r337wvxr";
         };
       };
     };
     "symfony/polyfill-php80" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "symfony-polyfill-php80-77fa7995ac1b21ab60769b7323d600a991a90433";
+        name = "symfony-polyfill-php80-60328e362d4c2c802a54fcbf04f9d3fb892b4cf8";
         src = fetchurl {
-          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/77fa7995ac1b21ab60769b7323d600a991a90433";
-          sha256 = "03y0jzb5z1d2jdxcw1mhcbb9psp1iabmvaflwib68vzncvh6fscl";
+          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/60328e362d4c2c802a54fcbf04f9d3fb892b4cf8";
+          sha256 = "008nx5xplqx3iks3fpzd4qgy3zzrvx1bmsdc13ndf562a6hf9lrg";
         };
       };
     };
