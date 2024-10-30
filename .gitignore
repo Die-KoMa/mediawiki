@@ -1,3 +1,5 @@
 /result
 *~
 /.direnv/
+/packages/extdist.log
+/packages/extdist.pid
