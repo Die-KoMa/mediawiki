@@ -25,7 +25,7 @@ with lib;
     adminAddr = mkOption {
       type = types.str;
       description = "Mail address for the admin user";
-      default = "homepage@die-koma.org";
+      default = "komapedia@komapedia.org";
     };
 
     stateDir = mkOption {
@@ -67,6 +67,31 @@ with lib;
           };
         }
       );
+    };
+
+    mail = mkOption {
+      type = types.submodule {
+        options = {
+          host = mkOption {
+            description = "SMTP hostname";
+            type = types.str;
+            default = "localhost";
+          };
+
+          port = mkOption {
+            description = "SMTP port";
+            type = types.int;
+            default = 465;
+          };
+
+          domain = mkOption {
+            description = "FROM domain";
+            type = types.str;
+            default = config.networking.fqdn;
+          };
+        };
+      };
+      default = { };
     };
   };
 
@@ -155,8 +180,6 @@ with lib;
 
               $wgEnableEmail = true;
               $wgEnableUserEmail = true; # UPO
-              $wgEmergencyContact = "homepage@die-koma.org";
-              $wgPasswordSender = "homepage@die-koma.org";
 
               $wgEnotifUserTalk = true; # UPO
               $wgEnotifWatchlist = true; # UPO
@@ -194,9 +217,6 @@ with lib;
               # Enable string parser functions
               $wgPFEnableStringFunctions = true;
 
-              # we currently don't support sending mail.
-              $wgEnableEmail = false;
-
               # it's time to arrive in 2022
               $wgDefaultSkin = 'timeless';
               $wgVectorDefaultSidebarVisibleForAnonymousUser = true;  # but show the sidebar for anonymous users
@@ -211,6 +231,31 @@ with lib;
 
               # better OpenGraph descriptions
               $wgEnableMetaDescriptionFunctions = true;
+
+              # mail
+              $wgPasswordSender = "${config.die-koma.komapedia.adminAddr}";
+              $wgEmergencyContact = "${config.die-koma.komapedia.adminAddr}";
+              $wgSMTP = [
+                'host' => "tlsv1.3://${config.die-koma.komapedia.mail.host}",
+                'IDHost' => "${config.die-koma.komapedia.mail.domain}",
+                'localhost' => "${config.die-koma.komapedia.mail.domain}",
+                'port' => ${toString config.die-koma.komapedia.mail.port},
+                'auth' => false,
+                'debug' => false,
+                'socket_options' => [ 'ssl' => [ 'verify_peer' => false, 'verify_peer_name' => false ]]
+              ];
+
+              if (false) {
+                error_reporting( -1 );
+                ini_set( 'display_errors', 1 );
+                $wgShowExceptionDetails = true;
+                $wgDebugToolbar = true;
+                $wgDevelopmentWarnings = true;
+                $wgResourceLoaderDebug = true;
+                $egScssCacheType = CACHE_NONE;
+                $wgParserCacheType = CACHE_NONE;
+                $wgCachePages = false;
+              }
             ''
             poweredBy
           ];
