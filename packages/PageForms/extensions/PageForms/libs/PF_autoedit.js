@@ -88,7 +88,16 @@
 		var targetpage = $jeditdata.find( 'input[name=target]' ).val();
 		var confirmEdit = $jeditdata.hasClass( 'confirm-edit' );
 		if ( confirmEdit ) {
-			OO.ui.confirm( mw.msg( 'pf_autoedit_confirm', targetpage ) ).done( function(confirmed) {
+			var confirmText = $jeditdata.find( 'input[name=confirmtext]' ).val();
+			if ( !confirmText ) {
+				if ( targetpage ) {
+					confirmText = mw.msg( 'pf_autoedit_confirm', targetpage );
+				} else {
+					var formName = $jeditdata.find( 'input[name=form]' ).val();
+					confirmText = mw.msg( 'pf_autoedit_confirmcreate', formName );
+				}
+			}
+			OO.ui.confirm( confirmText ).done( function(confirmed) {
 				if ( confirmed ) {
 					sendData( $jtrigger );
 				}

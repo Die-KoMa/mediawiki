@@ -1,7 +1,7 @@
 {
 	"name": "PageForms",
 	"namemsg": "pageforms-name",
-	"version": "5.8.1",
+	"version": "5.9",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -30,7 +30,7 @@
 		"PFHooks::initialize"
 	],
 	"requires": {
-		"MediaWiki": ">= 1.38.0"
+		"MediaWiki": ">= 1.39.0"
 	},
 	"GroupPermissions": {
 		"*": {
@@ -270,7 +270,8 @@
 			"messages": [
 				"pf-autoedit-wait",
 				"pf_autoedit_anoneditwarning",
-				"pf_autoedit_confirm"
+				"pf_autoedit_confirm",
+				"pf_autoedit_confirmcreate"
 			],
 			"targets": [
 				"desktop",
@@ -289,7 +290,8 @@
 			"messages": [
 				"pf-autoedit-wait",
 				"pf_autoedit_anoneditwarning",
-				"pf_autoedit_confirm"
+				"pf_autoedit_confirm",
+				"pf_autoedit_confirmcreate"
 			],
 			"targets": [
 				"desktop",

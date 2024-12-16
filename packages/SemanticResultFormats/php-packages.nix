@@ -15,10 +15,10 @@ let
     "data-values/common" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "data-values-common-9f5e6216ec66ac8f2281351b110bad0eded43e65";
+        name = "data-values-common-b21c2bd3b213d6233a645003df4f88956afc52f4";
         src = fetchurl {
-          url = "https://api.github.com/repos/DataValues/Common/zipball/9f5e6216ec66ac8f2281351b110bad0eded43e65";
-          sha256 = "0qgbchshqjpm68z71774adrmr6khfmmz0yjb8i4hsia5asyqpp4y";
+          url = "https://api.github.com/repos/DataValues/Common/zipball/b21c2bd3b213d6233a645003df4f88956afc52f4";
+          sha256 = "12nnzal5bgnk928wgkr3l707c1vc003g1xcyn900d7q4mbbfsslg";
         };
       };
     };
@@ -35,20 +35,20 @@ let
     "data-values/geo" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "data-values-geo-1dd742dabb63e211862486259b2cbe0274211bf9";
+        name = "data-values-geo-dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2";
         src = fetchurl {
-          url = "https://api.github.com/repos/DataValues/Geo/zipball/1dd742dabb63e211862486259b2cbe0274211bf9";
-          sha256 = "0zn6v96f0d7nrvmhmxbp953g7ibqf3has7ksl70maqhn0dd36wpn";
+          url = "https://api.github.com/repos/DataValues/Geo/zipball/dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2";
+          sha256 = "187pxdkx4wvn2h14vanly9fz8hgrgphdyghx6p5rmmasp22cmzk0";
         };
       };
     };
     "data-values/interfaces" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "data-values-interfaces-244d078954bc05edf8f8c6b088e848289171c3a8";
+        name = "data-values-interfaces-22573cd52a7b37416f28ed6a8d8706543b0d430a";
         src = fetchurl {
-          url = "https://api.github.com/repos/DataValues/Interfaces/zipball/244d078954bc05edf8f8c6b088e848289171c3a8";
-          sha256 = "19dq2s1zaq3rk0ylb9iy0jabfawzwk7ply31chx3si88vdqz4595";
+          url = "https://api.github.com/repos/DataValues/Interfaces/zipball/22573cd52a7b37416f28ed6a8d8706543b0d430a";
+          sha256 = "173zwd6g63as8b6l8r205d59jb28g6fgjc5p4v559q7nnchnir4y";
         };
       };
     };
@@ -215,10 +215,10 @@ let
     "serialization/serialization" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "serialization-serialization-6fa293415e2b70c30c1e673d8bcd04d27dc15e44";
+        name = "serialization-serialization-4403fbab83e0187791d35caef4eef4395811e58d";
         src = fetchurl {
-          url = "https://api.github.com/repos/wmde/Serialization/zipball/6fa293415e2b70c30c1e673d8bcd04d27dc15e44";
-          sha256 = "0r9y72g79h4ycqlywgkagwya5qj6dfs20v4zxzlnp6hwlbfkhd5y";
+          url = "https://api.github.com/repos/wmde/Serialization/zipball/4403fbab83e0187791d35caef4eef4395811e58d";
+          sha256 = "0gsm2x86lrqh60iff4ybghdvd1wj6ycq6p48m6m0a8ig4sdn62z7";
         };
       };
     };

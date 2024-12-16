@@ -906,19 +906,34 @@ END;
 		) {
 			$this->showDeletionLog( $wgOut );
 		}
-		$hookContainer = MediaWikiServices::getInstance()->getHookContainer();
+		$services = MediaWikiServices::getInstance();
+		$hookContainer = $services->getHookContainer();
 		// Unfortunately, we can't just call userCan() or its
 		// equivalent here because it seems to ignore the setting
 		// "$wgEmailConfirmToEdit = true;". Instead, we'll just get the
 		// permission errors from the start, and use those to determine
 		// whether the page is editable.
 		if ( !$is_query ) {
-			$permissionErrors = MediaWikiServices::getInstance()->getPermissionManager()
-				->getPermissionErrors( 'edit', $user, $this->mPageTitle );
-			if ( MediaWikiServices::getInstance()->getReadOnlyMode()->isReadOnly() ) {
-				$permissionErrors = [ [ 'readonlytext', [ MediaWikiServices::getInstance()->getReadOnlyMode()->getReason() ] ] ];
+			$permissionManager = $services->getPermissionManager();
+			$readOnlyMode = $services->getReadOnlyMode();
+			$permissionStatus = $permissionErrors = null;
+
+			if ( method_exists( $permissionManager, 'getPermissionStatus' ) ) {
+				// MW 1.43+
+				$permissionStatus = $permissionManager->getPermissionStatus( 'edit', $user, $this->mPageTitle );
+				if ( $readOnlyMode->isReadOnly() ) {
+					$permissionStatus->error( 'readonlytext', $readOnlyMode->getReason() );
+				}
+				$userCanEditPage = $permissionStatus->isOK();
+			} else {
+				// MW < 1.43
+				$permissionErrors = $permissionManager->getPermissionErrors( 'edit', $user, $this->mPageTitle );
+				if ( $readOnlyMode->isReadOnly() ) {
+					$permissionErrors = [ [ 'readonlytext', [ $readOnlyMode->getReason() ] ] ];
+				}
+				$userCanEditPage = count( $permissionErrors ) == 0;
 			}
-			$userCanEditPage = count( $permissionErrors ) == 0;
+
 			$hookContainer->run( 'PageForms::UserCanEditPage', [ $this->mPageTitle, &$userCanEditPage ] );
 		}
 
@@ -942,7 +957,14 @@ END;
 			$form_is_disabled = true;
 			if ( $wgOut->getTitle() != null ) {
 				$wgOut->setPageTitle( wfMessage( 'badaccess' )->text() );
-				$wgOut->addWikiTextAsInterface( $wgOut->formatPermissionsErrorMessage( $permissionErrors, 'edit' ) );
+				if ( $permissionStatus ) {
+					$wgOut->addWikiTextAsInterface( $wgOut->formatPermissionStatus( $permissionStatus, 'edit' ) );
+				} else {
+					// MW < 1.43
+					$wgOut->addWikiTextAsInterface(
+						$wgOut->formatPermissionsErrorMessage( $permissionErrors, 'edit' )
+					);
+				}
 				$wgOut->addHTML( "\n<hr />\n" );
 			}
 		}
@@ -953,12 +975,7 @@ END;
 				Html::element( 'a', [ 'href' => '#' ], 'Expand all collapsed parts of the form' ) ) . "\n";
 		}
 
-		if ( method_exists( ParserFactory::class, 'getInstance' ) ) {
-			// MW 1.39+
-			$parser = MediaWikiServices::getInstance()->getParserFactory()->getInstance();
-		} else {
-			$parser = PFUtils::getParser()->getFreshParser();
-		}
+		$parser = $services->getParserFactory()->getInstance();
 		if ( !$parser->getOptions() ) {
 			$parser->setOptions( ParserOptions::newFromUser( $user ) );
 		}
@@ -2060,14 +2077,15 @@ END;
 	}
 
 	/**
-	 * for translatable fields, this function add an hidden input containing the translate tags
+	 * If a field is "translatable", add a hidden input containing the "<!--T:X-->"
+	 * translate tag.
 	 *
 	 * @param PFFormField $form_field
 	 * @param string $cur_value
 	 * @param string &$text
 	 */
 	private function addTranslatableInput( $form_field, $cur_value, &$text ) {
-		if ( PFUtils::isTranslateEnabled() || !$form_field->hasFieldArg( 'translatable' ) || !$form_field->getFieldArg( 'translatable' ) ) {
+		if ( !PFUtils::isTranslateEnabled() || !$form_field->hasFieldArg( 'translatable' ) || !$form_field->getFieldArg( 'translatable' ) ) {
 			return;
 		}
 
@@ -2085,7 +2103,7 @@ END;
 	}
 
 	private function createFormFieldTranslateTag( &$template, &$tif, &$form_field, &$cur_value ) {
-		if ( PFUtils::isTranslateEnabled() || !$form_field->hasFieldArg( 'translatable' ) || !$form_field->getFieldArg( 'translatable' ) ) {
+		if ( !PFUtils::isTranslateEnabled() || !$form_field->hasFieldArg( 'translatable' ) || !$form_field->getFieldArg( 'translatable' ) ) {
 			return;
 		}
 

@@ -154,25 +154,25 @@
         },
         {
             "name": "data-values/common",
-            "version": "1.1.0",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataValues/Common.git",
-                "reference": "9f5e6216ec66ac8f2281351b110bad0eded43e65"
+                "reference": "b21c2bd3b213d6233a645003df4f88956afc52f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataValues/Common/zipball/9f5e6216ec66ac8f2281351b110bad0eded43e65",
-                "reference": "9f5e6216ec66ac8f2281351b110bad0eded43e65",
+                "url": "https://api.github.com/repos/DataValues/Common/zipball/b21c2bd3b213d6233a645003df4f88956afc52f4",
+                "reference": "b21c2bd3b213d6233a645003df4f88956afc52f4",
                 "shasum": ""
             },
             "require": {
                 "data-values/data-values": "~3.0|~2.0|~1.0|~0.1",
                 "data-values/interfaces": "~1.0|~0.2.0",
-                "php": ">=7.2.0"
+                "php": ">=7.4"
             },
             "require-dev": {
-                "mediawiki/mediawiki-codesniffer": "^34",
+                "mediawiki/mediawiki-codesniffer": "^45",
                 "ockcyp/covers-validator": "^1.3.3",
                 "phpunit/phpunit": "~8.0"
             },
@@ -213,9 +213,9 @@
             "support": {
                 "irc": "irc://irc.freenode.net/wikidata",
                 "issues": "https://github.com/DataValues/Common/issues",
-                "source": "https://github.com/DataValues/Common/tree/1.1.0"
+                "source": "https://github.com/DataValues/Common/tree/1.2.0"
             },
-            "time": "2022-10-21T14:13:11+00:00"
+            "time": "2024-12-09T23:03:13+00:00"
         },
         {
             "name": "data-values/data-values",
@@ -285,27 +285,27 @@
         },
         {
             "name": "data-values/geo",
-            "version": "4.4.0",
+            "version": "4.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataValues/Geo.git",
-                "reference": "1dd742dabb63e211862486259b2cbe0274211bf9"
+                "reference": "dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataValues/Geo/zipball/1dd742dabb63e211862486259b2cbe0274211bf9",
-                "reference": "1dd742dabb63e211862486259b2cbe0274211bf9",
+                "url": "https://api.github.com/repos/DataValues/Geo/zipball/dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2",
+                "reference": "dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2",
                 "shasum": ""
             },
             "require": {
                 "data-values/data-values": "^3.0|^2.0|^1.0|~0.1",
                 "data-values/interfaces": "^1.0.0|^0.2.0",
-                "php": ">=7.3",
+                "php": ">=8.0",
                 "symfony/polyfill-php80": "^1.18.1"
             },
             "require-dev": {
                 "maglnet/composer-require-checker": "^3.0|^2.0",
-                "mediawiki/mediawiki-codesniffer": "^34 || ^35 || ^36 || ^38",
+                "mediawiki/mediawiki-codesniffer": "^45",
                 "ockcyp/covers-validator": "^1.3.3",
                 "phpmd/phpmd": "^2.9.1",
                 "phpstan/phpstan": "^0.12.68 || ^1.0.0",
@@ -361,7 +361,7 @@
             "support": {
                 "docs": "https://github.com/DataValues/Geo/#usage",
                 "issues": "https://github.com/DataValues/Geo/issues",
-                "source": "https://github.com/DataValues/Geo/tree/4.4.0"
+                "source": "https://github.com/DataValues/Geo/tree/4.5.0"
             },
             "funding": [
                 {
@@ -369,27 +369,27 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-10-21T14:19:26+00:00"
+            "time": "2024-12-10T13:13:38+00:00"
         },
         {
             "name": "data-values/interfaces",
-            "version": "1.0.0",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataValues/Interfaces.git",
-                "reference": "244d078954bc05edf8f8c6b088e848289171c3a8"
+                "reference": "22573cd52a7b37416f28ed6a8d8706543b0d430a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataValues/Interfaces/zipball/244d078954bc05edf8f8c6b088e848289171c3a8",
-                "reference": "244d078954bc05edf8f8c6b088e848289171c3a8",
+                "url": "https://api.github.com/repos/DataValues/Interfaces/zipball/22573cd52a7b37416f28ed6a8d8706543b0d430a",
+                "reference": "22573cd52a7b37416f28ed6a8d8706543b0d430a",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2"
+                "php": ">=7.4"
             },
             "require-dev": {
-                "mediawiki/mediawiki-codesniffer": "^34",
+                "mediawiki/mediawiki-codesniffer": "^45",
                 "ockcyp/covers-validator": "~1.0",
                 "phpmd/phpmd": "^2.9.1",
                 "phpstan/phpstan": "^0.12.68",
@@ -426,9 +426,9 @@
             ],
             "support": {
                 "issues": "https://github.com/DataValues/Interfaces/issues",
-                "source": "https://github.com/DataValues/Interfaces/tree/1.0.0"
+                "source": "https://github.com/DataValues/Interfaces/tree/1.2.0"
             },
-            "time": "2021-01-20T13:45:09+00:00"
+            "time": "2024-12-09T23:03:07+00:00"
         },
         {
             "name": "data-values/validators",
@@ -1490,24 +1490,24 @@
         },
         {
             "name": "serialization/serialization",
-            "version": "4.0.0",
+            "version": "4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wmde/Serialization.git",
-                "reference": "6fa293415e2b70c30c1e673d8bcd04d27dc15e44"
+                "reference": "4403fbab83e0187791d35caef4eef4395811e58d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wmde/Serialization/zipball/6fa293415e2b70c30c1e673d8bcd04d27dc15e44",
-                "reference": "6fa293415e2b70c30c1e673d8bcd04d27dc15e44",
+                "url": "https://api.github.com/repos/wmde/Serialization/zipball/4403fbab83e0187791d35caef4eef4395811e58d",
+                "reference": "4403fbab83e0187791d35caef4eef4395811e58d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.9"
+                "php": ">=7.4"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.8",
-                "wikibase/wikibase-codesniffer": "^0.2.0"
+                "mediawiki/mediawiki-codesniffer": "^45",
+                "phpunit/phpunit": "^8.5.14"
             },
             "type": "library",
             "extra": {
@@ -1523,7 +1523,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "GPL-2.0+"
+                "GPL-2.0-or-later"
             ],
             "authors": [
                 {
@@ -1545,9 +1545,9 @@
             ],
             "support": {
                 "irc": "irc://irc.freenode.net/wikidata",
-                "source": "https://github.com/wmde/Serialization/tree/master"
+                "source": "https://github.com/wmde/Serialization/tree/4.1.0"
             },
-            "time": "2017-10-25T11:45:30+00:00"
+            "time": "2024-12-11T14:47:31+00:00"
         },
         {
             "name": "symfony/css-selector",
@@ -1635,8 +1635,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {

@@ -706,12 +706,9 @@ class PFFormField {
 			}
 			if ( !$form_submitted && $field_query_val != '' ) {
 				if ( is_array( $field_query_val ) ) {
-					$str = PFFormPrinter::getStringFromPassedInArray( $field_query_val, $delimiter );
-				} else {
-					$str = $field_query_val;
+					return PFFormPrinter::getStringFromPassedInArray( $field_query_val, $delimiter );
 				}
-				return str_replace( [ '<', '>' ], [ '&lt;', '&gt;' ], $str );
-
+				return $field_query_val;
 			}
 		}
 
@@ -1028,7 +1025,7 @@ class PFFormField {
 	 * @param array|null $default_args
 	 * @return array
 	 */
-	function getArgumentsForInputCall( array $default_args = null ) {
+	function getArgumentsForInputCall( ?array $default_args = null ) {
 		$parser = PFUtils::getParser();
 
 		// start with the arguments array already defined

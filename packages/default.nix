@@ -82,10 +82,10 @@ let
 in
 rec {
   mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
-    version = "1.39.8";
+    version = "1.39.10";
     src = pkgs.fetchurl {
       url = "https://releases.wikimedia.org/mediawiki/${lib.versions.majorMinor version}/mediawiki-${version}.tar.gz";
-      hash = "sha256-rSf8yOY2F5wryiH/5hnW0uYtNDkNaCiwZ3/HaG5qCmo=";
+      hash = "sha256-mL8OakLrzEsWXDhToXNo5lVhmqz9qMYSH/6tWUDuHhM=";
     };
   });
 
