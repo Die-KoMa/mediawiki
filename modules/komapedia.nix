@@ -221,6 +221,9 @@ with lib;
               $wgDefaultSkin = 'timeless';
               $wgVectorDefaultSidebarVisibleForAnonymousUser = true;  # but show the sidebar for anonymous users
 
+              # Increase maximum size of server-scaled images
+              $wgMaxImageArea = 2.5e7;
+
               # Caching
               $wgMemCachedServers = [ "${config.services.memcached.listen}:${toString config.services.memcached.port}" ];
               $wgMainCacheType = CACHE_MEMCACHED;
