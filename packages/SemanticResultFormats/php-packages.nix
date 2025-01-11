@@ -35,10 +35,10 @@ let
     "data-values/geo" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "data-values-geo-dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2";
+        name = "data-values-geo-eb1996b7ece9d501a86772755b1ba5dac25a540f";
         src = fetchurl {
-          url = "https://api.github.com/repos/DataValues/Geo/zipball/dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2";
-          sha256 = "187pxdkx4wvn2h14vanly9fz8hgrgphdyghx6p5rmmasp22cmzk0";
+          url = "https://api.github.com/repos/DataValues/Geo/zipball/eb1996b7ece9d501a86772755b1ba5dac25a540f";
+          sha256 = "145qwc7mlxd7zjfy2kfbila99cbyx504wl3r1dgl6bq9ymh84w0z";
         };
       };
     };

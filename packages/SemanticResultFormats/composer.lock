@@ -285,22 +285,22 @@
         },
         {
             "name": "data-values/geo",
-            "version": "4.5.0",
+            "version": "4.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataValues/Geo.git",
-                "reference": "dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2"
+                "reference": "eb1996b7ece9d501a86772755b1ba5dac25a540f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataValues/Geo/zipball/dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2",
-                "reference": "dfad9f2281bc7f3a5c59e054a33faeb9e7f9dba2",
+                "url": "https://api.github.com/repos/DataValues/Geo/zipball/eb1996b7ece9d501a86772755b1ba5dac25a540f",
+                "reference": "eb1996b7ece9d501a86772755b1ba5dac25a540f",
                 "shasum": ""
             },
             "require": {
                 "data-values/data-values": "^3.0|^2.0|^1.0|~0.1",
                 "data-values/interfaces": "^1.0.0|^0.2.0",
-                "php": ">=8.0",
+                "php": ">=7.4",
                 "symfony/polyfill-php80": "^1.18.1"
             },
             "require-dev": {
@@ -361,7 +361,7 @@
             "support": {
                 "docs": "https://github.com/DataValues/Geo/#usage",
                 "issues": "https://github.com/DataValues/Geo/issues",
-                "source": "https://github.com/DataValues/Geo/tree/4.5.0"
+                "source": "https://github.com/DataValues/Geo/tree/4.5.1"
             },
             "funding": [
                 {
@@ -369,7 +369,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-12-10T13:13:38+00:00"
+            "time": "2025-01-06T11:04:09+00:00"
         },
         {
             "name": "data-values/interfaces",
