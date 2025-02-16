@@ -154,16 +154,16 @@
         },
         {
             "name": "mediawiki/page-forms",
-            "version": "5.9",
+            "version": "5.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wikimedia/mediawiki-extensions-PageForms.git",
-                "reference": "4ac28291df76dd5544d232d2988f69e61c86af3e"
+                "reference": "c861c29cb0bc2a99f5b90cb009e99f828039f6d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/4ac28291df76dd5544d232d2988f69e61c86af3e",
-                "reference": "4ac28291df76dd5544d232d2988f69e61c86af3e",
+                "url": "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/c861c29cb0bc2a99f5b90cb009e99f828039f6d2",
+                "reference": "c861c29cb0bc2a99f5b90cb009e99f828039f6d2",
                 "shasum": ""
             },
             "require": {
@@ -171,7 +171,7 @@
             },
             "require-dev": {
                 "mediawiki/mediawiki-codesniffer": "45.0.0",
-                "mediawiki/mediawiki-phan-config": "0.14.0",
+                "mediawiki/mediawiki-phan-config": "0.15.1",
                 "mediawiki/minus-x": "1.1.3",
                 "php-parallel-lint/php-console-highlighter": "1.0.0",
                 "php-parallel-lint/php-parallel-lint": "1.4.0"
@@ -210,9 +210,9 @@
                 "wiki"
             ],
             "support": {
-                "source": "https://github.com/wikimedia/mediawiki-extensions-PageForms/tree/5.9"
+                "source": "https://github.com/wikimedia/mediawiki-extensions-PageForms/tree/5.9.1"
             },
-            "time": "2024-12-12T17:44:45+00:00"
+            "time": "2025-01-16T19:57:08+00:00"
         }
     ],
     "packages-dev": [],
