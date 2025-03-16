@@ -60,14 +60,6 @@
               composer2nix -p mediawiki/semantic-media-wiki
               popd
               git add SemanticMediaWiki
-
-              pushd SemanticResultFormats
-              rm composer.lock
-              composer2nix -p mediawiki/semantic-result-formats
-              popd
-              git add SemanticResultFormats
-
-              popd
             '';
           in
           "${updateScript}";

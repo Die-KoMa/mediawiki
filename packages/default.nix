@@ -81,7 +81,7 @@ let
       '';
     };
 in
-rec {
+{
   mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
     version = "1.43.0";
     src = pkgs.fetchurl {
@@ -92,7 +92,6 @@ rec {
 
   PageForms = composerExtension "PageForms";
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
-  SemanticResultFormats = composerExtension' "SemanticResultFormats" { inherit SemanticMediaWiki; };
 
   EditSubpages = extdistExtension ./EditSubpages-REL1_43.tar.gz;
   UserMerge = extdistExtension ./UserMerge-REL1_43.tar.gz;
