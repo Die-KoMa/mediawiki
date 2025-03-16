@@ -2,23 +2,18 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use SMW\Store;
-use SMW\Localizer\Message;
-use SMWQueryProcessor as QueryProcessor;
-use SMW\SQLStore\SQLStore;
-use SMW\SQLStore\TableBuilder\FieldType;
-use SMWQuery as Query;
+use Html;
+use RuntimeException;
 use SMW\DIProperty;
-use SMW\RequestOptions;
-use SMWDITime as DITime;
-use SMW\DataValueFactory;
+use SMW\Localizer\Message;
 use SMW\Query\QueryResult;
 use SMW\Query\Result\FilterMap;
-use SMW\DataTypeRegistry;
-use RuntimeException;
+use SMW\Store;
+use SMWQuery as Query;
+use SMWQueryProcessor as QueryProcessor;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -61,7 +56,7 @@ class ResultFetcher {
 	private $queryResult;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -71,22 +66,22 @@ class ResultFetcher {
 	private $format = '';
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $valueFilters = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $propertyFilters = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $categoryFilters = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $errors = [];
 
@@ -104,7 +99,7 @@ class ResultFetcher {
 	 *
 	 * @return int
 	 */
-	public function getTotalCount() : int {
+	public function getTotalCount(): int {
 		return $this->totalCount;
 	}
 
@@ -113,7 +108,7 @@ class ResultFetcher {
 	 *
 	 * @return int
 	 */
-	public function getLimit() : int {
+	public function getLimit(): int {
 		return $this->limit;
 	}
 
@@ -122,7 +117,7 @@ class ResultFetcher {
 	 *
 	 * @return int
 	 */
-	public function getOffset() : int {
+	public function getOffset(): int {
 		return $this->offset;
 	}
 
@@ -131,7 +126,7 @@ class ResultFetcher {
 	 *
 	 * @return bool
 	 */
-	public function hasFurtherResults() : bool {
+	public function hasFurtherResults(): bool {
 		return $this->hasFurtherResults;
 	}
 
@@ -140,7 +135,7 @@ class ResultFetcher {
 	 *
 	 * @return string
 	 */
-	public function getQueryString() : string {
+	public function getQueryString(): string {
 		return $this->queryString;
 	}
 
@@ -149,25 +144,25 @@ class ResultFetcher {
 	 *
 	 * @return QueryResult|null
 	 */
-	public function getQueryResult() : ?QueryResult {
+	public function getQueryResult(): ?QueryResult {
 		return $this->queryResult;
 	}
 
 	/**
 	 * @since 3.2
 	 *
-	 * @return []
+	 * @return
 	 */
-	public function getPropertyFilters() : array {
+	public function getPropertyFilters(): array {
 		return $this->propertyFilters;
 	}
 
 	/**
 	 * @since 3.2
 	 *
-	 * @return []
+	 * @return
 	 */
-	public function getCategoryFilters() : array {
+	public function getCategoryFilters(): array {
 		return $this->categoryFilters;
 	}
 
@@ -176,7 +171,7 @@ class ResultFetcher {
 	 *
 	 * @return array
 	 */
-	public function getValueFilters() : array {
+	public function getValueFilters(): array {
 		return $this->valueFilters;
 	}
 
@@ -185,19 +180,18 @@ class ResultFetcher {
 	 *
 	 * @return string
 	 */
-	public function getHtml() : string {
-
+	public function getHtml(): string {
 		if ( $this->errors !== [] ) {
 			$msg = '';
 			foreach ( $this->errors as $error ) {
 				$msg .= Message::decode( $error );
 			}
 
-			return '<div class="smw-callout smw-callout-error">' . $msg . '</div>';
+			return Html::errorBox( $msg );
 		}
 
 		if ( $this->queryResult === null ) {
-			throw new RuntimeException( "Missing a `QueryResult` object, `ResultFetcher::fetchQueryResult` wasn't executed!");
+			throw new RuntimeException( "Missing a `QueryResult` object, `ResultFetcher::fetchQueryResult` wasn't executed!" );
 		}
 
 		$printer = QueryProcessor::getResultPrinter(
@@ -209,7 +203,9 @@ class ResultFetcher {
 		$html = $printer->getResult( $this->queryResult, $this->params, SMW_OUTPUT_HTML );
 
 		if ( $html === '' ) {
-			$html = '<div class="smw-callout smw-callout-warning">' . Message::get( [ 'smw-facetedsearch-no-output',  $this->format ] ) . '</div>';
+			$html = Html::warningBox(
+				Message::get( [ 'smw-facetedsearch-no-output', $this->format ] )
+			);
 		}
 
 		return $html;
@@ -221,7 +217,6 @@ class ResultFetcher {
 	 * @param ParametersProcessor $parametersProcessor
 	 */
 	public function fetchQueryResult( ParametersProcessor $parametersProcessor ) {
-
 		[ $queryString, $parameters, $printRequests ] = QueryProcessor::getComponentsFromFunctionParams(
 			$parametersProcessor->getParameters(),
 			false
@@ -254,7 +249,7 @@ class ResultFetcher {
 		$this->errors = $query->getErrors();
 
 		if ( $this->errors !== [] ) {
-			return ;
+			return;
 		}
 
 		/**
@@ -303,7 +298,7 @@ class ResultFetcher {
 		// filter list for all matchable subjects on a specific selected property
 		if ( $parametersProcessor->getValueFilters() !== [] ) {
 
-		//	$_queryString = $queryString;
+		// $_queryString = $queryString;
 
 			foreach ( $parametersProcessor->getValueFilters() as $prop => $conds ) {
 
@@ -353,7 +348,6 @@ class ResultFetcher {
 	}
 
 	private function findValueFilters( $results, $valueFilterResult, array $propertyFilters ) {
-
 		if ( $propertyFilters === [] ) {
 			return;
 		}

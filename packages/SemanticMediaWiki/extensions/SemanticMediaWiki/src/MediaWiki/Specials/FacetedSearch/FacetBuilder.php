@@ -2,15 +2,13 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use SMW\Store;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
 use SMW\Localizer\MessageLocalizerTrait;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 use Title;
-use Html;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -62,8 +60,7 @@ class FacetBuilder {
 	 *
 	 * @return string
 	 */
-	public function getPropertyFilterFacet( Title $title, UrlArgs $urlArgs ) : string {
-
+	public function getPropertyFilterFacet( Title $title, UrlArgs $urlArgs ): string {
 		$params = [
 			'min_item' => $this->profile->get( 'filters.property_filter.filter_input.min_item' ),
 			'hierarchy_tree' => $this->profile->get( 'filters.property_filter.hierarchy_tree', false )
@@ -118,8 +115,7 @@ class FacetBuilder {
 	 *
 	 * @return string
 	 */
-	public function getCategoryFilterFacet( Title $title, UrlArgs $urlArgs ) : string {
-
+	public function getCategoryFilterFacet( Title $title, UrlArgs $urlArgs ): string {
 		$params = [
 			'min_item' => $this->profile->get( 'filters.category_filter.filter_input.min_item', 10 ),
 			'hierarchy_tree' => $this->profile->get( 'filters.category_filter.hierarchy_tree', false )
@@ -175,8 +171,7 @@ class FacetBuilder {
 	 *
 	 * @return string
 	 */
-	public function getValueFilterFacets( Title $title, UrlArgs $urlArgs ) : string {
-
+	public function getValueFilterFacets( Title $title, UrlArgs $urlArgs ): string {
 		$params = [
 			'default_filter' => $this->profile->get( 'filters.value_filter.default_filter' ),
 			'min_item' => $this->profile->get( 'filters.value_filter.filter_input.min_item' ),
@@ -204,7 +199,7 @@ class FacetBuilder {
 				continue;
 			}
 
-			$clear = $urlArgs->getArray( 'clear' ) ;
+			$clear = $urlArgs->getArray( 'clear' );
 
 			if (
 				isset( $pv[$property] ) &&
@@ -246,7 +241,6 @@ class FacetBuilder {
 	}
 
 	private function createClearFilter( $name, $count = 1 ) {
-
 		$this->templateEngine->compile(
 			'filter-items-clear-button',
 			[

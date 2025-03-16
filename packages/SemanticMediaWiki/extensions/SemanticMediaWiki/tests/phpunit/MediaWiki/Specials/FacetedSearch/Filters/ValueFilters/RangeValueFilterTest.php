@@ -9,12 +9,12 @@ use SMW\Tests\PHPUnitCompat;
  * @covers \SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\RangeValueFilter
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.2
  *
  * @author mwjames
  */
-class RangeValueFilterTest extends \PHPUnit_Framework_TestCase {
+class RangeValueFilterTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
@@ -23,7 +23,7 @@ class RangeValueFilterTest extends \PHPUnit_Framework_TestCase {
 	private $messageLocalizer;
 	private $compartmentIterator;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->messageLocalizer = $this->getMockBuilder( '\SMW\Localizer\MessageLocalizer' )
@@ -44,7 +44,6 @@ class RangeValueFilterTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			RangeValueFilter::class,
 			new RangeValueFilter( $this->templateEngine, $this->compartmentIterator, [] )
@@ -52,10 +51,9 @@ class RangeValueFilterTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCreate_NoFilter() {
-
 		$this->templateEngine->expects( $this->any() )
 			->method( 'publish' )
-			->will( $this->returnValue( '' ) );
+			->willReturn( '' );
 
 		$params = [
 			'min_item' => 1
@@ -74,11 +72,10 @@ class RangeValueFilterTest extends \PHPUnit_Framework_TestCase {
 		$filters = [];
 		$raw = [];
 
-		$this->assertInternalType(
-			'string',
+		$this->assertIsString(
+
 			$instance->create( $this->urlArgs, 'Foo', $filters, $raw )
 		);
 	}
 
 }
-

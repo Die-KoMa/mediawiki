@@ -2,17 +2,13 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use WebRequest;
-use SMW\Utils\UrlArgs;
-use Html;
-use Title;
 use SMW\DIProperty;
-use SMW\Store;
-use SMW\SQLStore\EntityStore\PrefetchItemLookup;
 use SMW\RequestOptions;
+use SMW\SQLStore\EntityStore\PrefetchItemLookup;
+use SMW\Store;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -35,7 +31,7 @@ class TreeBuilder {
 	private $store;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $nodes;
 
@@ -73,14 +69,13 @@ class TreeBuilder {
 	/**
 	 * @since 3.2
 	 *
-	 * @param array $categories
+	 * @param array $subjects
 	 * @param string $type
 	 *
-	 * @return []
+	 * @return
 	 */
-	public function getHierarchyList( array $subjects, string $type ) : array {
-
-		if ( $subjects === []) {
+	public function getHierarchyList( array $subjects, string $type ): array {
+		if ( $subjects === [] ) {
 			return [];
 		}
 
@@ -130,7 +125,6 @@ class TreeBuilder {
 	 * @param string $type
 	 */
 	public function buildFrom( array $subjects, string $type ) {
-
 		$hierarchyList = $this->getHierarchyList(
 			$subjects,
 			$type
@@ -167,7 +161,6 @@ class TreeBuilder {
 	}
 
 	public function hasNode( $id ) {
-
 		if ( $this->nodes === [] || $this->nodes === null ) {
 			return false;
 		}
@@ -179,14 +172,13 @@ class TreeBuilder {
 		foreach ( $this->nodes as $key => $node ) {
 			if ( $node->hasNode( $id ) ) {
 				return true;
-			};
+			}
 		}
 
 		return false;
 	}
 
 	public function getNode( $id ) {
-
 		if ( isset( $this->nodes[$id] ) ) {
 			return $this->nodes[$id];
 		}
@@ -194,12 +186,11 @@ class TreeBuilder {
 		foreach ( $this->nodes as $key => $node ) {
 			if ( $node->hasNode( $id ) ) {
 				return $node->getNode( $id );
-			};
+			}
 		}
 	}
 
 	public function getTree() {
-
 		$text = '';
 
 		if ( $this->nodes === [] || $this->nodes === null ) {
@@ -214,7 +205,7 @@ class TreeBuilder {
 	}
 
 	public function newNode( $id, $content = '' ) {
-		return new class (  $id, $content ) {
+		return new class ( $id, $content ) {
 
 			public $id;
 			public $content = '';
@@ -226,7 +217,6 @@ class TreeBuilder {
 			}
 
 			public function hasNode( $id ) {
-
 				if ( isset( $this->children[$id] ) ) {
 					return $this->children[$id];
 				}
@@ -234,14 +224,13 @@ class TreeBuilder {
 				foreach ( $this->children as $key => $child ) {
 					if ( $child->hasNode( $id ) ) {
 						return true;
-					};
+					}
 				}
 
 				return false;
 			}
 
 			public function getNode( $id ) {
-
 				if ( isset( $this->children[$id] ) ) {
 					return $this->children[$id];
 				}
@@ -249,7 +238,7 @@ class TreeBuilder {
 				foreach ( $this->children as $key => $child ) {
 					if ( $child->hasNode( $id ) ) {
 						return $child->getNode( $id );
-					};
+					}
 				}
 			}
 
@@ -258,9 +247,8 @@ class TreeBuilder {
 			}
 
 			public function getString() {
-
 				if ( is_array( $this->content ) ) {
-					$text = implode('', $this->content );
+					$text = implode( '', $this->content );
 				} else {
 					$text = $this->content;
 				}
@@ -273,7 +261,7 @@ class TreeBuilder {
 				// the <ul> becomes part of the <li> element otherwise the elements
 				// aren't correct positioned as per HTML standard.
 				if ( $this->children !== [] && substr( "$text", -5 ) === '</li>' ) {
-					$text = substr_replace( $text ,"", -5 );
+					$text = substr_replace( $text, "", -5 );
 				}
 
 				if ( $this->children !== [] ) {

@@ -2,14 +2,14 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters;
 
-use SMW\Localizer\MessageLocalizerTrait;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
-use SMW\Schema\CompartmentIterator;
 use Html;
+use SMW\Localizer\MessageLocalizerTrait;
+use SMW\Schema\CompartmentIterator;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -34,7 +34,7 @@ class RangeValueFilter {
 	private $urlArgs;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -61,8 +61,7 @@ class RangeValueFilter {
 	 *
 	 * @return string
 	 */
-	public function create( UrlArgs $urlArgs, string $property, array $values, array $raw ) : string {
-
+	public function create( UrlArgs $urlArgs, string $property, array $values, array $raw ): string {
 		if ( $values === [] ) {
 			return $this->msg( 'smw-facetedsearch-no-filter-range' );
 		}
@@ -135,7 +134,7 @@ class RangeValueFilter {
 				'data-to' => $to,
 				'data-step' => $defaults['step_size'],
 				'data-min-interval' => $defaults['min_interval'],
-				'data-postfix' => $postFix !== '' ? "&nbsp;$postFix": '',
+				'data-postfix' => $postFix !== '' ? "&nbsp;$postFix" : '',
 				'data-property' => $property,
 				'name' => "pv[$property][]",
 				'value' => "$min|$max",
@@ -145,7 +144,6 @@ class RangeValueFilter {
 	}
 
 	private function findDefaults() {
-
 		$defaults = [
 			'step_size' => 1,
 			'min_interval' => 5,

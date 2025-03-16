@@ -11,19 +11,19 @@ use SMW\Tests\PHPUnitCompat;
  * @covers \SMW\DataValues\MonolingualTextValue
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 2.4
  *
  * @author mwjames
  * @reviewer thomas-topway-it
  */
-class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
+class MonolingualTextValueMappingTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
 	private $dataValueServiceFactory;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$constraintValueValidator = $this->getMockBuilder( '\SMW\DataValues\ValueValidators\ConstraintValueValidator' )
@@ -36,15 +36,14 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 
 		$this->dataValueServiceFactory->expects( $this->any() )
 			->method( 'getConstraintValueValidator' )
-			->will( $this->returnValue( $constraintValueValidator ) );
+			->willReturn( $constraintValueValidator );
 
 		$this->dataValueServiceFactory->expects( $this->any() )
 			->method( 'getValueParser' )
-			->will( $this->returnValue( new MonolingualTextValueParser() ) );
+			->willReturn( new MonolingualTextValueParser() );
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			'\SMW\DataValues\MonolingualTextValue',
 			new MonolingualTextValue()
@@ -52,7 +51,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testErrorForMissingLanguageCode() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -68,7 +66,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testNoErrorForMissingLanguageCodeWhenFeatureIsDisabled() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -84,7 +81,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testErrorForInvalidLanguageCode() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -99,7 +95,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testValidParsableUserValue() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -131,7 +126,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testTryToGetTextValueByLanguageForUnrecognizedLanguagCode() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -146,7 +140,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetWikiValueForValidMonolingualTextValue() {
-
 		$instance = new MonolingualTextValue();
 
 		$monolingualTextValueFormatter = new MonolingualTextValueFormatter();
@@ -154,7 +147,7 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 
 		$this->dataValueServiceFactory->expects( $this->any() )
 			->method( 'getValueFormatter' )
-			->will( $this->returnValue( $monolingualTextValueFormatter ) );
+			->willReturn( $monolingualTextValueFormatter );
 
 		$instance->setDataValueServiceFactory(
 			$this->dataValueServiceFactory
@@ -169,7 +162,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetWikiValueForInvalidMonolingualTextValue() {
-
 		$instance = new MonolingualTextValue();
 
 		$monolingualTextValueFormatter = new MonolingualTextValueFormatter();
@@ -177,7 +169,7 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 
 		$this->dataValueServiceFactory->expects( $this->any() )
 			->method( 'getValueFormatter' )
-			->will( $this->returnValue( $monolingualTextValueFormatter ) );
+			->willReturn( $monolingualTextValueFormatter );
 
 		$instance->setDataValueServiceFactory(
 			$this->dataValueServiceFactory
@@ -192,7 +184,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetProperties() {
-
 		$instance = new MonolingualTextValue();
 		$properties = $instance->getPropertyDataItems();
 
@@ -208,7 +199,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testToArray() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -227,7 +217,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testToString() {
-
 		$instance = new MonolingualTextValue();
 
 		$instance->setDataValueServiceFactory(
@@ -243,7 +232,6 @@ class MonolingualTextValueMappingTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetTextWithLanguageTag() {
-
 		$instance = new MonolingualTextValue();
 
 		$this->assertSame(

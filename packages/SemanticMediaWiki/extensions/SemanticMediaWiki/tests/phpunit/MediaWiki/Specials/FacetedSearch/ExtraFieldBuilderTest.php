@@ -3,26 +3,25 @@
 namespace SMW\Tests\MediaWiki\Specials\FacetedSearch;
 
 use SMW\MediaWiki\Specials\FacetedSearch\ExtraFieldBuilder;
-use SMW\Tests\Utils\Mock\IteratorMockBuilder;
 use SMW\Tests\PHPUnitCompat;
 
 /**
  * @covers \SMW\MediaWiki\Specials\FacetedSearch\ExtraFieldBuilder
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.2
  *
  * @author mwjames
  */
-class ExtraFieldBuilderTest extends \PHPUnit_Framework_TestCase {
+class ExtraFieldBuilderTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
 	private $profile;
 	private $templateEngine;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->profile = $this->getMockBuilder( '\SMW\MediaWiki\Specials\FacetedSearch\Profile' )
@@ -35,7 +34,6 @@ class ExtraFieldBuilderTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			ExtraFieldBuilder::class,
 			new ExtraFieldBuilder( $this->profile, $this->templateEngine )
@@ -43,4 +41,3 @@ class ExtraFieldBuilderTest extends \PHPUnit_Framework_TestCase {
 	}
 
 }
-

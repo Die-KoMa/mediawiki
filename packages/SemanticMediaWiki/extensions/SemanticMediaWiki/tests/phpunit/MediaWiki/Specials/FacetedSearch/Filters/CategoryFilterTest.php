@@ -9,12 +9,12 @@ use SMW\Tests\PHPUnitCompat;
  * @covers \SMW\MediaWiki\Specials\FacetedSearch\Filters\CategoryFilter
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.2
  *
  * @author mwjames
  */
-class CategoryFilterTest extends \PHPUnit_Framework_TestCase {
+class CategoryFilterTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
@@ -23,7 +23,7 @@ class CategoryFilterTest extends \PHPUnit_Framework_TestCase {
 	private $urlArgs;
 	private $messageLocalizer;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->messageLocalizer = $this->getMockBuilder( '\SMW\Localizer\MessageLocalizer' )
@@ -44,18 +44,16 @@ class CategoryFilterTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			CategoryFilter::class,
-			new CategoryFilter( $this->templateEngine, $this->treeBuilder,  [] )
+			new CategoryFilter( $this->templateEngine, $this->treeBuilder, [] )
 		);
 	}
 
 	public function testCreate_NoFilter() {
-
 		$this->templateEngine->expects( $this->any() )
 			->method( 'publish' )
-			->will( $this->returnValue( '' ) );
+			->willReturn( '' );
 
 		$params = [
 			'min_item' => 1
@@ -73,17 +71,16 @@ class CategoryFilterTest extends \PHPUnit_Framework_TestCase {
 
 		$filters = [];
 
-		$this->assertInternalType(
-			'string',
+		$this->assertIsString(
+
 			$instance->create( $this->urlArgs, $filters )
 		);
 	}
 
 	public function testCreate_OneFilter() {
-
 		$this->templateEngine->expects( $this->any() )
 			->method( 'publish' )
-			->will( $this->returnValue( '' ) );
+			->willReturn( '' );
 
 		$params = [
 			'min_item' => 1,
@@ -104,11 +101,10 @@ class CategoryFilterTest extends \PHPUnit_Framework_TestCase {
 			'Foo' => 42
 		];
 
-		$this->assertInternalType(
-			'string',
+		$this->assertIsString(
+
 			$instance->create( $this->urlArgs, $filters )
 		);
 	}
 
 }
-

@@ -2,17 +2,14 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters;
 
-use SMW\Localizer\MessageLocalizerTrait;
-use SMW\ApplicationFactory;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
-use SMW\DIProperty;
 use SMW\DIWikiPage;
+use SMW\Localizer\MessageLocalizerTrait;
 use SMW\MediaWiki\Specials\FacetedSearch\TreeBuilder;
-use Html;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -32,7 +29,7 @@ class CategoryFilter {
 	private $treeBuilder;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -57,8 +54,7 @@ class CategoryFilter {
 	 *
 	 * @return string
 	 */
-	public function create( UrlArgs $urlArgs, array $filters ) : string {
-
+	public function create( UrlArgs $urlArgs, array $filters ): string {
 		$categories = [];
 
 		$list = [
@@ -123,7 +119,6 @@ class CategoryFilter {
 	}
 
 	private function matchFilter( $categoryFilters, $key, $count, &$list, $clear ) {
-
 		$category = DIWikiPage::newFromText( $key, NS_CATEGORY );
 		$key = str_replace( '_', ' ', $key );
 
@@ -161,7 +156,6 @@ class CategoryFilter {
 	}
 
 	private function createInputField( array $values ) {
-
 		if ( count( $values ) <= $this->params['min_item'] ) {
 			return '';
 		}

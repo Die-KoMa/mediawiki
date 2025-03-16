@@ -408,16 +408,16 @@
         },
         {
             "name": "jeroen/file-fetcher",
-            "version": "6.1.0",
+            "version": "6.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/JeroenDeDauw/FileFetcher.git",
-                "reference": "d38fb0587b52b28bd24fda599f2da69ac8530453"
+                "reference": "d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d38fb0587b52b28bd24fda599f2da69ac8530453",
-                "reference": "d38fb0587b52b28bd24fda599f2da69ac8530453",
+                "url": "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80",
+                "reference": "d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80",
                 "shasum": ""
             },
             "require": {
@@ -425,7 +425,7 @@
                 "psr/log": "~3.0|~2.0|~1.0"
             },
             "require-dev": {
-                "jeroen/psr-log-test-doubles": "~3.1",
+                "jeroen/psr-log-test-doubles": "~3.0|~2.2",
                 "phpstan/phpstan": "~1.6.0",
                 "phpunit/phpunit": "~9.5",
                 "squizlabs/php_codesniffer": "~3.2",
@@ -477,7 +477,7 @@
             ],
             "support": {
                 "issues": "https://github.com/JeroenDeDauw/FileFetcher/issues",
-                "source": "https://github.com/JeroenDeDauw/FileFetcher/tree/6.1.0"
+                "source": "https://github.com/JeroenDeDauw/FileFetcher/tree/6.1.1"
             },
             "funding": [
                 {
@@ -485,7 +485,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-26T17:29:31+00:00"
+            "time": "2025-02-26T21:03:11+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -673,16 +673,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "4.2.0",
+            "version": "5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "0a8af7546b81f6dcab3f336f14023c8e7aea3805"
+                "reference": "88189dc70021354e15abe3c7b69e79e6b5b3ee99"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/0a8af7546b81f6dcab3f336f14023c8e7aea3805",
-                "reference": "0a8af7546b81f6dcab3f336f14023c8e7aea3805",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/88189dc70021354e15abe3c7b69e79e6b5b3ee99",
+                "reference": "88189dc70021354e15abe3c7b69e79e6b5b3ee99",
                 "shasum": ""
             },
             "require": {
@@ -698,7 +698,7 @@
                 "onoi/event-dispatcher": "~1.0",
                 "onoi/message-reporter": "~1.0",
                 "param-processor/param-processor": "~1.2",
-                "php": ">=7.4",
+                "php": ">=8.1",
                 "psr/log": "~1.0",
                 "seld/jsonlint": "^1.7",
                 "serialization/serialization": "~3.2|~4.0",
@@ -707,7 +707,8 @@
                 "wikimedia/textcat": "^2|^1.1"
             },
             "require-dev": {
-                "mediawiki/mediawiki-codesniffer": "43.0.0",
+                "mediawiki/mediawiki-codesniffer": "46.0.0",
+                "mediawiki/mediawiki-phan-config": "0.14.0",
                 "mediawiki/minus-x": "1.1.3",
                 "php-parallel-lint/php-console-highlighter": "1.0.0",
                 "php-parallel-lint/php-parallel-lint": "1.4.0",
@@ -720,7 +721,7 @@
             "type": "mediawiki-extension",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "4.x-dev"
+                    "dev-master": "5.x-dev"
                 }
             },
             "autoload": {
@@ -732,7 +733,7 @@
                 },
                 "psr-4": {
                     "SMW\\": "src/",
-                    "Onoi\\Tesa\\": "src/Tesa/src/",
+                    "Onoi\\Tesa\\": "Tesa/src/",
                     "SMW\\Tests\\": "tests/phpunit/",
                     "SMW\\Maintenance\\": "maintenance/"
                 },
@@ -794,7 +795,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-07-18T13:31:02+00:00"
+            "time": "2025-03-10T12:43:04+00:00"
         },
         {
             "name": "onoi/blob-store",

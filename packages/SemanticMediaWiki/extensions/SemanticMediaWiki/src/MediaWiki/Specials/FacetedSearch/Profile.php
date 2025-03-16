@@ -2,16 +2,14 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use SMW\Schema\CompartmentIterator;
+use SMW\MediaWiki\Specials\FacetedSearch\Exception\DefaultProfileNotFoundException;
+use SMW\MediaWiki\Specials\FacetedSearch\Exception\ProfileSourceDefinitionConflictException;
 use SMW\Schema\Compartment;
 use SMW\Schema\Exception\SchemaTypeNotFoundException;
 use SMW\Schema\SchemaFactory;
-use SMW\MediaWiki\Specials\FacetedSearch\Exception\DefaultProfileNotFoundException;
-use SMW\MediaWiki\Specials\FacetedSearch\Exception\ProfileSourceDefinitionConflictException;
-use RuntimeException;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -34,7 +32,7 @@ class Profile {
 	private $profile;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $profileList = [];
 
@@ -64,7 +62,7 @@ class Profile {
 	 *
 	 * @return string
 	 */
-	public function getProfileName() : string {
+	public function getProfileName(): string {
 		return $this->profileName;
 	}
 
@@ -73,7 +71,7 @@ class Profile {
 	 *
 	 * @return int
 	 */
-	public function getProfileCount() : int {
+	public function getProfileCount(): int {
 		return count( $this->getProfileList() );
 	}
 
@@ -82,8 +80,7 @@ class Profile {
 	 *
 	 * @return array
 	 */
-	public function getProfileList() : array {
-
+	public function getProfileList(): array {
 		if ( $this->profileList === [] ) {
 			$this->loadProfile();
 		}
@@ -100,7 +97,6 @@ class Profile {
 	 * @return array|string|int
 	 */
 	public function get( string $key, $default = null ) {
-
 		if ( $this->profile === null ) {
 			$this->loadProfile();
 		}
@@ -115,7 +111,6 @@ class Profile {
 	}
 
 	private function loadProfile() {
-
 		$schemaList = $this->schemaFactory->newSchemaFinder()->getSchemaListByType(
 			self::SCHEMA_TYPE
 		);
@@ -127,7 +122,7 @@ class Profile {
 		$compartmentIterator = $schemaList->newCompartmentIteratorByKey( 'profiles' );
 
 		if ( $this->profileName === '' ) {
-			$this->profileName = str_replace( '_profile', '', $schemaList->get( 'default_profile', 'default' ) );
+			$this->profileName = str_replace( '_profile', '', $schemaList->get( 'default_profile', 'default' ) ?? '' );
 		}
 
 		foreach ( $compartmentIterator as $profiles ) {

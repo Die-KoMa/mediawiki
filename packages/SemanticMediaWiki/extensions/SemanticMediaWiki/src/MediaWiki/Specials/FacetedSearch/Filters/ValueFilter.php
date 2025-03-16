@@ -2,22 +2,17 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters;
 
+use SMW\DataTypeRegistry;
+use SMW\DIProperty;
 use SMW\Localizer\MessageLocalizerTrait;
 use SMW\MediaWiki\Specials\FacetedSearch\Exception\DefaultValueFilterNotFoundException;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
 use SMW\Schema\SchemaFinder;
-use SMW\Schema\SchemaList;
-use SMW\DIProperty;
-use SMW\DIWikiPage;
-use SMW\DataTypeRegistry;
-use SMW\DataValueFactory;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 use SMWDataItem as DataItem;
-use Title;
-use Html;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -47,7 +42,7 @@ class ValueFilter {
 	private $urlArgs;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -74,8 +69,7 @@ class ValueFilter {
 	 *
 	 * @return array
 	 */
-	public function create( UrlArgs $urlArgs, array $valueFilters ) : array {
-
+	public function create( UrlArgs $urlArgs, array $valueFilters ): array {
 		$cards = [];
 		$filters = $valueFilters['filter'] ?? [];
 
@@ -99,16 +93,20 @@ class ValueFilter {
 			}
 
 			$raw = $valueFilters['raw'][$property] ?? [];
+			$escapedValues = [];
+			foreach ( $values as $k => $groupId ) {
+				// Security measure to prevent XSS attacks
+				$escapedValues[htmlspecialchars( $k )] = $groupId;
+			}
 
 			$valueFilter = $this->newValueFilter( $property );
-			$cards[$property] = $valueFilter->create( $urlArgs, $property, $values, $raw );
+			$cards[$property] = $valueFilter->create( $urlArgs, $property, $escapedValues, $raw );
 		}
 
 		return $cards;
 	}
 
 	private function newValueFilter( $property ) {
-
 		$prop = DIProperty::newFromUserLabel(
 			$property
 		);
@@ -172,7 +170,6 @@ class ValueFilter {
 	}
 
 	private function getType( $property ) {
-
 		$type = DataTypeRegistry::getInstance()->getDataItemByType(
 			$property->findPropertyValueType()
 		);
@@ -180,10 +177,8 @@ class ValueFilter {
 		switch ( $type ) {
 			case DataItem::TYPE_NUMBER:
 				return 'TYPE_NUMBER';
-				break;
 			default:
 				return '';
-				break;
 		}
 	}
 

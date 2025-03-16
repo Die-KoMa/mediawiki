@@ -2,15 +2,15 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters;
 
-use SMW\Localizer\MessageLocalizerTrait;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
-use SMW\DataValueFactory;
 use SMW\DataTypeRegistry;
+use SMW\DataValueFactory;
 use SMW\DIProperty;
+use SMW\Localizer\MessageLocalizerTrait;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -30,7 +30,7 @@ class ListValueFilter {
 	private $urlArgs;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -55,8 +55,7 @@ class ListValueFilter {
 	 *
 	 * @return string
 	 */
-	public function create( UrlArgs $urlArgs, string $property, array $values, array $raw ) : string {
-
+	public function create( UrlArgs $urlArgs, string $property, array $values, array $raw ): string {
 		if ( $values === [] ) {
 			return '';
 		}
@@ -146,7 +145,6 @@ class ListValueFilter {
 	}
 
 	private function getValueFilters( $property ) {
-
 		$valueFilters = $this->urlArgs->getArray( 'pv' );
 		$valueFilters = $valueFilters[$property] ?? [];
 
@@ -154,7 +152,6 @@ class ListValueFilter {
 	}
 
 	private function sortValues( $list ) {
-
 		$linked = [];
 		$unlinked = [];
 
@@ -162,13 +159,13 @@ class ListValueFilter {
 		foreach ( $list as $c => $l ) {
 			foreach ( $l as $k => $v ) {
 				if ( $k === 'linked' && $v !== [] ) {
-					foreach ( $v as $key => $value) {
-						$linked[] = $value ;
+					foreach ( $v as $key => $value ) {
+						$linked[] = $value;
 					}
 				}
 				if ( $k === 'unlinked' && $v !== [] ) {
-					foreach ( $v as $key => $value) {
-						$unlinked[] = $value ;
+					foreach ( $v as $key => $value ) {
+						$unlinked[] = $value;
 					}
 				}
 			}
@@ -181,7 +178,6 @@ class ListValueFilter {
 	}
 
 	private function matchFilter( $property, $key, $label, $count, $valueFilters, $clear, &$list ) {
-
 		if ( !isset( $list[$count] ) ) {
 			$list[$count] = [ 'linked' => [], 'unlinked' => [] ];
 		}
@@ -194,7 +190,7 @@ class ListValueFilter {
 
 		if ( isset( $valueFilters[$key] ) && $isClear ) {
 
-			if ( isset($list[$count]['unlinked'][$key] ) ) {
+			if ( isset( $list[$count]['unlinked'][$key] ) ) {
 				return;
 			}
 
@@ -231,7 +227,6 @@ class ListValueFilter {
 	}
 
 	private function createConditionField( $property ) {
-
 		if ( $this->params['condition_field'] === false ) {
 			return '';
 		}
@@ -242,9 +237,9 @@ class ListValueFilter {
 			'filter-items-condition',
 			[
 				'property' => $property,
-				'or-selected' => $condition === 'or' ? 'selected': '',
-				'and-selected' => $condition === 'and' ? 'selected': '',
-				'not-selected' => $condition === 'not' ? 'selected': ''
+				'or-selected' => $condition === 'or' ? 'selected' : '',
+				'and-selected' => $condition === 'and' ? 'selected' : '',
+				'not-selected' => $condition === 'not' ? 'selected' : ''
 			]
 		);
 
@@ -252,7 +247,6 @@ class ListValueFilter {
 	}
 
 	private function createInputField( $property, array $values ) {
-
 		if ( count( $values ) <= $this->params['min_item'] ) {
 			return '';
 		}

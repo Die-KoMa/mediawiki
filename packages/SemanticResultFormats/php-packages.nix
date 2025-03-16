@@ -65,10 +65,10 @@ let
     "jeroen/file-fetcher" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "jeroen-file-fetcher-d38fb0587b52b28bd24fda599f2da69ac8530453";
+        name = "jeroen-file-fetcher-d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80";
         src = fetchurl {
-          url = "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d38fb0587b52b28bd24fda599f2da69ac8530453";
-          sha256 = "1v55rh35xynni7pk467cm802153cd23sx77vhacaqc5yl3vdlk7f";
+          url = "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80";
+          sha256 = "068r8vfy0zgdpczm6ikln36vhjf8kj2zbqxxdcbjyfsrksv3znq6";
         };
       };
     };

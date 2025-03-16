@@ -2,15 +2,14 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use Title;
+use SMW\Localizer\Message;
+use SMW\Localizer\MessageLocalizerTrait;
 use SMW\Utils\TemplateEngine;
 use SMW\Utils\UrlArgs;
-use SMW\Localizer\MessageLocalizerTrait;
-use SMW\Localizer\Message;
-use SMW\Utils\HtmlTabs;
+use Title;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -81,8 +80,7 @@ class HtmlBuilder {
 	 * @param Title $title
 	 * @param UrlArgs $urlArgs
 	 */
-	public function buildEmptyHTML( Title $title, UrlArgs $urlArgs ) : string {
-
+	public function buildEmptyHTML( Title $title, UrlArgs $urlArgs ): string {
 		$profileName = $this->profile->getProfileName();
 
 		$this->templateEngine->compile(
@@ -123,7 +121,7 @@ class HtmlBuilder {
 				'search' => $this->templateEngine->publish( 'search-form' ),
 				'search-extra-fields' => $this->extraFieldBuilder->buildHTML( $urlArgs ),
 				'intro' => $html,
-				'theme' => $this->profile->get( 'theme')
+				'theme' => $this->profile->get( 'theme' )
 			]
 		);
 
@@ -136,8 +134,7 @@ class HtmlBuilder {
 	 * @param Title $title
 	 * @param UrlArgs $urlArgs
 	 */
-	public function buildHTML( Title $title, UrlArgs $urlArgs ) : string {
-
+	public function buildHTML( Title $title, UrlArgs $urlArgs ): string {
 		$result = $this->resultFetcher->getHtml();
 		$profileName = $urlArgs->get( 'profile', 'default' );
 
@@ -181,7 +178,7 @@ class HtmlBuilder {
 		// Remember the "cstate" (aka card state) over the period of one
 		// request by adding hidden elements to the form
 		foreach ( $urlArgs->getArray( 'cstate', [] ) as $key => $value ) {
-			$hidden .= '<input name="' . "cstate[$key]" .'" type="hidden" value="' . $value . '">';
+			$hidden .= '<input name="' . "cstate[$key]" . '" type="hidden" value="' . $value . '">';
 		}
 
 		$this->templateEngine->compile(
@@ -207,7 +204,7 @@ class HtmlBuilder {
 		if ( $this->profile->get( 'debug_output' ) ) {
 
 			$queryString = str_replace(
-				['<', '>', '=' ],
+				[ '<', '>', '=' ],
 				[ '&lt;', '&gt;', '0x003D' ],
 				$this->resultFetcher->getQueryString()
 			);
@@ -227,7 +224,7 @@ class HtmlBuilder {
 		$this->templateEngine->compile(
 			'facetedsearch-sidebar',
 			[
-				'cards' => $this->templateEngine->publish( 'filter-cards', TemplateEngine::HTML_TIDY  )
+				'cards' => $this->templateEngine->publish( 'filter-cards', TemplateEngine::HTML_TIDY )
 			]
 		);
 
@@ -238,7 +235,7 @@ class HtmlBuilder {
 				'search-extra-fields' => $this->extraFieldBuilder->buildHTML( $urlArgs ),
 				'sidebar' => $this->templateEngine->publish( 'facetedsearch-sidebar' ),
 				'content' => $this->templateEngine->publish( 'facetedsearch-content' ),
-				'theme' => $this->profile->get( 'theme')
+				'theme' => $this->profile->get( 'theme' )
 			]
 		);
 

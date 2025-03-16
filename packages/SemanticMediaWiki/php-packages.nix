@@ -55,10 +55,10 @@ let
     "jeroen/file-fetcher" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "jeroen-file-fetcher-d38fb0587b52b28bd24fda599f2da69ac8530453";
+        name = "jeroen-file-fetcher-d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80";
         src = fetchurl {
-          url = "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d38fb0587b52b28bd24fda599f2da69ac8530453";
-          sha256 = "1v55rh35xynni7pk467cm802153cd23sx77vhacaqc5yl3vdlk7f";
+          url = "https://api.github.com/repos/JeroenDeDauw/FileFetcher/zipball/d9fadc0486ef690ce7dd9c6d32d6e5f2857bfd80";
+          sha256 = "068r8vfy0zgdpczm6ikln36vhjf8kj2zbqxxdcbjyfsrksv3znq6";
         };
       };
     };
@@ -95,10 +95,10 @@ let
     "mediawiki/semantic-media-wiki" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-semantic-media-wiki-0a8af7546b81f6dcab3f336f14023c8e7aea3805";
+        name = "mediawiki-semantic-media-wiki-88189dc70021354e15abe3c7b69e79e6b5b3ee99";
         src = fetchurl {
-          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/0a8af7546b81f6dcab3f336f14023c8e7aea3805";
-          sha256 = "02pg2rjfnhj4ddcy7c1kikyg4mz8cjp4rp7l7f03911dlss86jdr";
+          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/88189dc70021354e15abe3c7b69e79e6b5b3ee99";
+          sha256 = "00wj0556v8v6lgf67w28d99mcag5qi9dd477jrf2sn6w8rv57fpx";
         };
       };
     };

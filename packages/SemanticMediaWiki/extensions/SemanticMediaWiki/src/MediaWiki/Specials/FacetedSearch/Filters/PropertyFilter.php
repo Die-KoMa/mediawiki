@@ -2,16 +2,15 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters;
 
-use SMW\Localizer\MessageLocalizerTrait;
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
 use SMW\DIProperty;
 use SMW\DIWikiPage;
+use SMW\Localizer\MessageLocalizerTrait;
 use SMW\MediaWiki\Specials\FacetedSearch\TreeBuilder;
-use Html;
+use SMW\Utils\TemplateEngine;
+use SMW\Utils\UrlArgs;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -31,7 +30,7 @@ class PropertyFilter {
 	private $treeBuilder;
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $params;
 
@@ -61,8 +60,7 @@ class PropertyFilter {
 	 *
 	 * @return string
 	 */
-	public function create( UrlArgs $urlArgs, array $propertyFilters ) : string {
-
+	public function create( UrlArgs $urlArgs, array $propertyFilters ): string {
 		$this->urlArgs = $urlArgs;
 
 		$properties = [];
@@ -132,7 +130,6 @@ class PropertyFilter {
 	}
 
 	private function matchFilter( $key, $count, &$list ) {
-
 		$property = DIWikiPage::newFromText( $key, SMW_NS_PROPERTY );
 		$propertyFilters = $this->urlArgs->getArray( 'pv' );
 
@@ -172,7 +169,6 @@ class PropertyFilter {
 	}
 
 	private function createInputField( array $values ) {
-
 		if ( count( $values ) <= $this->params['min_item'] ) {
 			return '';
 		}

@@ -9,12 +9,12 @@ use SMW\Tests\PHPUnitCompat;
  * @covers \SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\ListValueFilter
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.2
  *
  * @author mwjames
  */
-class ListValueFilterTest extends \PHPUnit_Framework_TestCase {
+class ListValueFilterTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
@@ -22,7 +22,7 @@ class ListValueFilterTest extends \PHPUnit_Framework_TestCase {
 	private $urlArgs;
 	private $messageLocalizer;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->messageLocalizer = $this->getMockBuilder( '\SMW\Localizer\MessageLocalizer' )
@@ -39,7 +39,6 @@ class ListValueFilterTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			ListValueFilter::class,
 			new ListValueFilter( $this->templateEngine, [] )
@@ -47,10 +46,9 @@ class ListValueFilterTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCreate_NoFilter() {
-
 		$this->templateEngine->expects( $this->any() )
 			->method( 'publish' )
-			->will( $this->returnValue( '' ) );
+			->willReturn( '' );
 
 		$params = [
 			'min_item' => 1
@@ -68,11 +66,10 @@ class ListValueFilterTest extends \PHPUnit_Framework_TestCase {
 		$filters = [];
 		$raw = [];
 
-		$this->assertInternalType(
-			'string',
+		$this->assertIsString(
+
 			$instance->create( $this->urlArgs, 'Foo', $filters, $raw )
 		);
 	}
 
 }
-

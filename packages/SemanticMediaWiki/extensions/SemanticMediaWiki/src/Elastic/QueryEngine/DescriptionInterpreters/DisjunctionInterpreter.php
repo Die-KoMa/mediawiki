@@ -6,7 +6,7 @@ use SMW\Elastic\QueryEngine\ConditionBuilder;
 use SMW\Query\Language\Disjunction;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.0
  *
  * @author mwjames
@@ -35,7 +35,6 @@ class DisjunctionInterpreter {
 	 * @return Condition|[]
 	 */
 	public function interpretDescription( Disjunction $description, $isConjunction = false ) {
-
 		$params = [];
 		$notConditionFields = [];
 

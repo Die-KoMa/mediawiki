@@ -2,18 +2,15 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch\Filters;
 
-use SMW\Utils\UrlArgs;
-use SMW\Utils\TemplateEngine;
-use SMW\Schema\CompartmentIterator;
-use SMW\Services\ServicesFactory;
-use SMW\MediaWiki\Specials\FacetedSearch\TreeBuilder;
+use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\CheckboxRangeGroupValueFilter;
+use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\CheckboxValueFilter;
 use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\ListValueFilter;
 use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\RangeValueFilter;
-use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\CheckboxValueFilter;
-use SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilters\CheckboxRangeGroupValueFilter;
+use SMW\Schema\CompartmentIterator;
+use SMW\Utils\TemplateEngine;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -41,7 +38,7 @@ class ValueFilterFactory {
 	 *
 	 * @return ListValueFilter
 	 */
-	public function newListValueFilter( array $params ) : ListValueFilter {
+	public function newListValueFilter( array $params ): ListValueFilter {
 		return new ListValueFilter( $this->templateEngine, $params );
 	}
 
@@ -52,7 +49,7 @@ class ValueFilterFactory {
 	 *
 	 * @return CheckboxValueFilter
 	 */
-	public function newCheckboxValueFilter( array $params ) : CheckboxValueFilter {
+	public function newCheckboxValueFilter( array $params ): CheckboxValueFilter {
 		return new CheckboxValueFilter( $this->templateEngine, $params );
 	}
 
@@ -64,7 +61,7 @@ class ValueFilterFactory {
 	 *
 	 * @return CheckboxRangeGroupValueFilter
 	 */
-	public function newCheckboxRangeGroupValueFilter( CompartmentIterator $compartmentIterator, array $params ) : CheckboxRangeGroupValueFilter {
+	public function newCheckboxRangeGroupValueFilter( CompartmentIterator $compartmentIterator, array $params ): CheckboxRangeGroupValueFilter {
 		return new CheckboxRangeGroupValueFilter( $this->templateEngine, $compartmentIterator, $params );
 	}
 
@@ -76,7 +73,7 @@ class ValueFilterFactory {
 	 *
 	 * @return RangeValueFilter
 	 */
-	public function newRangeValueFilter( CompartmentIterator $compartmentIterator, array $params ) : RangeValueFilter {
+	public function newRangeValueFilter( CompartmentIterator $compartmentIterator, array $params ): RangeValueFilter {
 		return new RangeValueFilter( $this->templateEngine, $compartmentIterator, $params );
 	}
 

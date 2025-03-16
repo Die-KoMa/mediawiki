@@ -2,10 +2,9 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use WebRequest;
-use SMWInfolink as Infolink;
 use SMW\Localizer\Localizer;
-use RuntimeException;
+use SMWInfolink as Infolink;
+use WebRequest;
 
 /**
  * @private
@@ -21,7 +20,7 @@ use RuntimeException;
  * - csum: defines a checksum to verify whether the query string was modified
  *   during a request
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -46,22 +45,22 @@ class ParametersProcessor {
 	private $format = '';
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $parameters = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $filterConditions = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $propertyFilters = [];
 
 	/**
-	 * @var []
+	 * @var
 	 */
 	private $valueFilters = [];
 
@@ -79,7 +78,7 @@ class ParametersProcessor {
 	 *
 	 * @return array
 	 */
-	public function getParameters() : array {
+	public function getParameters(): array {
 		return $this->parameters;
 	}
 
@@ -88,7 +87,7 @@ class ParametersProcessor {
 	 *
 	 * @return string
 	 */
-	public function getFormat() : string {
+	public function getFormat(): string {
 		return $this->format;
 	}
 
@@ -97,7 +96,7 @@ class ParametersProcessor {
 	 *
 	 * @return array
 	 */
-	public function getFilterConditions() : array {
+	public function getFilterConditions(): array {
 		return $this->filterConditions;
 	}
 
@@ -106,7 +105,7 @@ class ParametersProcessor {
 	 *
 	 * @return array
 	 */
-	public function getValueFilters() : array {
+	public function getValueFilters(): array {
 		return $this->valueFilters;
 	}
 
@@ -115,7 +114,7 @@ class ParametersProcessor {
 	 *
 	 * @return array
 	 */
-	public function getPropertyFilters() : array {
+	public function getPropertyFilters(): array {
 		return $this->propertyFilters;
 	}
 
@@ -125,7 +124,6 @@ class ParametersProcessor {
 	 * @param WebRequest $request
 	 */
 	public function checkRequest( WebRequest $request ) {
-
 		// Was not filtered and the query checksum is different which means
 		// the query string was modified
 		if (
@@ -158,7 +156,6 @@ class ParametersProcessor {
 	 * @param array|null $params
 	 */
 	public function process( WebRequest $request, $params ) {
-
 		$this->parameters = [];
 
 		$query = $request->getVal( 'q' );
@@ -186,12 +183,12 @@ class ParametersProcessor {
 
 		$this->parameters = $this->makeParameters( $query, $request );
 
-		$this->parameters[] = 'limit='. $limit;
-		$this->parameters[] = 'offset='. $request->getVal( 'offset', 0 );
+		$this->parameters[] = 'limit=' . $limit;
+		$this->parameters[] = 'offset=' . $request->getVal( 'offset', 0 );
 
 		if ( in_array( $request->getVal( 'order', 'asc' ), [ 'asc', 'desc' ] ) ) {
-			$this->parameters[] = 'order='. $request->getVal( 'order', 'asc' );
-		} else if ( $request->getVal( 'order', 'asc' ) === 'recent' ) {
+			$this->parameters[] = 'order=' . $request->getVal( 'order', 'asc' );
+		} elseif ( $request->getVal( 'order', 'asc' ) === 'recent' ) {
 			$this->parameters[] = 'order=desc';
 			$this->parameters[] = 'sort=Modification date';
 		}
@@ -208,7 +205,6 @@ class ParametersProcessor {
 	}
 
 	private function fromQueryParameter( $query ) {
-
 		$params = '';
 
 		// Allow Category:Foo, Property:Bar, Concept:Foobar
@@ -216,15 +212,15 @@ class ParametersProcessor {
 			[ $ns, $v ] = explode( ':', $query, 2 );
 
 			if ( Localizer::getInstance()->getNsIndex( $ns ) === NS_CATEGORY ) {
-				$params = str_replace( '_',' ', "[[Category:$v]]" );
+				$params = str_replace( '_', ' ', "[[Category:$v]]" );
 			}
 
 			if ( Localizer::getInstance()->getNsIndex( $ns ) === SMW_NS_PROPERTY ) {
-				$params = str_replace( '_',' ', "[[$v::+]]" );
+				$params = str_replace( '_', ' ', "[[$v::+]]" );
 			}
 
 			if ( Localizer::getInstance()->getNsIndex( $ns ) === SMW_NS_CONCEPT ) {
-				$params = str_replace( '_',' ', "[[Concept:$v]]" );
+				$params = str_replace( '_', ' ', "[[Concept:$v]]" );
 			}
 		} elseif ( strpos( $query, '/' ) !== false ) {
 			// PropertyFoo/ValueBar
@@ -236,7 +232,6 @@ class ParametersProcessor {
 	}
 
 	private function makeParameters( $query, $request ) {
-
 		$this->queryString = $query[0] ?? '';
 
 		$parameters = [];
@@ -251,7 +246,7 @@ class ParametersProcessor {
 			if ( isset( $clear['p'] ) && isset( $pv[$clear['p']] ) ) {
 				unset( $pv[$clear['p']] );
 				$request->setVal( 'pv', $pv );
-			} elseif( isset( $clear['p.all'] ) ) {
+			} elseif ( isset( $clear['p.all'] ) ) {
 				$pv = [];
 				$request->setVal( 'pv', $pv );
 				$request->unsetVal( 'clear' );
@@ -276,7 +271,7 @@ class ParametersProcessor {
 			if ( isset( $clear['c'] ) && isset( $c[$clear['c']] ) ) {
 				unset( $c[$clear['c']] );
 				$request->setVal( 'c', $c );
-			} elseif( isset( $clear['c.all'] ) ) {
+			} elseif ( isset( $clear['c.all'] ) ) {
 				$c = [];
 				$request->setVal( 'c', $c );
 				$request->unsetVal( 'clear' );
@@ -310,7 +305,6 @@ class ParametersProcessor {
 	}
 
 	private function fieldConditions( $fields ) {
-
 		if ( !is_array( $fields ) || $fields === [] ) {
 			return [];
 		}
@@ -344,7 +338,6 @@ class ParametersProcessor {
 	}
 
 	private function propertyFilterConditions( $values, $clear ) {
-
 		$filters = array_keys( (array)$values );
 		$this->propertyFilters = $filters;
 
@@ -372,7 +365,6 @@ class ParametersProcessor {
 	}
 
 	private function categoryFilterConditions( $values, $clear ) {
-
 		$filters = (array)$values;
 		$conditions = [];
 		$printRequests = [];
@@ -395,7 +387,6 @@ class ParametersProcessor {
 	}
 
 	private function valueFilterConditions( $values, $cond, $clear ) {
-
 		if ( is_string( $values ) ) {
 			$filters = array_filter( explode( '|', $values ) );
 		} else {
@@ -427,7 +418,7 @@ class ParametersProcessor {
 
 			foreach ( $filter as $value ) {
 
-				if ( $value === '' || isset( $clear['v'] ) && $clear['v'] === $value ) {
+				if ( $value === '' || ( isset( $clear['v'] ) && $clear['v'] === $value ) ) {
 					continue;
 				}
 
@@ -450,7 +441,7 @@ class ParametersProcessor {
 					} elseif ( $not === '!' ) {
 						$conditions[$prop][] = "<q>[[$prop::≤$min]] OR [[$prop::≥$max]]</q>";
 					} elseif ( $min === $max ) {
-					//	$conditions[$prop][] = "<q>[[$prop::$max]]</q>";
+					// $conditions[$prop][] = "<q>[[$prop::$max]]</q>";
 					} else {
 						$conditions[$prop][] = "[[$prop::≥$min]][[$prop::≤$max]]";
 					}
@@ -481,8 +472,7 @@ class ParametersProcessor {
 	}
 
 	private function addDefaultPrintRequests( string $query ) {
-
-		preg_match_all('/\[\[(.*?)\]\]/i', $query, $matches );
+		preg_match_all( '/\[\[(.*?)\]\]/i', $query, $matches );
 		$printRequests = [];
 
 		foreach ( $matches[1] as $match ) {

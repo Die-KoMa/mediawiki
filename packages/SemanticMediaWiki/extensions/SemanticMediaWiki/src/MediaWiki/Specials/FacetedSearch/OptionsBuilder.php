@@ -2,15 +2,11 @@
 
 namespace SMW\MediaWiki\Specials\FacetedSearch;
 
-use WebRequest;
-use SMW\Utils\UrlArgs;
 use Html;
-use Title;
-use SMW\Message;
 use SMW\Localizer\MessageLocalizerTrait;
 
 /**
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since   3.2
  *
  * @author mwjames
@@ -27,7 +23,7 @@ class OptionsBuilder {
 	/**
 	 * @since 3.2
 	 *
-	 * @param int $size
+	 * @param Profile $profile
 	 */
 	public function __construct( Profile $profile ) {
 		$this->profile = $profile;
@@ -40,8 +36,7 @@ class OptionsBuilder {
 	 *
 	 * @return string
 	 */
-	public function profiles( string $profile = '' ) : string {
-
+	public function profiles( string $profile = '' ): string {
 		$html = [];
 		$list = $this->profile->getProfileList();
 
@@ -72,10 +67,9 @@ class OptionsBuilder {
 	/**
 	 * @since 3.2
 	 *
-	 * @param int $size
+	 * @param string $format
 	 */
 	public function format( string $format ) {
-
 		$html = [];
 		$list = [
 			'table' => $this->msg( "smw-facetedsearch-format-table" )
@@ -105,7 +99,6 @@ class OptionsBuilder {
 	 * @param int $size
 	 */
 	public function size( int $size ) {
-
 		$html = [];
 		$list = $this->profile->get( 'result.paging_limit' );
 
@@ -134,14 +127,13 @@ class OptionsBuilder {
 	 * @param string $order
 	 */
 	public function order( string $order ) {
-
 		$html = [];
 
 		$list = [
 			'asc' => "Title (A-Z)",
 			'desc' => "Title (Z-A)",
 			'recent' => "Most recent",
-		//	'score' => "Relevance"
+		// 'score' => "Relevance"
 		];
 
 		foreach ( $list as $key => $val ) {
@@ -166,8 +158,7 @@ class OptionsBuilder {
 	 *
 	 * @return string
 	 */
-	public function previous( int $size, int $offset ) : string {
-
+	public function previous( int $size, int $offset ): string {
 		if ( $offset < 1 ) {
 			return $this->msg( 'smw_result_prev' );
 		}
@@ -194,8 +185,7 @@ class OptionsBuilder {
 	 *
 	 * @return string
 	 */
-	public function next( int $size, int $offset, bool $hasFurtherResults ) : string {
-
+	public function next( int $size, int $offset, bool $hasFurtherResults ): string {
 		if ( $hasFurtherResults === false ) {
 			return $this->msg( 'smw_result_next' );
 		}

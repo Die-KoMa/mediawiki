@@ -9,18 +9,18 @@ use SMW\Tests\PHPUnitCompat;
  * @covers \SMW\MediaWiki\Specials\FacetedSearch\Filters\ValueFilterFactory
  * @group semantic-mediawiki
  *
- * @license GNU GPL v2+
+ * @license GPL-2.0-or-later
  * @since 3.2
  *
  * @author mwjames
  */
-class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
+class ValueFilterFactoryTest extends \PHPUnit\Framework\TestCase {
 
 	use PHPUnitCompat;
 
 	private $templateEngine;
 
-	protected function setUp() : void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->templateEngine = $this->getMockBuilder( '\SMW\Utils\TemplateEngine' )
@@ -29,7 +29,6 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstruct() {
-
 		$this->assertInstanceOf(
 			ValueFilterFactory::class,
 			new ValueFilterFactory( $this->templateEngine )
@@ -37,7 +36,6 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstructListValueFilter() {
-
 		$instance = new ValueFilterFactory(
 			$this->templateEngine
 		);
@@ -49,7 +47,6 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstructCheckboxValueFilter() {
-
 		$instance = new ValueFilterFactory(
 			$this->templateEngine
 		);
@@ -61,7 +58,6 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstructCheckboxRangeGroupValueFilter() {
-
 		$compartmentIterator = $this->getMockBuilder( '\SMW\Schema\CompartmentIterator' )
 			->disableOriginalConstructor()
 			->getMock();
@@ -77,7 +73,6 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testCanConstructRangeValueFilter() {
-
 		$compartmentIterator = $this->getMockBuilder( '\SMW\Schema\CompartmentIterator' )
 			->disableOriginalConstructor()
 			->getMock();
@@ -93,12 +88,11 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testConfirmAllCanConstructMethodsWereCalled() {
-
 		// Available class methods to be tested
 		$classMethods = get_class_methods( ValueFilterFactory::class );
 
 		// Match all "testCanConstruct" to define the expected set of methods
-		$testMethods = preg_grep('/^testCanConstruct/', get_class_methods( $this ) );
+		$testMethods = preg_grep( '/^testCanConstruct/', get_class_methods( $this ) );
 
 		$testMethods = array_flip(
 			str_replace( 'testCanConstruct', 'new', $testMethods )
@@ -115,4 +109,3 @@ class ValueFilterFactoryTest extends \PHPUnit_Framework_TestCase {
 	}
 
 }
-
