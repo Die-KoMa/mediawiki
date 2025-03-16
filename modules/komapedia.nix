@@ -182,7 +182,7 @@ with lib;
               #enableSemantics('${config.die-koma.komapedia.semanticsHostName}');
 
               $wgReadOnlyFile = "${config.die-koma.komapedia.stateDir}/readonly/msg";
-              $wgLogo = "/images/komapedia-logo.png";
+              $wgLogos = [ "icon" => "/images/komapedia-logo.png" ];
 
               $wgEnableEmail = true;
               $wgEnableUserEmail = true; # UPO
