@@ -56,6 +56,7 @@ let
 
         pushd vendor/composer/
         substituteInPlace *.json *.php --replace "/extensions/${name}/" "/" ${replacements}
+        substituteInPlace *.json --replace "src/Tesa/src/" "Tesa/src"
         popd
 
         cp -R vendor $out/
