@@ -145,6 +145,7 @@ with lib;
             post_max_size = 100M
             upload_max_filesize = 100M
           '';
+          phpEnv.MW_INSTALL_PATH = "${cfg.finalPackage}/share/mediawiki";
         };
 
         memcached = {
