@@ -163,7 +163,6 @@ with lib;
               # in-tree extensions
               Math = null;
               ParserFunctions = null;
-              Renameuser = null;
               ReplaceText = null;
               VisualEditor = null;
             };
