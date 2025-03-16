@@ -38,7 +38,7 @@
               pushd packages
               TMPDIR=$(mktemp --directory)
               ${pkgs.mediawiki-extdist}/bin/mediawiki-extdist \
-                --mw-version REL1_39 --output $TMPDIR \
+                --mw-version REL1_43 --output $TMPDIR \
                 --extension Description2 \
                 --extension EditSubpages \
                 --extension Interwiki \

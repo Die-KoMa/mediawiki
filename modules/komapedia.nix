@@ -133,7 +133,13 @@ with lib;
             "listen.group" = mkOverride 75 config.services.nginx.user;
           };
           phpPackage = lib.mkForce (
-            pkgs.php81.withExtensions ({ all, enabled }: enabled ++ [ all.memcached ])
+            pkgs.php83.withExtensions (
+              { all, enabled }:
+              enabled
+              ++ [
+                all.memcached
+              ]
+            )
           );
           phpOptions = ''
             post_max_size = 100M

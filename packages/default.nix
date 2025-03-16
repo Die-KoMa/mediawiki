@@ -82,10 +82,10 @@ let
 in
 rec {
   mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
-    version = "1.39.10";
+    version = "1.43.0";
     src = pkgs.fetchurl {
       url = "https://releases.wikimedia.org/mediawiki/${lib.versions.majorMinor version}/mediawiki-${version}.tar.gz";
-      hash = "sha256-mL8OakLrzEsWXDhToXNo5lVhmqz9qMYSH/6tWUDuHhM=";
+      hash = "sha256-VuCn/i/3jlC5yHs9WJ8tjfW8qwAY5FSypKI5yFhr2O4=";
     };
   });
 
@@ -93,11 +93,11 @@ rec {
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
   SemanticResultFormats = composerExtension' "SemanticResultFormats" { inherit SemanticMediaWiki; };
 
-  EditSubpages = extdistExtension ./EditSubpages-REL1_39.tar.gz;
-  UserMerge = extdistExtension ./UserMerge-REL1_39.tar.gz;
-  Variables = extdistExtension ./Variables-REL1_39.tar.gz;
-  NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_39.tar.gz;
-  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_39.tar.gz;
-  Description2 = extdistExtension ./Description2-REL1_39.tar.gz;
-  Interwiki = extdistExtension ./Interwiki-REL1_39.tar.gz;
+  EditSubpages = extdistExtension ./EditSubpages-REL1_43.tar.gz;
+  UserMerge = extdistExtension ./UserMerge-REL1_43.tar.gz;
+  Variables = extdistExtension ./Variables-REL1_43.tar.gz;
+  NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_43.tar.gz;
+  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_43.tar.gz;
+  Description2 = extdistExtension ./Description2-REL1_43.tar.gz;
+  Interwiki = extdistExtension ./Interwiki-REL1_43.tar.gz;
 }
