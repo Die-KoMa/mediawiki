@@ -46,6 +46,10 @@
                 --extension OpenGraphMeta \
                 --extension UserMerge \
                 --extension Variables
+
+              ${pkgs.mediawiki-extdist}/bin/mediawiki-extdist \
+                --mw-version master --output $TMPDIR \
+                --extension PageForms
               cp $TMPDIR/*.tar.gz .
               git add *.tar.gz
 

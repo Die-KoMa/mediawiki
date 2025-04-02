@@ -90,7 +90,8 @@ in
     };
   });
 
-  PageForms = composerExtension "PageForms";
+  # PageForms 5.9.1 is broken with SemanticMediaWiki, need to use master
+  # PageForms = composerExtension "PageForms";
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
 
   EditSubpages = extdistExtension ./EditSubpages-REL1_43.tar.gz;
@@ -100,4 +101,5 @@ in
   OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_43.tar.gz;
   Description2 = extdistExtension ./Description2-REL1_43.tar.gz;
   Interwiki = extdistExtension ./Interwiki-REL1_43.tar.gz;
+  PageForms = extdistExtension ./PageForms-master.tar.gz;
 }
