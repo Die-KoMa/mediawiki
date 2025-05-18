@@ -15,10 +15,10 @@ let
     "mediawiki/page-forms" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-page-forms-c861c29cb0bc2a99f5b90cb009e99f828039f6d2";
+        name = "mediawiki-page-forms-35099cf9fab298ceb5fbc51ed2c721eae2728406";
         src = fetchurl {
-          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/c861c29cb0bc2a99f5b90cb009e99f828039f6d2";
-          sha256 = "0w6dr9031hn2h6fac1jsxaxgz632684vp9a8q23idwwiqwwmldd9";
+          url = "https://api.github.com/repos/wikimedia/mediawiki-extensions-PageForms/zipball/35099cf9fab298ceb5fbc51ed2c721eae2728406";
+          sha256 = "1pygl5z7dvc66w9aw5rz52hv5afp0wzqscsbvim9hkamxh4ndrik";
         };
       };
     };

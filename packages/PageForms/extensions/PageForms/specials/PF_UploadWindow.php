@@ -11,6 +11,7 @@
  */
 
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
 
 /**
  * @ingroup PFSpecialPages
@@ -19,17 +20,13 @@ class PFUploadWindow extends UnlistedSpecialPage {
 	/**
 	 * Constructor : initialise object
 	 * Get data POSTed through the form and assign them to the object
-	 * @param WebRequest|null $request Data posted.
 	 */
-	public function __construct( $request = null ) {
+	public function __construct() {
 		parent::__construct( 'UploadWindow', 'upload' );
-		$this->loadRequest( $request instanceof WebRequest ? $request : $this->getRequest() );
+		$this->loadRequest();
 	}
 
 	/** Misc variables */
-
-	/** @var WebRequest|FauxRequest The request this form is supposed to handle */
-	public $mRequest;
 	public $mSourceType;
 
 	/** @var UploadBase */
@@ -73,11 +70,9 @@ class PFUploadWindow extends UnlistedSpecialPage {
 
 	/**
 	 * Initialize instance variables from request and create an Upload handler
-	 *
-	 * @param WebRequest $request The request to extract variables from
 	 */
-	protected function loadRequest( $request ) {
-		$this->mRequest = $request;
+	protected function loadRequest() {
+		$request = $this->getRequest();
 		$this->mSourceType	= $request->getVal( 'wpSourceType', 'file' );
 		$this->mUpload	    = UploadBase::createFromRequest( $request );
 		$this->mUploadClicked     = $request->wasPosted()
@@ -584,9 +579,6 @@ END;
 				$this->recoverableUploadError( $this->msg( 'illegalfilename',
 					$details['filtered'] )->parse() );
 				break;
-			case UploadBase::OVERWRITE_EXISTING_FILE:
-				$this->recoverableUploadError( $this->msg( $details['overwrite'] )->parse() );
-				break;
 			case UploadBase::FILETYPE_MISSING:
 				$this->recoverableUploadError( $this->msg( 'filetype-missing' )->parse() );
 				break;
@@ -615,10 +607,6 @@ END;
 				unset( $details['status'] );
 				$code = array_shift( $details['details'] );
 				$this->uploadError( $this->msg( $code, $details['details'] )->parse() );
-				break;
-			case UploadBase::HOOK_ABORTED:
-				$error = $details['error'];
-				$this->uploadError( $this->msg( $error )->parse() );
 				break;
 			default:
 				throw new MWException( __METHOD__ . ": Unknown value `{$details['status']}`" );

@@ -4,6 +4,8 @@
  * @ingroup PF
  */
 
+use MediaWiki\Language\RawMessage;
+
 /**
  * Adds and handles the 'pfautocomplete' action to the MediaWiki API.
  *
@@ -77,6 +79,7 @@ class PFAutocompleteAPI extends ApiBase {
 			$map = $wgPageFormsUseDisplayTitle;
 		} elseif ( $external_url !== null ) {
 			$data = PFValuesUtils::getValuesFromExternalURL( $external_url, $substr );
+			$map = true;
 		} else {
 			$data = [];
 		}
@@ -113,9 +116,9 @@ class PFAutocompleteAPI extends ApiBase {
 		// "title" key after having removed it, but the removal was
 		// needed for the sorting.
 		$formattedData = [];
-		foreach ( $data as $index => $value ) {
+		foreach ( $data as $key => $value ) {
 			if ( $map ) {
-				$formattedData[] = [ 'title' => $index, 'displaytitle' => $value ];
+				$formattedData[] = [ 'title' => $key, 'displaytitle' => $value ];
 			} else {
 				$formattedData[] = [ 'title' => $value ];
 			}

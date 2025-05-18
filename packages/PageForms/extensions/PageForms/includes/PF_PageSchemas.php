@@ -1,6 +1,8 @@
 <?php
 
+use MediaWiki\Html\Html;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
 
 /**
  * Static functions for Page Forms, for use by the Page Schemas
@@ -282,7 +284,7 @@ class PFPageSchemas extends PSExtensionHandler {
 			$includeFreeText = true;
 		}
 
-		$freeTextLabel = html_entity_decode( PageSchemas::getValueFromObject( $form_array, 'freeTextLabel' ) );
+		$freeTextLabel = html_entity_decode( PageSchemas::getValueFromObject( $form_array, 'freeTextLabel' ) ?? '' );
 
 		$text = "\t<p>" . wfMessage( 'ps-namelabel' )->escaped() . ' ' . Html::input( 'pf_form_name', $formName, 'text', [ 'size' => 15 ] ) . "</p>\n";
 		// The checkbox isn't actually a field in the page schema -

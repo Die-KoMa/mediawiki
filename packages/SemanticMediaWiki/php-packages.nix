@@ -95,10 +95,10 @@ let
     "mediawiki/semantic-media-wiki" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-semantic-media-wiki-88189dc70021354e15abe3c7b69e79e6b5b3ee99";
+        name = "mediawiki-semantic-media-wiki-bdbab8fdd22d61674fbbfdbdf0325ad5b66f4e20";
         src = fetchurl {
-          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/88189dc70021354e15abe3c7b69e79e6b5b3ee99";
-          sha256 = "00wj0556v8v6lgf67w28d99mcag5qi9dd477jrf2sn6w8rv57fpx";
+          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/bdbab8fdd22d61674fbbfdbdf0325ad5b66f4e20";
+          sha256 = "0wp8fqyjai3zrjdfd3imi30a369y1ks9n4fb1axcr2mwdqhs3n7b";
         };
       };
     };
@@ -205,10 +205,10 @@ let
     "symfony/polyfill-php80" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "symfony-polyfill-php80-60328e362d4c2c802a54fcbf04f9d3fb892b4cf8";
+        name = "symfony-polyfill-php80-0cc9dd0f17f61d8131e7df6b84bd344899fe2608";
         src = fetchurl {
-          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/60328e362d4c2c802a54fcbf04f9d3fb892b4cf8";
-          sha256 = "008nx5xplqx3iks3fpzd4qgy3zzrvx1bmsdc13ndf562a6hf9lrg";
+          url = "https://api.github.com/repos/symfony/polyfill-php80/zipball/0cc9dd0f17f61d8131e7df6b84bd344899fe2608";
+          sha256 = "0bliap0hqz9ca7795ah9dlmispl0r67lsbs3s33awf677ql6amwk";
         };
       };
     };

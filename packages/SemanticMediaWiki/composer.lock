@@ -673,16 +673,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "5.0.0",
+            "version": "5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "88189dc70021354e15abe3c7b69e79e6b5b3ee99"
+                "reference": "bdbab8fdd22d61674fbbfdbdf0325ad5b66f4e20"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/88189dc70021354e15abe3c7b69e79e6b5b3ee99",
-                "reference": "88189dc70021354e15abe3c7b69e79e6b5b3ee99",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/bdbab8fdd22d61674fbbfdbdf0325ad5b66f4e20",
+                "reference": "bdbab8fdd22d61674fbbfdbdf0325ad5b66f4e20",
                 "shasum": ""
             },
             "require": {
@@ -795,7 +795,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-03-10T12:43:04+00:00"
+            "time": "2025-04-14T13:15:46+00:00"
         },
         {
             "name": "onoi/blob-store",
@@ -1380,16 +1380,16 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "60328e362d4c2c802a54fcbf04f9d3fb892b4cf8"
+                "reference": "0cc9dd0f17f61d8131e7df6b84bd344899fe2608"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/60328e362d4c2c802a54fcbf04f9d3fb892b4cf8",
-                "reference": "60328e362d4c2c802a54fcbf04f9d3fb892b4cf8",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/0cc9dd0f17f61d8131e7df6b84bd344899fe2608",
+                "reference": "0cc9dd0f17f61d8131e7df6b84bd344899fe2608",
                 "shasum": ""
             },
             "require": {
@@ -1440,7 +1440,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -1456,7 +1456,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2025-01-02T08:10:11+00:00"
         },
         {
             "name": "wikimedia/cdb",
