@@ -254,6 +254,10 @@ with lib;
                 'socket_options' => [ 'ssl' => [ 'verify_peer' => false, 'verify_peer_name' => false ]]
               ];
 
+              # unlimited group (for aksync, e.g.)
+              $wgGroupPermissions['unlimited']['apihighlimits'] = true;
+              $wgGroupPermissions['unlimited']['noratelimit'] = true;
+
               if (false) {
                 error_reporting( -1 );
                 ini_set( 'display_errors', 1 );
