@@ -257,6 +257,7 @@ with lib;
               # unlimited group (for aksync, e.g.)
               $wgGroupPermissions['unlimited']['apihighlimits'] = true;
               $wgGroupPermissions['unlimited']['noratelimit'] = true;
+              $wgGroupPermissions['unlimited']['delete'] = true;
 
               if (false) {
                 error_reporting( -1 );
