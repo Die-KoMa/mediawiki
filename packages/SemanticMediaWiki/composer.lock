@@ -673,16 +673,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "5.0.2",
+            "version": "5.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "5db1fe6f8ce08ef5f0c591465ed68d80c60521ad"
+                "reference": "29dde3c0850c3908c5a993508483975af5cf6776"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/5db1fe6f8ce08ef5f0c591465ed68d80c60521ad",
-                "reference": "5db1fe6f8ce08ef5f0c591465ed68d80c60521ad",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/29dde3c0850c3908c5a993508483975af5cf6776",
+                "reference": "29dde3c0850c3908c5a993508483975af5cf6776",
                 "shasum": ""
             },
             "require": {
@@ -795,7 +795,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-05-23T22:21:16+00:00"
+            "time": "2025-07-24T20:42:10+00:00"
         },
         {
             "name": "onoi/blob-store",
