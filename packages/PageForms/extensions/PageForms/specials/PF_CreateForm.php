@@ -184,7 +184,9 @@ class PFCreateForm extends SpecialPage {
 						}
 
 						if ( $paramName == 'label' ) {
-							$field->template_field->setLabel( $value );
+							$templateField = $field->getTemplateField();
+							$templateField->setLabel( $value );
+							$field->setTemplateField( $templateField );
 						} elseif ( $paramName == 'input type' ) {
 							$input_type = $req->getVal( "input_type_" . $old_i . "_" . $j );
 							if ( $input_type == 'hidden' ) {
@@ -602,7 +604,7 @@ END;
 
 	function fieldCreationHTML( $field, $field_num, $template_num ) {
 		$field_form_text = $template_num . "_" . $field_num;
-		$template_field = $field->template_field;
+		$template_field = $field->getTemplateField();
 		$text = Html::element( 'h3', null, $this->msg( 'pf_createform_field' )->text() . " " . $template_field->getFieldName() ) . "\n";
 
 		if ( !defined( 'SMW_VERSION' ) || $template_field->getSemanticProperty() == "" ) {
@@ -782,7 +784,7 @@ END;
 			foreach ( $param['values'] as $val ) {
 				$checkboxHTML = new OOUI\CheckboxInputWidget( [
 					'name' => 'p[' . $paramName . '][' . $val . ']',
-					'selected' => in_array( $val, $cur_values ) ? true : false,
+					'selected' => in_array( $val, $cur_values ),
 					'value' => in_array( $val, $cur_values ) ? 'on' : ''
 				] );
 				$text .= Html::rawElement( 'span', [
@@ -822,12 +824,16 @@ END;
 		$inputTypeClass = $wgPageFormsFormPrinter->getInputType( $inputType );
 
 		$params = method_exists( $inputTypeClass, 'getParameters' ) ? call_user_func( [ $inputTypeClass, 'getParameters' ] ) : [];
+		$parser = PFUtils::getParser();
+		$parser->setOptions( ParserOptions::newFromUser( $this->getUser() ) );
+		$parserOptions = $parser->getOptions();
 
 		$i = 0;
 		foreach ( $params as $param ) {
 			$paramName = $param['name'];
 			$type = $param['type'];
-			$desc = PFUtils::getParser()->parse( $param['description'], $this->getPageTitle(), ParserOptions::newFromUser( $this->getUser() ) )->getText();
+			$parserOutput = $parser->parse( $param['description'], $this->getPageTitle(), $parserOptions );
+			$desc = $parserOutput->runOutputPipeline( $parserOptions )->getContentHolderText();
 
 			if ( array_key_exists( $paramName, $paramValues ) ) {
 				$cur_value = $paramValues[$paramName];
@@ -867,11 +873,16 @@ END;
 		$section_text = 'section_' . $section_count;
 
 		$params = PFPageSection::getParameters();
+		$parser = PFUtils::getParser();
+		$parser->setOptions( ParserOptions::newFromUser( $this->getUser() ) );
+		$parserOptions = $parser->getOptions();
+
 		$i = 0;
 		foreach ( $params as $param ) {
 			$paramName = $param['name'];
 			$type = $param['type'];
-			$desc = PFUtils::getParser()->parse( $param['description'], $this->getPageTitle(), ParserOptions::newFromUser( $this->getUser() ) )->getText();
+			$parserOutput = $parser->parse( $param['description'], $this->getPageTitle(), $parserOptions );
+			$desc = $parserOutput->runOutputPipeline( $parserOptions )->getContentHolderText();
 
 			if ( array_key_exists( $paramName, $paramValues ) ) {
 				$cur_value = $paramValues[$paramName];

@@ -34,7 +34,7 @@ class PFCreateClass extends SpecialPage {
 		if ( !$this->getUser()->isAllowed( 'createclass' ) ) {
 			$this->displayRestrictionError();
 		}
-		$this->printCreateClassForm( $query );
+		$this->printCreateClassForm();
 	}
 
 	private function createAllPages() {
@@ -120,7 +120,7 @@ class PFCreateClass extends SpecialPage {
 		}
 
 		// Also create the "connecting property", if there is one.
-		$connectingProperty = trim( $req->getVal( 'connecting_property' ) );
+		$connectingProperty = trim( $req->getVal( 'connecting_property' ) ?? '' );
 		if ( defined( 'SMW_VERSION' ) && $connectingProperty != '' ) {
 			$property_title = Title::makeTitleSafe( SMW_NS_PROPERTY, $connectingProperty );
 			$datatypeLabels = PFUtils::getSMWContLang()->getDatatypeLabels();
@@ -204,7 +204,7 @@ class PFCreateClass extends SpecialPage {
 		$out->addWikiMsg( 'pf_createclass_success' );
 	}
 
-	private function printCreateClassForm( $query ) {
+	private function printCreateClassForm() {
 		$lang = $this->getLanguage();
 		$out = $this->getOutput();
 		$req = $this->getRequest();

@@ -673,16 +673,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "6.0.0",
+            "version": "6.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "16171910b16165089d19fc6f66c414e6f62aa1eb"
+                "reference": "448a112ac897ff6a4b615cf0703cf60ed946907f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/16171910b16165089d19fc6f66c414e6f62aa1eb",
-                "reference": "16171910b16165089d19fc6f66c414e6f62aa1eb",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/448a112ac897ff6a4b615cf0703cf60ed946907f",
+                "reference": "448a112ac897ff6a4b615cf0703cf60ed946907f",
                 "shasum": ""
             },
             "require": {
@@ -721,7 +721,7 @@
             "type": "mediawiki-extension",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.x-dev"
+                    "dev-master": "6.x-dev"
                 }
             },
             "autoload": {
@@ -795,7 +795,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-08-12T14:57:20+00:00"
+            "time": "2025-08-25T21:49:31+00:00"
         },
         {
             "name": "onoi/blob-store",
@@ -1380,7 +1380,7 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
@@ -1440,7 +1440,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -1449,6 +1449,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {

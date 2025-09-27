@@ -57,26 +57,29 @@ class PFAutocompleteAPI extends ApiBase {
 			$data = PFValuesUtils::getAllPagesForCategory( $category, 3, $substr );
 			$map = $wgPageFormsUseDisplayTitle;
 			if ( $map ) {
-				$data = PFMappingUtils::disambiguateLabels( $data );
+				$data = PFMappingUtils::createDisplayTitleLabels( $data );
 			}
 		} elseif ( $concept !== null ) {
 			$data = PFValuesUtils::getAllPagesForConcept( $concept, $substr );
 			$map = $wgPageFormsUseDisplayTitle;
 			if ( $map ) {
-				$data = PFMappingUtils::disambiguateLabels( $data );
+				$data = PFMappingUtils::createDisplayTitleLabels( $data );
 			}
 		} elseif ( $query !== null ) {
 			$query = PFValuesUtils::processSemanticQuery( $query, $substr );
 			$data = PFValuesUtils::getAllPagesForQuery( $query );
 			$map = $wgPageFormsUseDisplayTitle;
 			if ( $map ) {
-				$data = PFMappingUtils::disambiguateLabels( $data );
+				$data = PFMappingUtils::createDisplayTitleLabels( $data );
 			}
 		} elseif ( $cargo_table !== null && $cargo_field !== null ) {
 			$data = self::getAllValuesForCargoField( $cargo_table, $cargo_field, $cargo_where, $substr, $base_cargo_table, $base_cargo_field, $basevalue );
 		} elseif ( $namespace !== null ) {
 			$data = PFValuesUtils::getAllPagesForNamespace( $namespace, $substr );
 			$map = $wgPageFormsUseDisplayTitle;
+			if ( $map ) {
+				$data = PFMappingUtils::createDisplayTitleLabels( $data );
+			}
 		} elseif ( $external_url !== null ) {
 			$data = PFValuesUtils::getValuesFromExternalURL( $external_url, $substr );
 			$map = true;

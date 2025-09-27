@@ -170,7 +170,7 @@ SELECT ?value  WHERE {
 ?value " . $attributesQuery . " .
 ?value rdfs:label ?valueLabel .
 FILTER(LANG(?valueLabel) = \"" . $wgLanguageCode . "\") .
-FILTER(REGEX(LCASE(?valueLabel), \"\\\\b" . strtolower( $substring ) . "\"))
+FILTER(REGEX(LCASE(?valueLabel), \"\\\\b" . strtolower( $substring ?? '' ) . "\"))
 } ";
 		$maxValues = self::getMaxValuesToRetrieve( $substring );
 		$sparqlQueryString .= "LIMIT " . ( $maxValues + 10 );
@@ -233,6 +233,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 
 		try {
 			$sqlQuery = CargoSQLQuery::newFromValues( $tableName, $fieldName, $whereStr, $joinOnStr = null, $fieldName, $havingStr = null, $fieldName, $limitStr, $offsetStr = 0 );
+		// @phan-suppress-next-line PhanUnusedVariableCaughtException
 		} catch ( Exception $e ) {
 			return [];
 		}
@@ -311,7 +312,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 						$conditions[] = '((pp_displaytitle.pp_value IS NULL OR pp_displaytitle.pp_value = \'\') AND (' .
 							self::getSQLConditionForAutocompleteInColumn( 'page_title', $substring ) .
 							')) OR ' .
-							self::getSQLConditionForAutocompleteInColumn( 'pp_displaytitle.pp_value', $substring ) .
+							self::getSQLConditionForAutocompleteInColumn( 'pp_displaytitle.pp_value', $substring, false ) .
 							' OR page_namespace = ' . NS_CATEGORY;
 					}
 				} else {
@@ -636,9 +637,9 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			if ( array_key_exists( 'pp_displaytitle_value', $row ) &&
 				( $row[ 'pp_displaytitle_value' ] ) !== null &&
 				trim( str_replace( '&#160;', '', strip_tags( $row[ 'pp_displaytitle_value' ] ) ) ) !== '' ) {
-				$pages[ $title ] = htmlspecialchars_decode( $row[ 'pp_displaytitle_value'], ENT_QUOTES );
+				$pages[ $title . '@' ] = htmlspecialchars_decode( $row[ 'pp_displaytitle_value'], ENT_QUOTES );
 			} else {
-				$pages[ $title ] = $title;
+				$pages[ $title . '@' ] = $title;
 			}
 			if ( array_key_exists( 'pp_defaultsort_value', $row ) &&
 				( $row[ 'pp_defaultsort_value' ] ) !== null ) {
@@ -649,8 +650,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 		}
 		$res->free();
 
-		array_multisort( $sortkeys, $pages );
-		return $pages;
+		return self::fixedMultiSort( $sortkeys, $pages );
 	}
 
 	/**
@@ -759,7 +759,7 @@ SERVICE wikibase:label { bd:serviceParam wikibase:language \"" . $wgLanguageCode
 			$autocompletionSource = null;
 		}
 
-		if ( $wgCapitalLinks && $autocompleteFieldType != 'external_url' && $autocompleteFieldType != 'cargo field' && $autocompleteFieldType != 'semantic_query' ) {
+		if ( $wgCapitalLinks && in_array( $autocompleteFieldType, [ 'category', 'concept', 'namespace', 'property' ] ) ) {
 			$autocompletionSource = PFUtils::getContLang()->ucfirst( $autocompletionSource );
 		}
 

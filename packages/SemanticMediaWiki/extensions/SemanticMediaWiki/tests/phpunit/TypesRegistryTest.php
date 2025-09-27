@@ -66,14 +66,14 @@ class TypesRegistryTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	 * @dataProvider typeList
+	 * @dataProvider typeListProvider
 	 */
 	public function testTypeList_FirstCharUnderscore( $key, $def ) {
 		$this->assertTrue( $key[0] === '_' );
 	}
 
 	/**
-	 * @dataProvider typeList
+	 * @dataProvider typeListProvider
 	 */
 	public function testTypeList_ClassExists( $key, $def ) {
 		$class = $def[0];
@@ -86,13 +86,13 @@ class TypesRegistryTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	 * @dataProvider propertyList
+	 * @dataProvider propertyListProvider
 	 */
 	public function testPropertyList_FirstCharUnderscore( $key, $def ) {
 		$this->assertTrue( $key[0] === '_' );
 	}
 
-	public function typeList() {
+	public function typeListProvider() {
 		$excludes = [];
 
 		// Requires Maps/Semantic Maps hence remove from the
@@ -109,7 +109,7 @@ class TypesRegistryTest extends \PHPUnit\Framework\TestCase {
 		}
 	}
 
-	public function propertyList() {
+	public function propertyListProvider() {
 		$excludes = [];
 
 		foreach ( TypesRegistry::getPropertyList() as $key => $def ) {

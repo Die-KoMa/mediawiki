@@ -619,6 +619,7 @@ class PFAutoeditAPI extends ApiBase {
 				$this->logMessage( 'User tried to create a blank page', self::DEBUG );
 				try {
 					$contextTitle = $editor->getContextTitle();
+				// @phan-suppress-next-line PhanUnusedVariableCaughtException
 				} catch ( Exception $e ) {
 					// getContextTitle() throws an exception
 					// if there's no context title - this
@@ -1254,7 +1255,6 @@ class PFAutoeditAPI extends ApiBase {
 				$array[$key] = [];
 			}
 
-			// @phan-suppress-next-line PhanTypePossiblyInvalidDimOffset
 			self::addToArray( $array[$key], $matches[2] . $matches[3], $value, false );
 		} else {
 			if ( $key ) {

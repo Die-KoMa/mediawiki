@@ -118,7 +118,6 @@ class PFFormUtils {
 		if ( $is_disabled ) {
 			$attrs['disabled'] = true;
 		}
-		// @phan-suppress-next-line PhanImpossibleTypeComparison
 		if ( array_key_exists( 'class', $attrs ) ) {
 			$attrs['classes'] = [ $attrs['class'] ];
 		}
@@ -175,7 +174,6 @@ class PFFormUtils {
 		if ( $is_disabled ) {
 			$attrs['disabled'] = true;
 		}
-		// @phan-suppress-next-line PhanImpossibleTypeComparison
 		if ( array_key_exists( 'class', $attrs ) ) {
 			$attrs['classes'] = [ $attrs['class'] ];
 		}
@@ -524,7 +522,7 @@ END;
 		// We need to pass "false" in to the parse() $clearState param so that
 		// embedding Special:RunQuery will work.
 		$output = $parser->parse( $form_def, $title, $parser->getOptions(), true, false );
-		$form_def = $output->getText();
+		$form_def = $output->runOutputPipeline( $parser->getOptions() )->getContentHolderText();
 		$form_def = preg_replace_callback(
 			"/{$rnd}-item-(\d+)-{$rnd}/",
 			static function ( array $matches ) use ( $items ) {
@@ -535,8 +533,8 @@ END;
 		);
 
 		if ( $output->getCacheTime() == -1 ) {
-			$form_article = Article::newFromID( $form_id );
-			self::purgeCache( $form_article );
+			$wikiPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromID( $form_id );
+			self::purgeCache( $wikiPage );
 			wfDebug( "Caching disabled for form definition $form_id\n" );
 		} elseif ( $form_id !== null ) {
 			self::cacheFormDefinition( $form_id, $form_def, $parser );

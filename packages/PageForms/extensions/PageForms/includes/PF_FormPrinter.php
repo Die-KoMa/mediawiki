@@ -463,7 +463,7 @@ END;
 
 		$html = '';
 		foreach ( $tif->getFields() as $formField ) {
-			$fieldName = $formField->template_field->getFieldName();
+			$fieldName = $formField->getTemplateField()->getFieldName();
 			if ( $gridValues == null ) {
 				$curValue = null;
 			} else {
@@ -503,8 +503,8 @@ END;
 				$formField->setFieldArg( 'label', '' );
 			} elseif ( $formField->getLabelMsg() !== null ) {
 				$labelText = wfMessage( $formField->getLabelMsg() )->parse();
-			} elseif ( $formField->template_field->getLabel() !== null ) {
-				$labelText = $formField->template_field->getLabel() . ':';
+			} elseif ( $formField->getTemplateField()->getLabel() !== null ) {
+				$labelText = $formField->getTemplateField()->getLabel() . ':';
 			} else {
 				$labelText = $fieldName . ': ';
 			}
@@ -545,7 +545,7 @@ END;
 		} elseif ( array_key_exists( 'values from external data', $formFieldArgs ) ) {
 			return [ 'external data', $formFieldArgs['origName'] ];
 		} elseif ( array_key_exists( 'values from wikidata', $formFieldArgs ) ) {
-			return [ 'wikidata', $formFieldArgs['wikidata'] ];
+			return [ 'wikidata', $formFieldArgs['values from wikidata'] ];
 		} else {
 			return [ '', '' ];
 		}
@@ -563,7 +563,7 @@ END;
 
 		$gridParams = [];
 		foreach ( $tif->getFields() as $formField ) {
-			$templateField = $formField->template_field;
+			$templateField = $formField->getTemplateField();
 			$formFieldArgs = $formField->getFieldArgs();
 			$possibleValues = $formField->getPossibleValues();
 
@@ -1036,7 +1036,7 @@ END;
 				$brackets_end_loc = strpos( $section, "}}}", $brackets_loc );
 				// For cases with more than 3 ending brackets,
 				// take the last 3 ones as the tag end.
-				while ( $section[$brackets_end_loc + 3] == "}" ) {
+				while ( isset( $section[$brackets_end_loc + 3] ) && $section[$brackets_end_loc + 3] == "}" ) {
 					$brackets_end_loc++;
 				}
 				$bracketed_string = substr( $section, $brackets_loc + 3, $brackets_end_loc - ( $brackets_loc + 3 ) );
@@ -1755,7 +1755,7 @@ END;
 						$text = '';
 						$params = [];
 						foreach ( $tif->getFields() as $formField ) {
-							$templateField = $formField->template_field;
+							$templateField = $formField->getTemplateField();
 							$inputType = $formField->getInputType();
 							$values = [ 'name' => $templateField->getFieldName() ];
 							if ( $formField->getLabel() !== null ) {
@@ -2075,7 +2075,7 @@ END;
 			$text = $form_input->getHtmlText();
 		}
 
-		$this->addTranslatableInput( $form_field, $cur_value, $text );
+		$this->addTranslatableInput( $form_field, $text );
 		return $text;
 	}
 
@@ -2084,10 +2084,9 @@ END;
 	 * translate tag.
 	 *
 	 * @param PFFormField $form_field
-	 * @param string $cur_value
 	 * @param string &$text
 	 */
-	private function addTranslatableInput( $form_field, $cur_value, &$text ) {
+	private function addTranslatableInput( $form_field, &$text ) {
 		if ( !PFUtils::isTranslateEnabled() || !$form_field->hasFieldArg( 'translatable' ) || !$form_field->getFieldArg( 'translatable' ) ) {
 			return;
 		}

@@ -28,7 +28,7 @@ class PFHooks {
 			return 1;
 		}
 
-		define( 'PF_VERSION', '6.0' );
+		define( 'PF_VERSION', '6.0.2' );
 
 		$GLOBALS['wgPageFormsIP'] = dirname( __DIR__ ) . '/../';
 
@@ -61,7 +61,6 @@ class PFHooks {
 		// This global variable is needed so that other
 		// extensions can hook into it to add their own
 		// input types.
-		// @phan-suppress-next-line PhanUndeclaredFunctionInCallable
 		$GLOBALS['wgPageFormsFormPrinter'] = new StubObject( 'wgPageFormsFormPrinter', 'PFFormPrinter' );
 	}
 
