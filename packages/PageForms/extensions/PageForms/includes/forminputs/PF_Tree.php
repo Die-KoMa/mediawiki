@@ -1,7 +1,5 @@
 <?php
 
-use MediaWiki\Title\Title;
-
 /**
  * A class that defines a tree - and can populate it based on either
  * wikitext or a category structure.
@@ -230,30 +228,35 @@ class PFTree {
 	private static function getSubcategories( $categoryName ) {
 		$dbr = PFUtils::getReadDB();
 
+		// true for MW 1.45+
+		$useTargetID = !$dbr->fieldExists( 'categorylinks', 'cl_to' );
+
 		$tables = [ 'page', 'categorylinks' ];
-		$fields = [ 'page_id', 'page_namespace', 'page_title',
-			'page_is_redirect', 'page_len', 'page_latest', 'cl_to',
-			'cl_from' ];
-		$where = [];
+		if ( $useTargetID ) {
+			$tables[] = 'linktarget';
+		}
+
+		$fields = [ 'page_title' ];
+		$where = [ 'page_namespace' => NS_CATEGORY ];
 		$joins = [];
 		$options = [ 'ORDER BY' => 'cl_type, cl_sortkey' ];
 
 		$joins['categorylinks'] = [ 'JOIN', 'cl_from = page_id' ];
-		$where['cl_to'] = str_replace( ' ', '_', $categoryName );
-		$options['USE INDEX']['categorylinks'] = 'cl_sortkey';
+		if ( $useTargetID ) {
+			$joins['linktarget'] = [ 'JOIN', 'cl_target_id = lt_id' ];
+		}
+		if ( $useTargetID ) {
+			$where['lt_title'] = str_replace( ' ', '_', $categoryName );
+		} else {
+			$where['cl_to'] = str_replace( ' ', '_', $categoryName );
+		}
 
-		$tables = array_merge( $tables, [ 'category' ] );
-		$fields = array_merge( $fields, [ 'cat_id', 'cat_title', 'cat_subcats', 'cat_pages', 'cat_files' ] );
-		$joins['category'] = [ 'LEFT JOIN', [ 'cat_title = page_title', 'page_namespace' => NS_CATEGORY ] ];
+		$options['USE INDEX']['categorylinks'] = 'cl_sortkey';
 
 		$res = $dbr->select( $tables, $fields, $where, __METHOD__, $options, $joins );
 		$subcats = [];
-
 		foreach ( $res as $row ) {
-			$t = Title::newFromRow( $row );
-			if ( $t->getNamespace() == NS_CATEGORY ) {
-				$subcats[] = $t->getText();
-			}
+			$subcats[] = str_replace( '_', ' ', $row->page_title );
 		}
 		return $subcats;
 	}

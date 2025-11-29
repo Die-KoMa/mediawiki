@@ -1,7 +1,7 @@
 {
 	"name": "PageForms",
 	"namemsg": "pageforms-name",
-	"version": "6.0.3",
+	"version": "6.0.4",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -60,12 +60,22 @@
 		"Templates": "PFTemplates",
 		"MultiPageEdit": "PFMultiPageEdit",
 		"CreateTemplate": "PFCreateTemplate",
-		"CreateClass": "PFCreateClass",
+		"CreateClass": {
+			"class": "PFCreateClass",
+			"services": [
+				"JobQueueGroup",
+				"WikiPageFactory"
+			]
+		},
 		"CreateCategory": "PFCreateCategory",
-		"FormStart": "PFFormStart",
+		"FormStart": {
+			"class": "PFFormStart",
+			"services": [
+				"WikiPageFactory"
+			]
+		},
 		"FormEdit": "PFFormEdit",
-		"RunQuery": "PFRunQuery",
-		"UploadWindow": "PFUploadWindow"
+		"RunQuery": "PFRunQuery"
 	},
 	"JobClasses": {
 		"pageFormsCreatePage": "PFCreatePageJob"
@@ -95,8 +105,6 @@
 		"PFFormStart": "specials/PF_FormStart.php",
 		"PFFormEdit": "specials/PF_FormEdit.php",
 		"PFRunQuery": "specials/PF_RunQuery.php",
-		"PFUploadForm": "specials/PF_UploadForm.php",
-		"PFUploadWindow": "specials/PF_UploadWindow.php",
 		"PFTemplateField": "includes/PF_TemplateField.php",
 		"PFForm": "includes/PF_Form.php",
 		"PFTemplate": "includes/PF_Template.php",
@@ -214,15 +222,6 @@
 				"skins/PF_wizard.css"
 			]
 		},
-		"ext.pageforms.browser": {
-			"scripts": [
-				"libs/foreign/jquery.browser/jquery.browser.js"
-			],
-			"targets": [
-				"desktop",
-				"mobile"
-			]
-		},
 		"ext.pageforms.jstree": {
 			"scripts": [
 				"libs/foreign/jstree/jstree.js",
@@ -265,12 +264,18 @@
 				"mobile"
 			]
 		},
+		"ext.pageforms.uploadable": {
+			"dependencies": [
+				"mediawiki.Upload.Dialog"
+			],
+			"packageFiles": [
+				"libs/uploadable/init.js",
+				"libs/uploadable/Booklet.js"
+			]
+		},
 		"ext.pageforms.popupformedit": {
 			"scripts": "libs/PF_popupform.js",
-			"styles": "skins/PF_popupform.css",
-			"dependencies": [
-				"ext.pageforms.browser"
-			]
+			"styles": "skins/PF_popupform.css"
 		},
 		"ext.pageforms.autoedit": {
 			"scripts": "libs/PF_autoedit.js",

@@ -1,7 +1,8 @@
 <?php
 /**
- * A special page holding a form that allows the user to create a semantic
- * property.
+ * A special page holding a form that allows the user to create an entire
+ * "class" of files, including one or more of template, form, category and
+ * (if using SMW) semantic properties.
  *
  * @author Yaron Koren
  * @author Sanyam Goyal
@@ -10,7 +11,7 @@
  */
 
 use MediaWiki\Html\Html;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\WikiPageFactory;
 use MediaWiki\Title\Title;
 
 /**
@@ -18,8 +19,16 @@ use MediaWiki\Title\Title;
  */
 class PFCreateClass extends SpecialPage {
 
-	public function __construct() {
+	private JobQueueGroup $jobQueueGroup;
+	private WikiPageFactory $wikiPageFactory;
+
+	public function __construct(
+		JobQueueGroup $jobQueueGroup,
+		WikiPageFactory $wikiPageFactory
+	) {
 		parent::__construct( 'CreateClass', 'createclass' );
+		$this->jobQueueGroup = $jobQueueGroup;
+		$this->wikiPageFactory = $wikiPageFactory;
 	}
 
 	public function doesWrites() {
@@ -68,7 +77,7 @@ class PFCreateClass extends SpecialPage {
 			$display_label = $display_label ?: $field_name;
 			$property_name = trim( $req->getVal( "property_name_$i" ) ?? '' );
 			$property_type = $req->getVal( "field_type_$i" );
-			$allowed_values = $req->getVal( "allowed_values_$i" );
+			$allowed_values = trim( $req->getVal( "allowed_values_$i" ) ?? '' );
 			$is_list = $req->getCheck( "is_list_$i" );
 			$delimiter = $req->getVal( "delimiter_$i" );
 			$is_hierarchy = $req->getCheck( "is_hierarchy_$i" );
@@ -78,9 +87,7 @@ class PFCreateClass extends SpecialPage {
 
 			if ( $is_hierarchy ) {
 				$field->setHierarchyStructure( $req->getVal( 'hierarchy_structure_' . $i ) );
-			} elseif ( trim( $allowed_values ) == '' ) {
-				// Do nothing.
-			} else {
+			} elseif ( $allowed_values !== '' ) {
 				// To ignore escaped commas during the split, we replace them with an
 				// obscure character (a "beep"), then replace them back afterwards.
 				$allowed_values_mod = str_replace( '\,', "\a", $allowed_values );
@@ -151,7 +158,7 @@ class PFCreateClass extends SpecialPage {
 		$full_text = $pfTemplate->createText();
 
 		$template_title = Title::makeTitleSafe( NS_TEMPLATE, $template_name );
-		$template_page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $template_title );
+		$template_page = $this->wikiPageFactory->newFromTitle( $template_title );
 		$edit_summary = '';
 		PFCreatePageJob::createOrModifyPage( $template_page, $full_text, $edit_summary, $user );
 
@@ -199,7 +206,7 @@ class PFCreateClass extends SpecialPage {
 			$jobs[] = new PFCreatePageJob( $category_title, $params );
 		}
 
-		MediaWikiServices::getInstance()->getJobQueueGroup()->push( $jobs );
+		$this->jobQueueGroup->push( $jobs );
 
 		$out->addWikiMsg( 'pf_createclass_success' );
 	}

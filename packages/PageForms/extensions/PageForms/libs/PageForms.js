@@ -852,12 +852,15 @@ function validateStartEndDateField( startInput, endInput ) {
 	if ( !startInput.length || !endInput.length ) {
 		return true;
 	}
+
+	// We get the index, instead of the actual value, of the month dropdown in
+	// case it's a text value (i.e., with $wgAmericanDates.)
 	const startYearVal = leftPad( startInput.find(".yearInput").val(),4 );
-	const startMonthVal = leftPad( startInput.find(".monthInput").val(),2 );
+	const startMonthVal = leftPad( startInput.find(".monthInput").prop('selectedIndex'),2 );
 	const startDayVal = leftPad( startInput.find(".dayInput").val(),2 );
 
 	const endYearVal = leftPad( endInput.find(".yearInput").val(),4 );
-	const endMonthVal = leftPad( endInput.find(".monthInput").val(),2 );
+	const endMonthVal = leftPad( endInput.find(".monthInput").prop('selectedIndex'),2 );
 	const endDayVal = leftPad( endInput.find(".dayInput").val(),2 );
 
 	const startDate = startYearVal + "/" + startMonthVal + "/" + startDayVal;
@@ -1380,6 +1383,12 @@ $.fn.addInstance = function( addAboveCurInstance ) {
 		}
 		return this.href.replace(/input_/g, 'input_' + num_elements + '_');
 	});
+
+	// Update the 'Upload file' link's data attribute to point to the new input ID.
+	$new_div.find( '.ext-pageforms-uploadable' ).attr(
+		'data-input-id',
+		( index, attr ) => attr.replace( /input_/g, 'input_' + num_elements + '_' )
+	);
 
 	$new_div.find('span').attr('id', function() {
 		return this.id.replace(/span_/g, 'span_' + num_elements + '_');
