@@ -81,25 +81,26 @@ let
       '';
     };
 in
-{
-  mediawiki = pkgs.mediawiki.overrideAttrs (old: rec {
-    version = "1.43.0";
-    src = pkgs.fetchurl {
-      url = "https://releases.wikimedia.org/mediawiki/${lib.versions.majorMinor version}/mediawiki-${version}.tar.gz";
-      hash = "sha256-VuCn/i/3jlC5yHs9WJ8tjfW8qwAY5FSypKI5yFhr2O4=";
+rec {
+  _meta =
+    let
+      inherit (builtins) splitVersion elemAt;
+    in
+    rec {
+      version = splitVersion mediawiki.version;
+      branch = "REL${elemAt version 0}_${elemAt version 1}";
     };
-  });
 
-  # PageForms 5.9.1 is broken with SemanticMediaWiki, need to use master
-  # PageForms = composerExtension "PageForms";
+  inherit (pkgs) mediawiki;
+
   SemanticMediaWiki = composerExtension "SemanticMediaWiki";
 
-  EditSubpages = extdistExtension ./EditSubpages-REL1_43.tar.gz;
-  UserMerge = extdistExtension ./UserMerge-REL1_43.tar.gz;
-  Variables = extdistExtension ./Variables-REL1_43.tar.gz;
-  NativeSvgHandler = extdistExtension ./NativeSvgHandler-REL1_43.tar.gz;
-  OpenGraphMeta = extdistExtension ./OpenGraphMeta-REL1_43.tar.gz;
-  Description2 = extdistExtension ./Description2-REL1_43.tar.gz;
-  Interwiki = extdistExtension ./Interwiki-REL1_43.tar.gz;
-  PageForms = extdistExtension ./PageForms-master.tar.gz;
+  EditSubpages = extdistExtension ./EditSubpages-${_meta.branch}.tar.gz;
+  UserMerge = extdistExtension ./UserMerge-${_meta.branch}.tar.gz;
+  Variables = extdistExtension ./Variables-${_meta.branch}.tar.gz;
+  NativeSvgHandler = extdistExtension ./NativeSvgHandler-${_meta.branch}.tar.gz;
+  OpenGraphMeta = extdistExtension ./OpenGraphMeta-${_meta.branch}.tar.gz;
+  Description2 = extdistExtension ./Description2-${_meta.branch}.tar.gz;
+  Interwiki = extdistExtension ./Interwiki-${_meta.branch}.tar.gz;
+  PageForms = extdistExtension ./PageForms-${_meta.branch}.tar.gz;
 }

@@ -26,8 +26,11 @@
         inherit pkgs system;
         noDev = true;
       };
-      version = builtins.splitVersion pkgs.mediawiki.version;
-      branch = "REL${builtins.elemAt version 0}_${builtins.elemAt version 1}";
+
+      packages = import ./packages {
+        inherit pkgs system composer2nix;
+        lib = pkgs.lib;
+      };
     in
     {
       nixosModules.komapedia = import ./modules/komapedia.nix (self.packages."${system}");
@@ -36,45 +39,52 @@
         type = "app";
         program =
           let
-            updateScript = pkgs.writeShellScript "komapedia-update-extensions" ''
-              pushd packages
-              TMPDIR=$(mktemp --directory)
-              ${pkgs.mediawiki-extdist}/bin/mediawiki-extdist \
-                --mw-version ${branch} --output $TMPDIR \
-                --extension Description2 \
-                --extension EditSubpages \
-                --extension Interwiki \
-                --extension NativeSvgHandler \
-                --extension OpenGraphMeta \
-                --extension UserMerge \
-                --extension Variables
+            updateScript = pkgs.writeShellApplication {
+              name = "komapedia-update-extensions";
 
-              ${pkgs.mediawiki-extdist}/bin/mediawiki-extdist \
-                --mw-version master --output $TMPDIR \
-                --extension PageForms
-              cp $TMPDIR/*.tar.gz .
-              git add *.tar.gz
+              text = ''
+                pushd packages
+                TMPDIR=$(mktemp --directory)
+                COMPOSER_HOME="$TMPDIR"
+                export COMPOSER_HOME
 
-              pushd PageForms
-              rm composer.lock
-              composer2nix -p mediawiki/page-forms
-              popd
-              git add PageForms
+                cp "${./packages/composer.json}" "$TMPDIR"/config.json
 
-              pushd SemanticMediaWiki
-              rm composer.lock
-              composer2nix -p mediawiki/semantic-media-wiki
-              popd
-              git add SemanticMediaWiki
-            '';
+                mediawiki-extdist \
+                  --mw-version ${packages._meta.branch} --output "$TMPDIR" \
+                  --extension Description2 \
+                  --extension EditSubpages \
+                  --extension Interwiki \
+                  --extension NativeSvgHandler \
+                  --extension OpenGraphMeta \
+                  --extension UserMerge \
+                  --extension Variables \
+                  --extension PageForms
+
+                cp "$TMPDIR"/*.tar.gz .
+                git add ./*-${packages._meta.branch}.tar.gz
+
+                pushd SemanticMediaWiki
+                rm -f composer.lock
+                composer2nix -p mediawiki/semantic-media-wiki
+                jq -s '.[0] * .[1]' composer.json ../composer.json > "$TMPDIR"/composer-merged.json
+                cp "$TMPDIR"/composer-merged.json composer.json
+                popd
+                git add SemanticMediaWiki
+              '';
+
+              runtimeInputs = [
+                pkgs.mediawiki-extdist
+                pkgs.git
+                pkgs.jq
+                composer2nix
+              ];
+            };
           in
-          "${updateScript}";
+          pkgs.lib.getExe updateScript;
       };
 
-      packages."${system}" = import ./packages {
-        inherit pkgs system composer2nix;
-        lib = pkgs.lib;
-      };
+      packages."${system}" = pkgs.lib.filterAttrs (name: _: !pkgs.lib.hasPrefix "_" name) packages;
 
       devShells."${system}".default = pkgs.mkShell {
         nativeBuildInputs = [

@@ -65,10 +65,10 @@ let
     "justinrainbow/json-schema" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "justinrainbow-json-schema-feb2ca6dd1cebdaf1ed60a4c8de2e53ce11c4fd8";
+        name = "justinrainbow-json-schema-b5a44b6391a3bbb75c9f2b73e1ef03d6045e1e20";
         src = fetchurl {
-          url = "https://api.github.com/repos/jsonrainbow/json-schema/zipball/feb2ca6dd1cebdaf1ed60a4c8de2e53ce11c4fd8";
-          sha256 = "13gy5lh8cza7kwsn7s8960114icjz52lk1ja28kxf4v67yc1qswq";
+          url = "https://api.github.com/repos/jsonrainbow/json-schema/zipball/b5a44b6391a3bbb75c9f2b73e1ef03d6045e1e20";
+          sha256 = "054gv0la1b363ax5j7j2afr77msnzj5w9w3f60sxmd9hlic0y0i1";
         };
       };
     };
