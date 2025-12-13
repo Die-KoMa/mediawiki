@@ -26,6 +26,8 @@
         inherit pkgs system;
         noDev = true;
       };
+      version = builtins.splitVersion pkgs.mediawiki.version;
+      branch = "REL${builtins.elemAt version 0}_${builtins.elemAt version 1}";
     in
     {
       nixosModules.komapedia = import ./modules/komapedia.nix (self.packages."${system}");
@@ -38,7 +40,7 @@
               pushd packages
               TMPDIR=$(mktemp --directory)
               ${pkgs.mediawiki-extdist}/bin/mediawiki-extdist \
-                --mw-version REL1_43 --output $TMPDIR \
+                --mw-version ${branch} --output $TMPDIR \
                 --extension Description2 \
                 --extension EditSubpages \
                 --extension Interwiki \
