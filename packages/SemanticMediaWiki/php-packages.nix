@@ -25,10 +25,10 @@ let
     "data-values/data-values" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "data-values-data-values-1084142918095dfedf9b6cc0de0755f8c4628264";
+        name = "data-values-data-values-45aca708da1f7d39c4fca9e6c7373404627e083b";
         src = fetchurl {
-          url = "https://api.github.com/repos/DataValues/DataValues/zipball/1084142918095dfedf9b6cc0de0755f8c4628264";
-          sha256 = "08rwf24b6kdp6ixsvxi6jla000i2v1skcf08lvs4n57gmyjcwygj";
+          url = "https://api.github.com/repos/DataValues/DataValues/zipball/45aca708da1f7d39c4fca9e6c7373404627e083b";
+          sha256 = "0f09g81714hs0n7d5hxw0963snjp1sbfg1srl362hfxrs64rjfak";
         };
       };
     };
