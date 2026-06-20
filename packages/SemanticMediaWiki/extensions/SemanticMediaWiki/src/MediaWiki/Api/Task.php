@@ -3,6 +3,7 @@
 namespace SMW\MediaWiki\Api;
 
 use MediaWiki\Api\ApiBase;
+use MediaWiki\Api\ApiMain;
 use MediaWiki\Context\RequestContext;
 use Wikimedia\ParamValidator\ParamValidator;
 
@@ -18,7 +19,16 @@ class Task extends ApiBase {
 
 	const CACHE_NAMESPACE = 'smw:api:task';
 
-	private TaskFactory $taskFactory;
+	/**
+	 * @since 7.0.0
+	 */
+	public function __construct(
+		ApiMain $main,
+		string $action,
+		private readonly TaskFactory $taskFactory
+	) {
+		parent::__construct( $main, $action );
+	}
 
 	/**
 	 * @since 3.0
@@ -27,14 +37,14 @@ class Task extends ApiBase {
 	 *
 	 * @return string
 	 */
-	public static function makeCacheKey( $key ) {
+	public static function makeCacheKey( $key ): string {
 		return smwfCacheKey( self::CACHE_NAMESPACE, [ $key ] );
 	}
 
 	/**
 	 * @see ApiBase::execute
 	 */
-	public function execute() {
+	public function execute(): void {
 		$params = $this->extractRequestParams();
 
 		$parameters = json_decode(
@@ -46,7 +56,6 @@ class Task extends ApiBase {
 			$this->dieWithError( [ 'smw-api-invalid-parameters' ] );
 		}
 
-		$this->taskFactory = new TaskFactory();
 		$task = $this->taskFactory->newByType( $params['task'], $this->getUser() );
 
 		// If the `uselang` isn't set then inject the language from the
@@ -75,43 +84,18 @@ class Task extends ApiBase {
 	 *
 	 * @return array
 	 */
-	public function getAllowedParams() {
-		$taskFactory = new TaskFactory();
-
+	public function getAllowedParams(): array {
 		return [
 			'task' => [
 				ParamValidator::PARAM_REQUIRED => true,
-				ParamValidator::PARAM_TYPE => $taskFactory->getAllowedTypes()
+				ParamValidator::PARAM_TYPE => $this->taskFactory->getAllowedTypes(),
+				ApiBase::PARAM_HELP_MSG => 'apihelp-smwtask-param-task',
 			],
 			'params' => [
 				ParamValidator::PARAM_TYPE => 'string',
 				ParamValidator::PARAM_REQUIRED => false,
+				ApiBase::PARAM_HELP_MSG => 'apihelp-smwtask-param-params',
 			],
-		];
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getParamDescription
-	 *
-	 * @return array
-	 */
-	public function getParamDescription() {
-		return [
-			'task' => 'Defines the task type',
-			'params' => 'JSON encoded parameters that matches the selected type requirement'
-		];
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getDescription
-	 *
-	 * @return array
-	 */
-	public function getDescription() {
-		return [
-			'Semantic MediaWiki API module to invoke and execute tasks (for internal use only)'
 		];
 	}
 
@@ -119,7 +103,7 @@ class Task extends ApiBase {
 	 * @codeCoverageIgnore
 	 * @see ApiBase::needsToken
 	 */
-	public function needsToken() {
+	public function needsToken(): string {
 		return 'csrf';
 	}
 
@@ -127,7 +111,7 @@ class Task extends ApiBase {
 	 * @codeCoverageIgnore
 	 * @see ApiBase::mustBePosted
 	 */
-	public function mustBePosted() {
+	public function mustBePosted(): bool {
 		return true;
 	}
 
@@ -135,29 +119,16 @@ class Task extends ApiBase {
 	 * @codeCoverageIgnore
 	 * @see ApiBase::isWriteMode
 	 */
-	public function isWriteMode() {
+	public function isWriteMode(): bool {
 		return true;
 	}
 
 	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getExamples
-	 *
-	 * @return array
-	 */
-	protected function getExamples() {
-		return [
-			'api.php?action=smwtask&task=update&params={ "subject": "Foo" }',
-		];
-	}
-
-	/**
-	 * @codeCoverageIgnore
 	 * @see ApiBase::getExamplesMessages
 	 *
 	 * @return array
 	 */
-	protected function getExamplesMessages() {
+	protected function getExamplesMessages(): array {
 		return [
 			'action=smwtask&task=update&params={ "subject": "Foo" }'
 				=> 'smw-apihelp-smwtask-example-update'
@@ -170,18 +141,8 @@ class Task extends ApiBase {
 	 *
 	 * @return string
 	 */
-	public function getHelpUrls() {
+	public function getHelpUrls(): string {
 		return 'https://www.semantic-mediawiki.org/wiki/Help:API:smwtask';
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getVersion
-	 *
-	 * @return string
-	 */
-	public function getVersion() {
-		return __CLASS__ . ':' . SMW_VERSION;
 	}
 
 }

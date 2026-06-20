@@ -2,6 +2,7 @@
 
 namespace SMW\Tests;
 
+use HttpStatus;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Output\OutputPage;
@@ -9,10 +10,10 @@ use MediaWiki\Request\FauxRequest;
 use MediaWiki\Request\WebRequest;
 use MediaWiki\Request\WebResponse;
 use MediaWiki\SpecialPage\SpecialPage;
+use PHPUnit\Framework\TestCase;
 use SMW\Tests\Utils\Mock\MockSuperUser;
 
 /**
- *
  * @group SMW
  * @group SMWExtension
  * @group medium
@@ -22,7 +23,7 @@ use SMW\Tests\Utils\Mock\MockSuperUser;
  *
  * @author mwjames
  */
-abstract class SpecialPageTestCase extends \PHPUnit\Framework\TestCase {
+abstract class SpecialPageTestCase extends TestCase {
 
 	protected $obLevel;
 	protected $store = null;
@@ -94,7 +95,7 @@ abstract class SpecialPageTestCase extends \PHPUnit\Framework\TestCase {
 		$code = $response->getStatusCode();
 
 		if ( $code > 0 ) {
-			$response->header( "Status: " . $code . ' ' . \HttpStatus::getMessage( $code ) );
+			$response->header( "Status: " . $code . ' ' . HttpStatus::getMessage( $code ) );
 		}
 
 		$this->text = $text;

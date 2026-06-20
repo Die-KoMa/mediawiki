@@ -6,7 +6,7 @@ use MediaWiki\Deferred\LinksUpdate\LinksUpdate;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Parser\ParserOutput;
 use MediaWiki\Title\Title;
-use SMW\DIWikiPage;
+use SMW\DataItems\WikiPage;
 use SMW\ParserData;
 use SMW\Services\ServicesFactory;
 use SMW\Tests\SMWIntegrationTestCase;
@@ -26,7 +26,6 @@ use UnexpectedValueException;
 class LinksUpdateSQLStoreDBIntegrationTest extends SMWIntegrationTestCase {
 
 	private $title = null;
-	private $mwHooksHandler;
 	private $semanticDataValidator;
 	private $pageDeleter;
 	private $revisionGuard;
@@ -43,19 +42,12 @@ class LinksUpdateSQLStoreDBIntegrationTest extends SMWIntegrationTestCase {
 			 [ '_MDAT' ]
 		);
 
-		$this->mwHooksHandler = $this->testEnvironment->getUtilityFactory()->newMwHooksHandler();
-
-		$this->mwHooksHandler->deregisterListedHooks();
-		$this->mwHooksHandler->invokeHooksFromRegistry();
-
 		$this->semanticDataValidator = $this->testEnvironment->getUtilityFactory()->newValidatorFactory()->newSemanticDataValidator();
 		$this->pageDeleter = $this->testEnvironment->getUtilityFactory()->newPageDeleter();
 		$this->pageCreator = $serviceFactory->newPageCreator();
 	}
 
 	public function tearDown(): void {
-		$this->mwHooksHandler->restoreListedHooks();
-
 		if ( $this->title !== null ) {
 			$this->pageDeleter->deletePage( $this->title );
 		}
@@ -134,7 +126,7 @@ class LinksUpdateSQLStoreDBIntegrationTest extends SMWIntegrationTestCase {
 
 		$this->semanticDataValidator->assertThatSemanticDataHasPropertyCountOf(
 			4,
-			$this->getStore()->getSemanticData( DIWikiPage::newFromTitle( $this->title ) ),
+			$this->getStore()->getSemanticData( WikiPage::newFromTitle( $this->title ) ),
 			'Asserts property Aa, Fuyu, _SKEY, and _MDAT exists'
 		);
 	}
@@ -142,7 +134,7 @@ class LinksUpdateSQLStoreDBIntegrationTest extends SMWIntegrationTestCase {
 	protected function assertSemanticDataAfterContentAlteration() {
 		$this->semanticDataValidator->assertThatSemanticDataHasPropertyCountOf(
 			2,
-			$this->getStore()->getSemanticData( DIWikiPage::newFromTitle( $this->title ) ),
+			$this->getStore()->getSemanticData( WikiPage::newFromTitle( $this->title ) ),
 			'Asserts property _SKEY and _MDAT exists'
 		);
 	}
@@ -168,7 +160,7 @@ class LinksUpdateSQLStoreDBIntegrationTest extends SMWIntegrationTestCase {
 
 		$this->semanticDataValidator->assertThatSemanticDataHasPropertyCountOf(
 			$storeExpected['count'],
-			$this->getStore()->getSemanticData( DIWikiPage::newFromTitle( $this->title ) ),
+			$this->getStore()->getSemanticData( WikiPage::newFromTitle( $this->title ) ),
 			$storeExpected['msg']
 		);
 	}

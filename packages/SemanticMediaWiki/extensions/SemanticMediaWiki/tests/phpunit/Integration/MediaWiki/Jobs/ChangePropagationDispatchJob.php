@@ -20,7 +20,6 @@ class ChangePropagationDispatchJob extends SMWIntegrationTestCase {
 	private $job = null;
 	private $pages = [];
 
-	private $mwHooksHandler;
 	private $pageCreator;
 
 	private $jobQueueRunner;
@@ -31,17 +30,11 @@ class ChangePropagationDispatchJob extends SMWIntegrationTestCase {
 
 		$utilityFactory = $this->testEnvironment->getUtilityFactory();
 
-		$this->mwHooksHandler = $utilityFactory->newMwHooksHandler();
-
-		$this->mwHooksHandler->deregisterListedHooks();
-		$this->mwHooksHandler->invokeHooksFromRegistry();
-
 		$this->pageCreator = $utilityFactory->newPageCreator();
 
 		$this->jobQueue = ApplicationFactory::getInstance()->getJobQueue();
 
 		$this->jobQueueRunner = $utilityFactory->newRunnerFactory()->newJobQueueRunner();
-		$this->jobQueueRunner->setConnectionProvider( $this->getConnectionProvider() );
 		$this->jobQueueRunner->deleteAllJobs();
 
 		$this->testEnvironment->addConfiguration( 'smwgEnableUpdateJobs', true );
@@ -53,7 +46,6 @@ class ChangePropagationDispatchJob extends SMWIntegrationTestCase {
 		);
 
 		$this->testEnvironment->tearDown();
-		$this->mwHooksHandler->restoreListedHooks();
 
 		parent::tearDown();
 	}

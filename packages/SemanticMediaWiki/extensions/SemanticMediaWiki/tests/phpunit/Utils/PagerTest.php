@@ -3,7 +3,7 @@
 namespace SMW\Tests\Utils;
 
 use MediaWiki\Title\Title;
-use SMW\Tests\PHPUnitCompat;
+use PHPUnit\Framework\TestCase;
 use SMW\Utils\Pager;
 
 /**
@@ -15,9 +15,7 @@ use SMW\Utils\Pager;
  *
  * @author mwjames
  */
-class PagerTest extends \PHPUnit\Framework\TestCase {
-
-	use PHPUnitCompat;
+class PagerTest extends TestCase {
 
 	public function testFilter() {
 		$title = $this->createMock( Title::class );

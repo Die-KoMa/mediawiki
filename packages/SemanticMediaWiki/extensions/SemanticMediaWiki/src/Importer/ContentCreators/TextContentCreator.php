@@ -3,14 +3,15 @@
 namespace SMW\Importer\ContentCreators;
 
 use MediaWiki\Content\ContentHandler;
-use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\WikiPageFactory;
+use MediaWiki\Title\Title;
+use MediaWiki\Title\TitleFactory;
 use MediaWiki\User\User;
 use Onoi\MessageReporter\MessageReporterAwareTrait;
 use SMW\Importer\ContentCreator;
 use SMW\Importer\ImportContents;
 use SMW\MediaWiki\Connection\Database;
-use SMW\MediaWiki\TitleFactory;
 use SMW\Utils\CliMsgFormatter;
 use WikiPage;
 
@@ -24,30 +25,16 @@ class TextContentCreator implements ContentCreator {
 
 	use MessageReporterAwareTrait;
 
-	/**
-	 * @var TitleFactory
-	 */
-	private $titleFactory;
-
-	/**
-	 * @var Database
-	 */
-	private $connection;
-
-	/**
-	 * @var CliMsgFormatter
-	 */
-	private $cliMsgFormatter;
+	private ?CliMsgFormatter $cliMsgFormatter = null;
 
 	/**
 	 * @since 2.5
-	 *
-	 * @param TitleFactory $titleFactory
-	 * @param Database $connection
 	 */
-	public function __construct( TitleFactory $titleFactory, Database $connection ) {
-		$this->titleFactory = $titleFactory;
-		$this->connection = $connection;
+	public function __construct(
+		private TitleFactory $titleFactory,
+		private Database $connection,
+		private WikiPageFactory $wikiPageFactory,
+	) {
 	}
 
 	/**
@@ -55,7 +42,7 @@ class TextContentCreator implements ContentCreator {
 	 *
 	 * @param ImportContents $importContents
 	 */
-	public function canCreateContentsFor( ImportContents $importContents ) {
+	public function canCreateContentsFor( ImportContents $importContents ): bool {
 		return $importContents->getContentType() === ImportContents::CONTENT_TEXT;
 	}
 
@@ -88,7 +75,7 @@ class TextContentCreator implements ContentCreator {
 			);
 		}
 
-		$page = $this->titleFactory->createPage( $title );
+		$page = $this->wikiPageFactory->newFromTitle( $title );
 		$prefixedText = $title->getPrefixedText();
 
 		$replaceable = false;
@@ -134,12 +121,12 @@ class TextContentCreator implements ContentCreator {
 		// Avoid a possible "Notice: WikiPage::doUserEditContent: Transaction already
 		// in progress (from DatabaseUpdater::doUpdates), performing implicit
 		// commit ..."
-		$this->connection->onTransactionCommitOrIdle( function () use ( $page, $title, $importContents, $action ) {
+		$this->connection->onTransactionCommitOrIdle( function () use ( $page, $title, $importContents, $action ): void {
 			$this->doCreateContent( $page, $title, $importContents, $action );
 		} );
 	}
 
-	private function doCreateContent( $page, $title, $importContents, $action ) {
+	private function doCreateContent( WikiPage $page, ?Title $title, ImportContents $importContents, string $action ): void {
 		$content = ContentHandler::makeContent(
 			$this->fetchContents( $importContents ),
 			$title
@@ -151,8 +138,11 @@ class TextContentCreator implements ContentCreator {
 			$user = User::newSystemUser( $importContents->getImportPerformer(), [ 'steal' => true ] );
 		}
 
-		// Use the global user if necessary (same as doUserEditContent())
-		$user = $user ?? RequestContext::getMain()->getUser();
+		// Fall back to a system user to avoid CannotCreateActorException
+		// when temporary accounts are enabled (MW 1.44+)
+		if ( $user === null ) {
+			$user = User::newSystemUser( 'Maintenance script', [ 'steal' => true ] );
+		}
 		$status = $page->doUserEditContent(
 			$content,
 			$user,
@@ -175,7 +165,7 @@ class TextContentCreator implements ContentCreator {
 		);
 	}
 
-	private function fetchContents( $importContents ) {
+	private function fetchContents( ImportContents $importContents ) {
 		if ( $importContents->getContentsFile() === '' ) {
 			return $importContents->getContents();
 		}
@@ -198,10 +188,6 @@ class TextContentCreator implements ContentCreator {
 		$lastEditor = MediaWikiServices::getInstance()
 			->getUserFactory()
 			->newFromId( (int)$page->getUser() );
-
-		if ( !$lastEditor instanceof User ) {
-			return false;
-		}
 
 		$creator = $page->getCreator();
 

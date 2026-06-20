@@ -3,6 +3,7 @@
 namespace SMW\Tests\Integration\MediaWiki\Import\Maintenance;
 
 use MediaWiki\MediaWikiServices;
+use SMW\DataItems\Concept;
 use SMW\Tests\SMWIntegrationTestCase;
 use SMW\Tests\Utils\UtilityFactory;
 
@@ -33,10 +34,6 @@ class RebuildConceptCacheMaintenanceTest extends SMWIntegrationTestCase {
 		$this->runnerFactory  = $utilityFactory->newRunnerFactory();
 		$this->titleValidator = $utilityFactory->newValidatorFactory()->newTitleValidator();
 		$this->pageCreator = $utilityFactory->newPageCreator();
-
-		$utilityFactory->newMwHooksHandler()
-			->deregisterListedHooks()
-			->invokeHooksFromRegistry();
 
 		$importRunner = $this->runnerFactory->newXmlImportRunner(
 			__DIR__ . '/../Fixtures/' . 'GenericLoremIpsumTest-Mw-1-19-7.xml'
@@ -88,7 +85,7 @@ class RebuildConceptCacheMaintenanceTest extends SMWIntegrationTestCase {
 			->run();
 
 		$this->assertInstanceOf(
-			'SMW\DIConcept',
+			Concept::class,
 			$this->getStore()->getConceptCacheStatus( $conceptPage->getTitle() )
 		);
 

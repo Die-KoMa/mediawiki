@@ -19,7 +19,6 @@
         inherit system;
         overlays = [
           inputs.mediawiki-extdist.overlays.default
-          inputs.mediawiki-extdist.overlays.poetry2nix
         ];
       };
       composer2nix = import inputs.composer2nix {
@@ -41,6 +40,10 @@
           let
             updateScript = pkgs.writeShellApplication {
               name = "komapedia-update-extensions";
+              meta = {
+                license = pkgs.lib.licenses.publicDomain;
+                mainProgram = "komapedia-update-extensions";
+              };
 
               text = ''
                 pushd packages

@@ -2,9 +2,7 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use Article;
-use MediaWiki\Title\Title;
-use SMW\MediaWiki\HookListener;
+use MediaWiki\Page\Hook\ArticleFromTitleHook;
 use SMW\MediaWiki\PageFactory;
 use SMW\Store;
 
@@ -19,31 +17,18 @@ use SMW\Store;
  *
  * @author mwjames
  */
-class ArticleFromTitle implements HookListener {
-
-	/**
-	 * @var Store
-	 */
-	private $store;
+class ArticleFromTitle implements ArticleFromTitleHook {
 
 	/**
 	 * @since 2.0
-	 *
-	 * @param Store $store
 	 */
-	public function __construct( Store $store ) {
-		$this->store = $store;
+	public function __construct( private readonly Store $store ) {
 	}
 
 	/**
-	 * @since 2.0
-	 *
-	 * @param Title &$title
-	 * @param Article|null &$page
-	 *
-	 * @return true
+	 * @since 7.0.0
 	 */
-	public function process( Title &$title, ?Article &$page = null ) {
+	public function onArticleFromTitle( $title, &$article, $context ) {
 		$ns = $title->getNamespace();
 
 		if ( $ns !== SMW_NS_PROPERTY && $ns !== SMW_NS_CONCEPT ) {
@@ -54,7 +39,7 @@ class ArticleFromTitle implements HookListener {
 			$this->store
 		);
 
-		$page = $pageFactory->newPageFromTitle(
+		$article = $pageFactory->newPageFromTitle(
 			$title
 		);
 

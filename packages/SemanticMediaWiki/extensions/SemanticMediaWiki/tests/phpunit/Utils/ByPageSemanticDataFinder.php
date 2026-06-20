@@ -4,15 +4,14 @@ namespace SMW\Tests\Utils;
 
 use MediaWiki\Parser\ParserOutput;
 use MediaWiki\Title\Title;
+use SMW\DataModel\SemanticData;
 use SMW\ParserData;
 use SMW\RequestOptions;
-use SMW\SemanticData;
 use SMW\Services\ServicesFactory;
 use SMW\Store;
 use UnexpectedValueException;
 
 /**
- *
  * @group SMW
  * @group SMWExtension
  *

@@ -2,12 +2,11 @@
 
 namespace SMW\MediaWiki\Hooks;
 
-use Psr\Log\LoggerAwareTrait;
-use SMW\DependencyValidator;
-use SMW\DIWikiPage;
-use SMW\MediaWiki\HookListener;
+use MediaWiki\Hook\RejectParserCacheValueHook;
+use Psr\Log\LoggerInterface;
+use SMW\DataItems\WikiPage as DIWikiPage;
+use SMW\DependencyValidatorFactory;
 use SMW\NamespaceExaminer;
-use WikiPage;
 
 /**
  * @see https://www.mediawiki.org/wiki/Manual:Hooks/RejectParserCacheValue
@@ -17,54 +16,39 @@ use WikiPage;
  *
  * @author mwjames
  */
-class RejectParserCacheValue implements HookListener {
-
-	use LoggerAwareTrait;
+class RejectParserCacheValue implements RejectParserCacheValueHook {
 
 	/**
-	 * @var NamespaceExaminer
+	 * @since 7.0.0
 	 */
-	private $namespaceExaminer;
-
-	/**
-	 * @var DependencyValidator
-	 */
-	private $dependencyValidator;
-
-	/**
-	 * @since 3.0
-	 *
-	 * @param NamespaceExaminer $namespaceExaminer
-	 * @param DependencyValidator $dependencyValidator
-	 */
-	public function __construct( NamespaceExaminer $namespaceExaminer, DependencyValidator $dependencyValidator ) {
-		$this->namespaceExaminer = $namespaceExaminer;
-		$this->dependencyValidator = $dependencyValidator;
+	public function __construct(
+		private readonly NamespaceExaminer $namespaceExaminer,
+		private readonly LoggerInterface $logger,
+		private readonly DependencyValidatorFactory $dependencyValidatorFactory,
+	) {
 	}
 
 	/**
-	 * @since 3.0
-	 *
-	 * @param WikiPage $page
-	 *
-	 * @return bool
+	 * @since 7.0.0
 	 */
-	public function process( WikiPage $page ) {
-		$title = $page->getTitle();
+	public function onRejectParserCacheValue( $parserOutput, $wikiPage, $parserOptions ) {
+		$title = $wikiPage->getTitle();
 
-		if ( $this->namespaceExaminer->isSemanticEnabled( $title->getNamespace() ) === false ) {
+		if ( !$this->namespaceExaminer->isSemanticEnabled( $title->getNamespace() ) ) {
 			return true;
 		}
 
-		$subject = DIWikiPage::newFromTitle( $title );
+		$dependencyValidator = $this->dependencyValidatorFactory->newFor( $wikiPage, $parserOptions );
 
-		if ( $this->dependencyValidator->canKeepParserCache( $subject ) ) {
+		if ( $dependencyValidator->canKeepParserCache( DIWikiPage::newFromTitle( $title ) ) ) {
 			return true;
 		}
 
 		$this->logger->info(
-			[ 'RejectParserCacheValue', 'Rejected, found archaic query dependencies', '{etag}' ],
-			[ 'role' => 'user' ]
+			'RejectParserCacheValue Rejected, found archaic query dependencies',
+			[
+				'role' => 'user'
+			]
 		);
 
 		// Return false to reject an otherwise usable cached value from the

@@ -23,12 +23,8 @@ class Pipetrick {
 	 * Doesn't attempt to apply the reverse pipe trick.
 	 *
 	 * @since 3.0
-	 *
-	 * @param $title string
-	 *
-	 * @return string
 	 */
-	public static function apply( $title ) {
+	public static function apply( string $title ): string|array|null {
 		# Turn it into a link so we can use the MediaWiki regexes un-changed.
 		$link = '[[' . $title . '|]]';
 

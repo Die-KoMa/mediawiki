@@ -2,6 +2,7 @@
 
 namespace SMW\Factbox;
 
+use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\Parser\ParserOutput;
 use MediaWiki\Title\Title;
 use SMW\Services\ServicesFactory as ApplicationFactory;
@@ -21,7 +22,7 @@ class FactboxFactory {
 	 *
 	 * @return CheckMagicWords
 	 */
-	public function newCheckMagicWords( array $options ) {
+	public function newCheckMagicWords( array $options ): CheckMagicWords {
 		return new CheckMagicWords( $options );
 	}
 
@@ -30,7 +31,7 @@ class FactboxFactory {
 	 *
 	 * @return CachedFactbox
 	 */
-	public function newCachedFactbox() {
+	public function newCachedFactbox(): CachedFactbox {
 		$applicationFactory = ApplicationFactory::getInstance();
 		$settings = $applicationFactory->getSettings();
 
@@ -59,7 +60,7 @@ class FactboxFactory {
 		);
 
 		$cachedFactbox->setLogger(
-			$applicationFactory->getMediaWikiLogger()
+			LoggerFactory::getInstance( 'smw' )
 		);
 
 		return $cachedFactbox;
@@ -73,7 +74,7 @@ class FactboxFactory {
 	 *
 	 * @return Factbox
 	 */
-	public function newFactbox( Title $title, ParserOutput $parserOutput ) {
+	public function newFactbox( Title $title, ParserOutput $parserOutput ): Factbox {
 		$applicationFactory = ApplicationFactory::getInstance();
 
 		$factbox = new Factbox(

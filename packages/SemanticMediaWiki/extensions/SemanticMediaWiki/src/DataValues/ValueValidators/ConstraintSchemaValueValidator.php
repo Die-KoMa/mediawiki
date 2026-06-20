@@ -3,11 +3,11 @@
 namespace SMW\DataValues\ValueValidators;
 
 use SMW\Constraint\ConstraintCheckRunner;
-use SMW\DIWikiPage;
+use SMW\DataValues\DataValue;
+use SMW\MediaWiki\JobQueue;
 use SMW\MediaWiki\Jobs\DeferredConstraintCheckUpdateJob;
 use SMW\Schema\SchemaFinder;
 use SMW\Schema\SchemaList;
-use SMWDataValue as DataValue;
 
 /**
  * @private
@@ -19,58 +19,28 @@ use SMWDataValue as DataValue;
  */
 class ConstraintSchemaValueValidator implements ConstraintValueValidator {
 
-	/**
-	 * @var ConstraintCheckRunner
-	 */
-	private $constraintCheckRunner;
+	private array $schemaLists = [];
 
-	/**
-	 * @var SchemaFinder
-	 */
-	private $schemaFinder;
+	private bool $hasConstraintViolation = false;
 
-	/**
-	 * @var
-	 */
-	private $schemaLists = [];
+	private bool $postUpdateCheck = false;
 
-	/**
-	 * @var bool
-	 */
-	private $hasConstraintViolation = false;
-
-	/**
-	 * @var bool
-	 */
-	private $postUpdateCheck = false;
-
-	/**
-	 * @var bool
-	 */
-	private $isCommandLineMode = false;
-
-	/**
-	 * @var DIWikiPage
-	 */
-	private $contextPage;
+	private bool $isCommandLineMode = false;
 
 	/**
 	 * @since 3.1
-	 *
-	 * @param ConstraintCheckRunner $constraintCheckRunner
-	 * @param SchemaFinder $schemaFinder
 	 */
-	public function __construct( ConstraintCheckRunner $constraintCheckRunner, SchemaFinder $schemaFinder ) {
-		$this->constraintCheckRunner = $constraintCheckRunner;
-		$this->schemaFinder = $schemaFinder;
+	public function __construct(
+		private readonly ConstraintCheckRunner $constraintCheckRunner,
+		private readonly SchemaFinder $schemaFinder,
+		private readonly JobQueue $jobQueue,
+	) {
 	}
 
 	/**
 	 * @since 3.1
-	 *
-	 * @param bool $isCommandLineMode
 	 */
-	public function isCommandLineMode( $isCommandLineMode ) {
+	public function isCommandLineMode( bool $isCommandLineMode ): void {
 		$this->isCommandLineMode = $isCommandLineMode;
 	}
 
@@ -79,7 +49,7 @@ class ConstraintSchemaValueValidator implements ConstraintValueValidator {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function hasConstraintViolation() {
+	public function hasConstraintViolation(): bool {
 		return $this->hasConstraintViolation;
 	}
 
@@ -88,7 +58,7 @@ class ConstraintSchemaValueValidator implements ConstraintValueValidator {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function validate( $dataValue ) {
+	public function validate( $dataValue ): void {
 		$this->hasConstraintViolation = false;
 
 		if ( !$dataValue instanceof DataValue || $dataValue->getProperty() === null ) {
@@ -141,12 +111,22 @@ class ConstraintSchemaValueValidator implements ConstraintValueValidator {
 		}
 	}
 
-	private function triggerDeferredCheck( $contextPage ) {
+	private function triggerDeferredCheck( $contextPage ): void {
 		if ( $contextPage === null || $this->isCommandLineMode ) {
 			return;
 		}
 
-		DeferredConstraintCheckUpdateJob::pushJob( $contextPage->getTitle() );
+		$title = $contextPage->getTitle();
+
+		$job = new DeferredConstraintCheckUpdateJob(
+			$title,
+			DeferredConstraintCheckUpdateJob::newRootJobParams(
+				DeferredConstraintCheckUpdateJob::JOB_COMMAND,
+				$title
+			) + [ 'waitOnCommandLine' => true ]
+		);
+
+		$this->jobQueue->push( [ $job ] );
 	}
 
 }

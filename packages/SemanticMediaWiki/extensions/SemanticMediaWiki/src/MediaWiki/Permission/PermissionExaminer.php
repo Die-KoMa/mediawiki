@@ -14,41 +14,16 @@ use SMW\MediaWiki\PermissionManager;
 class PermissionExaminer {
 
 	/**
-	 * @var PermissionManager
-	 */
-	private $permissionManager;
-
-	/**
-	 * @var User
-	 */
-	private $user;
-
-	/**
 	 * @since 3.2
-	 *
-	 * @param PermissionManager $permissionManager
-	 * @param User|null $user
 	 */
-	public function __construct( PermissionManager $permissionManager, ?User $user = null ) {
-		$this->permissionManager = $permissionManager;
-		$this->user = $user;
+	public function __construct(
+		private readonly PermissionManager $permissionManager,
+		private ?User $user = null,
+	) {
 	}
 
 	/**
 	 * @since 3.2
-	 *
-	 * @return User $user
-	 */
-	public function setUser( User $user ) {
-		$this->user = $user;
-	}
-
-	/**
-	 * @since 3.2
-	 *
-	 * @param string $right
-	 *
-	 * @return bool
 	 */
 	public function hasPermissionOf( string $right ): bool {
 		if ( $this->user === null ) {

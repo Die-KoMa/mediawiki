@@ -19,17 +19,9 @@ class ExploreListBuilder {
 	use MessageLocalizerTrait;
 
 	/**
-	 * @var Profile
-	 */
-	private $profile;
-
-	/**
 	 * @since 3.2
-	 *
-	 * @param Profile $profile
 	 */
-	public function __construct( Profile $profile ) {
-		$this->profile = $profile;
+	public function __construct( private Profile $profile ) {
 	}
 
 	/**
@@ -67,7 +59,7 @@ class ExploreListBuilder {
 				Html::rawElement(
 					'a',
 					[
-						'href' => $title->getLocalUrl( $urlArgs )
+						'href' => $title->getLocalUrl( (string)$urlArgs )
 					],
 					$link['label']
 				) . $description

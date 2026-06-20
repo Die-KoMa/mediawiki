@@ -5,13 +5,14 @@ namespace SMW\MediaWiki\Specials\Admin\Maintenance;
 use MediaWiki\Html\Html;
 use MediaWiki\Request\WebRequest;
 use MediaWiki\SpecialPage\SpecialPage;
-use SMW\DIWikiPage;
+use SMW\DataItems\WikiPage;
 use SMW\Localizer\Message;
+use SMW\MediaWiki\JobFactory;
+use SMW\MediaWiki\JobQueue;
 use SMW\MediaWiki\Renderer\HtmlFormRenderer;
 use SMW\MediaWiki\Specials\Admin\ActionableTask;
 use SMW\MediaWiki\Specials\Admin\OutputFormatter;
 use SMW\MediaWiki\Specials\Admin\TaskHandler;
-use SMW\Services\ServicesFactory as ApplicationFactory;
 
 /**
  * @license GPL-2.0-or-later
@@ -21,30 +22,17 @@ use SMW\Services\ServicesFactory as ApplicationFactory;
  */
 class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements ActionableTask {
 
-	/**
-	 * @var HtmlFormRenderer
-	 */
-	private $htmlFormRenderer;
-
-	/**
-	 * @var OutputFormatter
-	 */
-	private $outputFormatter;
-
-	/**
-	 * @var bool
-	 */
-	public $isApiTask = true;
+	public bool $isApiTask = true;
 
 	/**
 	 * @since 2.5
-	 *
-	 * @param HtmlFormRenderer $htmlFormRenderer
-	 * @param OutputFormatter $outputFormatter
 	 */
-	public function __construct( HtmlFormRenderer $htmlFormRenderer, OutputFormatter $outputFormatter ) {
-		$this->htmlFormRenderer = $htmlFormRenderer;
-		$this->outputFormatter = $outputFormatter;
+	public function __construct(
+		private readonly HtmlFormRenderer $htmlFormRenderer,
+		private readonly OutputFormatter $outputFormatter,
+		private readonly JobFactory $jobFactory,
+		private readonly JobQueue $jobQueue,
+	) {
 	}
 
 	/**
@@ -52,7 +40,7 @@ class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements Actionab
 	 *
 	 * {@inheritDoc}
 	 */
-	public function getSection() {
+	public function getSection(): string {
 		return self::SECTION_MAINTENANCE;
 	}
 
@@ -61,7 +49,7 @@ class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements Actionab
 	 *
 	 * {@inheritDoc}
 	 */
-	public function isApiTask() {
+	public function isApiTask(): bool {
 		return $this->isApiTask;
 	}
 
@@ -89,7 +77,7 @@ class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements Actionab
 	 * {@inheritDoc}
 	 */
 	public function getHtml() {
-		$subject = DIWikiPage::newFromTitle( SpecialPage::getTitleFor( 'SMWAdmin' ) );
+		$subject = WikiPage::newFromTitle( SpecialPage::getTitleFor( 'SMWAdmin' ) );
 
 		// smw-admin-propertystatistics
 		$this->htmlFormRenderer
@@ -141,12 +129,13 @@ class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements Actionab
 	 *
 	 * {@inheritDoc}
 	 */
-	public function handleRequest( WebRequest $webRequest ) {
+	public function handleRequest( WebRequest $webRequest ): void {
 		if ( !$this->hasFeature( SMW_ADM_PSTATS ) || $this->hasPendingJob() || $this->isApiTask() ) {
-			return $this->outputFormatter->redirectToRootPage( '', [ 'tab' => 'maintenance' ] );
+			$this->outputFormatter->redirectToRootPage( '', [ 'tab' => 'maintenance' ] );
+			return;
 		}
 
-		$job = ApplicationFactory::getInstance()->newJobFactory()->newByType(
+		$job = $this->jobFactory->newByType(
 			'smw.propertyStatisticsRebuild',
 			SpecialPage::getTitleFor( 'SMWAdmin' )
 		);
@@ -156,8 +145,8 @@ class PropertyStatsRebuildJobTaskHandler extends TaskHandler implements Actionab
 		$this->outputFormatter->redirectToRootPage( '', [ 'tab' => 'maintenance' ] );
 	}
 
-	private function hasPendingJob() {
-		return ApplicationFactory::getInstance()->getJobQueue()->hasPendingJob( 'smw.propertyStatisticsRebuild' );
+	private function hasPendingJob(): bool {
+		return $this->jobQueue->hasPendingJob( 'smw.propertyStatisticsRebuild' );
 	}
 
 }

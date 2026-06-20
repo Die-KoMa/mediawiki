@@ -4,10 +4,10 @@ namespace SMW\Tests\Utils\Page;
 
 use MediaWiki\CommentStore\CommentStoreComment;
 use MediaWiki\Content\WikitextContent;
-use MediaWiki\Context\RequestContext;
 use MediaWiki\Revision\SlotRecord;
 use MediaWiki\Storage\RevisionSlotsUpdate;
 use MediaWiki\Title\Title;
+use MediaWiki\User\User;
 use RuntimeException;
 use SMW\Services\ServicesFactory;
 use WikiPage;
@@ -63,8 +63,7 @@ class PageEditor {
 	public function doEdit( $pageContent = '', $editMessage = '' ) {
 		$content = new WikitextContent( $pageContent );
 
-		// Simplified implementation of WikiPage::doUserEditContent() from MW 1.36
-		$performer = RequestContext::getMain()->getUser();
+		$performer = User::newSystemUser( 'Maintenance script', [ 'steal' => true ] );
 		$summary = CommentStoreComment::newUnsavedComment( trim( $editMessage ) );
 
 		$slotsUpdate = new RevisionSlotsUpdate();

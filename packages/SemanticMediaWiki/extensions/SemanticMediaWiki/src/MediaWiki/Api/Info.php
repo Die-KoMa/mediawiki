@@ -3,8 +3,10 @@
 namespace SMW\MediaWiki\Api;
 
 use MediaWiki\Api\ApiBase;
-use SMW\Services\ServicesFactory as ApplicationFactory;
+use MediaWiki\Api\ApiMain;
+use SMW\MediaWiki\JobQueue;
 use SMW\Site;
+use SMW\Store;
 use Wikimedia\ParamValidator\ParamValidator;
 
 /**
@@ -21,9 +23,21 @@ use Wikimedia\ParamValidator\ParamValidator;
 class Info extends ApiBase {
 
 	/**
+	 * @since 7.0.0
+	 */
+	public function __construct(
+		ApiMain $main,
+		string $action,
+		private readonly Store $store,
+		private readonly JobQueue $jobQueue
+	) {
+		parent::__construct( $main, $action );
+	}
+
+	/**
 	 * @see ApiBase::execute
 	 */
-	public function execute() {
+	public function execute(): void {
 		$params = $this->extractRequestParams();
 		$requestedInfo = $params['info'];
 
@@ -44,7 +58,7 @@ class Info extends ApiBase {
 			|| in_array( 'subobjectcount', $requestedInfo )
 			|| in_array( 'declaredpropcount', $requestedInfo ) ) {
 
-			$semanticStats = ApplicationFactory::getInstance()->getStore()->getStatistics();
+			$semanticStats = $this->store->getStatistics();
 
 			$map = [
 				'propcount' => 'PROPUSES',
@@ -74,7 +88,7 @@ class Info extends ApiBase {
 	 *
 	 * @return array
 	 */
-	public function getAllowedParams() {
+	public function getAllowedParams(): array {
 		return [
 			'info' => [
 				ParamValidator::PARAM_DEFAULT => 'propcount|usedpropcount|declaredpropcount',
@@ -93,58 +107,26 @@ class Info extends ApiBase {
 					'conceptcount',
 					'subobjectcount',
 					'jobcount'
-				]
+				],
+				ApiBase::PARAM_HELP_MSG => 'apihelp-smwinfo-param-info',
 			],
 		];
 	}
 
 	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getParamDescription
-	 *
-	 * @return array
+	 * @inheritDoc
 	 */
-	public function getParamDescription() {
+	protected function getExamplesMessages(): array {
 		return [
-			'info' => 'The info to provide.'
+			'action=smwinfo&info=proppagecount|propcount'
+				=> 'apihelp-smwinfo-example-1',
 		];
 	}
 
 	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getDescription
-	 *
-	 * @return array
+	 * @return mixed[]
 	 */
-	public function getDescription() {
-		return [
-			'API module get info about this SMW install.'
-		];
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getExamples
-	 *
-	 * @return array
-	 */
-	protected function getExamples() {
-		return [
-			'api.php?action=smwinfo&info=proppagecount|propcount',
-		];
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 * @see ApiBase::getVersion
-	 *
-	 * @return string
-	 */
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
-	}
-
-	private function doMapResultInfoFrom( $map, $requestedInfo, $semanticStats ) {
+	private function doMapResultInfoFrom( array $map, $requestedInfo, array $semanticStats ): array {
 		$resultInfo = [];
 
 		foreach ( $map as $apiName => $smwName ) {
@@ -163,10 +145,9 @@ class Info extends ApiBase {
 
 		if ( in_array( 'jobcount', $requestedInfo ) ) {
 			$resultInfo['jobcount'] = [];
-			$jobQueue = ApplicationFactory::getInstance()->getJobQueue();
 
 			foreach ( Site::getJobClasses( 'SMW' ) as $type => $class ) {
-				$size = $jobQueue->getQueueSize( $type );
+				$size = $this->jobQueue->getQueueSize( $type );
 
 				if ( $size > 0 ) {
 					$resultInfo['jobcount'][$type] = $size;
