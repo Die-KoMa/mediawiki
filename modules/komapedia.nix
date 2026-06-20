@@ -170,6 +170,7 @@ with lib;
 
           database = {
             createLocally = mkDefault false;
+            type = "mysql";
           };
           webserver = "none";
           name = "KoMapedia";
