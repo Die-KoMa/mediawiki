@@ -31,10 +31,14 @@ let
   composerExtension' =
     name: fixups:
     let
-      drv = import (./. + "/${name}") {
-        inherit pkgs system;
-        noDev = true;
-      };
+      drv =
+        (import (./. + "/${name}") {
+          inherit pkgs system;
+          noDev = true;
+        }).overrideAttrs
+          (_: {
+            dontCheckForBrokenSymlinks = true;
+          });
       meta = metaForExtension name;
       path = pathForExtension name;
 
@@ -48,8 +52,9 @@ let
       inherit (meta) pname version meta;
 
       dontUnpack = true;
-
       installPhase = ''
+        runHook preInstall
+
         mkdir $out
         cp -R ${drv}/${path}/extensions/${name}/* $out
         cp -R ${drv}/${path}/vendor vendor
@@ -60,6 +65,8 @@ let
         popd
 
         cp -R vendor $out/
+
+        runHook postInstall
       '';
     };
   extdistExtension =
