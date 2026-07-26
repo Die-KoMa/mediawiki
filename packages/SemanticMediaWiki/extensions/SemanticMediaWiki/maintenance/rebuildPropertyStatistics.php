@@ -6,6 +6,7 @@ use MediaWiki\Maintenance\Maintenance;
 use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\Setup;
 use SMW\SQLStore\SQLStore;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -51,6 +52,10 @@ class rebuildPropertyStatistics extends Maintenance {
 		$statisticsRebuilder = $maintenanceFactory->newPropertyStatisticsRebuilder(
 			$applicationFactory->getStore( SQLStore::class ),
 			[ $this, 'reportMessage' ]
+		);
+
+		$statisticsRebuilder->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
 		);
 
 		$statisticsRebuilder->rebuild();

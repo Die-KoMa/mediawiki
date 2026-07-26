@@ -11,6 +11,7 @@ use SMW\SQLStore\Installer;
 use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -59,6 +60,8 @@ class populateHashField extends Maintenance {
 	 * @var int
 	 */
 	private $last = 0;
+
+	private ?PeriodicStatsFlusher $statsFlusher = null;
 
 	/**
 	 * @since 3.1
@@ -112,6 +115,20 @@ class populateHashField extends Maintenance {
 	}
 
 	/**
+	 * Injected only by execute(). populate() also runs via the HashField
+	 * examiner (update.php), which reaches it without execute() and so has
+	 * no injection seam; that path is left unflushed deliberately. It is
+	 * safe without a flusher because populate() only computes a hash and
+	 * updates one row per entity (no parse), so it buffers few samples and
+	 * runs once as a one-time migration.
+	 *
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
+	}
+
+	/**
 	 * @since 3.1
 	 *
 	 * @param string $message
@@ -138,6 +155,10 @@ class populateHashField extends Maintenance {
 
 		$this->store = $applicationFactory->getStore(
 			SQLStore::class
+		);
+
+		$this->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
 		);
 
 		$localMessageProvider = $maintenanceFactory->newLocalMessageProvider(
@@ -251,6 +272,10 @@ class populateHashField extends Maintenance {
 
 		foreach ( $rows as $row ) {
 
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
+
 			$hash = $idTable->computeSha1(
 				[
 					$row->smw_title,
@@ -269,7 +294,7 @@ class populateHashField extends Maintenance {
 			$connection->newUpdateQueryBuilder()
 				->update( SQLStore::ID_TABLE )
 				->set( [
-					'smw_hash' => $hash
+					'smw_hash' => $connection->escape_bytea( $hash )
 				] )
 				->where( [
 					'smw_id' => $row->smw_id

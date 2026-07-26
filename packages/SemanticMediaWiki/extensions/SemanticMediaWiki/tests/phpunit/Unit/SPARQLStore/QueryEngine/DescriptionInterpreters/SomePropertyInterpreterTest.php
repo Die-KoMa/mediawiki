@@ -10,6 +10,7 @@ use SMW\DataItems\WikiPage;
 use SMW\Export\Exporter;
 use SMW\Exporter\Serializer\TurtleSerializer;
 use SMW\HierarchyLookup;
+use SMW\Query\Language\Conjunction;
 use SMW\Query\Language\Disjunction;
 use SMW\Query\Language\SomeProperty;
 use SMW\Query\Language\ThingDescription;
@@ -68,6 +69,18 @@ class SomePropertyInterpreterTest extends TestCase {
 		);
 	}
 
+	public function testThrowsExceptionForNonSomePropertyDescription() {
+		$conditionBuilder = $this->getMockBuilder( ConditionBuilder::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$this->expectException( \UnexpectedValueException::class );
+
+		$instance->interpretDescription( new ThingDescription() );
+	}
+
 	/**
 	 * @dataProvider descriptionProvider
 	 */
@@ -96,6 +109,96 @@ class SomePropertyInterpreterTest extends TestCase {
 
 		$this->assertEquals(
 			$expectedConditionString,
+			$conditionBuilder->convertConditionToString( $condition )
+		);
+	}
+
+	public function testNegatedThingDescriptionDoesNotUseHierarchyPatternWithoutSubproperty() {
+		$engineOptions = new EngineOptions();
+		$engineOptions->set( 'smwgSparqlQFeatures', SMW_SPARQL_QF_SUBP );
+
+		$property = new Property( 'Foo' );
+
+		$hierarchyLookup = $this->getMockBuilder( HierarchyLookup::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$hierarchyLookup->expects( $this->once() )
+			->method( 'hasSubproperty' )
+			->with( $property )
+			->willReturn( false );
+
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory, $engineOptions );
+		$conditionBuilder->setHierarchyLookup( $hierarchyLookup );
+		$conditionBuilder->setResultVariable( $resultVariable );
+		$conditionBuilder->setJoinVariable( $resultVariable );
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			$property,
+			$thingDescription
+		);
+
+		$condition = $instance->interpretDescription( $description );
+
+		$expected = UtilityFactory::getInstance()->newStringBuilder()
+			->addString( '?result swivt:page ?url .' )->addNewLine()
+			->addString( 'FILTER NOT EXISTS {' )->addNewLine()
+			->addString( '?result property:Foo ?v1 .' )->addNewLine()
+			->addString( '}' )->addNewLine()
+			->getString();
+
+		$this->assertEquals(
+			$expected,
+			$conditionBuilder->convertConditionToString( $condition )
+		);
+	}
+
+	public function testNegatedThingDescriptionDoesNotUseHierarchyPatternForPredefinedProperty() {
+		$engineOptions = new EngineOptions();
+		$engineOptions->set( 'smwgSparqlQFeatures', SMW_SPARQL_QF_SUBP );
+
+		$hierarchyLookup = $this->getMockBuilder( HierarchyLookup::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$hierarchyLookup->expects( $this->never() )
+			->method( 'hasSubproperty' );
+
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory, $engineOptions );
+		$conditionBuilder->setHierarchyLookup( $hierarchyLookup );
+		$conditionBuilder->setResultVariable( $resultVariable );
+		$conditionBuilder->setJoinVariable( $resultVariable );
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			new Property( Property::TYPE_SORTKEY ),
+			$thingDescription
+		);
+
+		$condition = $instance->interpretDescription( $description );
+
+		$expected = UtilityFactory::getInstance()->newStringBuilder()
+			->addString( '?result swivt:page ?url .' )->addNewLine()
+			->addString( 'FILTER NOT EXISTS {' )->addNewLine()
+			->addString( '?result swivt:wikiPageSortKey ?v1 .' )->addNewLine()
+			->addString( '}' )->addNewLine()
+			->getString();
+
+		$this->assertEquals(
+			$expected,
 			$conditionBuilder->convertConditionToString( $condition )
 		);
 	}
@@ -141,6 +244,185 @@ class SomePropertyInterpreterTest extends TestCase {
 		$this->assertEquals(
 			$expected,
 			$conditionBuilder->convertConditionToString( $condition )
+		);
+	}
+
+	public function testNegatedThingDescriptionKeepsHierarchyPatternInsideNotExists() {
+		$engineOptions = new EngineOptions();
+		$engineOptions->set( 'smwgSparqlQFeatures', SMW_SPARQL_QF_SUBP );
+
+		$property = new Property( 'Foo' );
+
+		$hierarchyLookup = $this->getMockBuilder( HierarchyLookup::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$hierarchyLookup->expects( $this->once() )
+			->method( 'hasSubproperty' )
+			->with( $property )
+			->willReturn( true );
+
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory, $engineOptions );
+		$conditionBuilder->setHierarchyLookup( $hierarchyLookup );
+		$conditionBuilder->setResultVariable( $resultVariable );
+		$conditionBuilder->setJoinVariable( $resultVariable );
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			$property,
+			$thingDescription
+		);
+
+		$condition = $instance->interpretDescription( $description );
+
+		$expected = UtilityFactory::getInstance()->newStringBuilder()
+			->addString( '?result swivt:page ?url .' )->addNewLine()
+			->addString( 'FILTER NOT EXISTS {' )->addNewLine()
+			->addString( '?sp2 rdfs:subPropertyOf* property:Foo .' )->addNewLine()
+			->addString( '?result ?sp2 ?v1 .' )->addNewLine()
+			->addString( '}' )->addNewLine()
+			->getString();
+
+		$this->assertEquals(
+			$expected,
+			$conditionBuilder->convertConditionToString( $condition )
+		);
+	}
+
+	public function testNegatedThingDescriptionProducesSelfContainedSafeCondition() {
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory );
+		$conditionBuilder->setResultVariable( $resultVariable );
+		$conditionBuilder->setJoinVariable( $resultVariable );
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			new Property( 'Foo' ),
+			$thingDescription
+		);
+
+		$condition = $instance->interpretDescription( $description );
+
+		// The condition must bind the result variable in its own graph pattern so
+		// it can stand alone inside a UNION branch (disjunction), where the base
+		// pattern injected by convertConditionToString is not in scope.
+		$this->assertTrue(
+			$condition->isSafe(),
+			'A negated property existence condition must be self-safe'
+		);
+
+		$this->assertStringContainsString(
+			'?result swivt:page ?url .',
+			$condition->getCondition()
+		);
+	}
+
+	public function testNegatedThingDescriptionBindsResultInsideEachDisjunctionBranch() {
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory );
+		$conditionBuilder->setResultVariable( $resultVariable );
+
+		$fooDescription = new ThingDescription();
+		$fooDescription->isNegation = true;
+
+		$barDescription = new ThingDescription();
+		$barDescription->isNegation = true;
+
+		$description = new Disjunction( [
+			new SomeProperty( new Property( 'Foo' ), $fooDescription ),
+			new SomeProperty( new Property( 'Bar' ), $barDescription )
+		] );
+
+		$condition = $conditionBuilder->getConditionFrom( $description );
+		$conditionString = $conditionBuilder->convertConditionToString( $condition );
+
+		// Both UNION branches must bind ?result before their FILTER NOT EXISTS.
+		// Without a binding the filter would be evaluated with ?result free,
+		// testing whether the store holds the property at all rather than
+		// whether the individual page lacks it.
+		$this->assertStringContainsString( 'UNION', $conditionString );
+
+		$this->assertSame(
+			2,
+			substr_count( $conditionString, "?result swivt:page ?url .\nFILTER NOT EXISTS {" )
+		);
+	}
+
+	public function testNegatedThingDescriptionBindsResultWhenNonBindingWeakConditionPresent() {
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory );
+		$conditionBuilder->setResultVariable( $resultVariable );
+		$conditionBuilder->setJoinVariable( $resultVariable );
+
+		$instance = new SomePropertyInterpreter( $conditionBuilder );
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			new Property( 'Foo' ),
+			$thingDescription
+		);
+
+		$condition = $instance->interpretDescription( $description );
+
+		// Mirror the weak condition that getConditionFrom() adds for a property
+		// whose page is a redirect (SMW_SPARQL_QF_REDI): it binds the redirect
+		// variable, not ?result. Such a weak condition previously suppressed the
+		// injected base pattern, leaving ?result unbound inside the NOT EXISTS.
+		$condition->weakConditions['redirect'] = "?r1 ^property:redirects_to property:Foo .\n";
+
+		$conditionString = $conditionBuilder->convertConditionToString( $condition );
+
+		$this->assertStringContainsString(
+			'?result swivt:page ?url .',
+			$conditionString
+		);
+	}
+
+	public function testNegatedThingDescriptionInPropertyChainDoesNotBindResultVariable() {
+		$resultVariable = 'result';
+
+		$conditionBuilder = new ConditionBuilder( $this->descriptionInterpreterFactory );
+		$conditionBuilder->setResultVariable( $resultVariable );
+
+		// [[Chain.A::!+]] [[Chain.B::!+]] — two chained negations whose
+		// intermediate join variables are already bound by the enclosing
+		// property triple. Neither must add its own binding: a shared binding
+		// variable (?url) across both would wrongly force the two intermediates
+		// to be the same subject and silently drop valid results.
+		$negatedA = new ThingDescription();
+		$negatedA->isNegation = true;
+
+		$negatedB = new ThingDescription();
+		$negatedB->isNegation = true;
+
+		$description = new Conjunction( [
+			new SomeProperty( new Property( 'Chain' ), new SomeProperty( new Property( 'A' ), $negatedA ) ),
+			new SomeProperty( new Property( 'Chain' ), new SomeProperty( new Property( 'B' ), $negatedB ) )
+		] );
+
+		$condition = $conditionBuilder->getConditionFrom( $description );
+		$conditionString = $conditionBuilder->convertConditionToString( $condition );
+
+		// The chain intermediates are bound by their '?result property:Chain ?vN'
+		// triples, so no swivt:page binding is emitted on them.
+		$this->assertSame(
+			0,
+			substr_count( $conditionString, 'swivt:page' )
 		);
 	}
 
@@ -537,6 +819,61 @@ class SomePropertyInterpreterTest extends TestCase {
 		$expected = $stringBuilder
 			->addString( '?result swivt:wikiPageSortKey ?resultsk .' )->addNewLine()
 			->addString( '?result property:Modification_date-23aux "2440587.5423611"^^xsd:double .' )->addNewLine()
+			->getString();
+
+		$provider[] = [
+			$description,
+			$orderByProperty,
+			$sortkeys,
+			$conditionType,
+			$expected
+		];
+
+		# 15
+		$conditionType = WhereCondition::class;
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			new Property( 'Foo' ),
+			$thingDescription
+		);
+
+		$orderByProperty = null;
+		$sortkeys = [];
+
+		$expected = $stringBuilder
+			->addString( '?result swivt:page ?url .' )->addNewLine()
+			->addString( 'FILTER NOT EXISTS {' )->addNewLine()
+			->addString( '?result property:Foo ?v1 .' )->addNewLine()
+			->addString( '}' )->addNewLine()
+			->getString();
+
+		$provider[] = [
+			$description,
+			$orderByProperty,
+			$sortkeys,
+			$conditionType,
+			$expected
+		];
+
+		# 16 Inverse
+		$conditionType = WhereCondition::class;
+
+		$thingDescription = new ThingDescription();
+		$thingDescription->isNegation = true;
+
+		$description = new SomeProperty(
+			new Property( 'Foo', true ),
+			$thingDescription
+		);
+
+		$expected = $stringBuilder
+			->addString( '?result swivt:page ?url .' )->addNewLine()
+			->addString( 'FILTER NOT EXISTS {' )->addNewLine()
+			->addString( '?v1 property:Foo ?result .' )->addNewLine()
+			->addString( '}' )->addNewLine()
 			->getString();
 
 		$provider[] = [

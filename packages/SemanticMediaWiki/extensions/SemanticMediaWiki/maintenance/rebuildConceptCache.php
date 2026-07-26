@@ -6,6 +6,7 @@ use MediaWiki\Maintenance\Maintenance;
 use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\Setup;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -151,6 +152,10 @@ class rebuildConceptCache extends Maintenance {
 		);
 
 		$conceptCacheRebuilder->setParameters( $this->mOptions );
+
+		$conceptCacheRebuilder->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
+		);
 
 		$result = $this->checkForRebuildState(
 			$conceptCacheRebuilder->rebuild()

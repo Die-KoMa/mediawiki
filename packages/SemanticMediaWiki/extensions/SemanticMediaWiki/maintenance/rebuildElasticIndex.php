@@ -12,6 +12,7 @@ use SMW\SetupFile;
 use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -414,7 +415,10 @@ class rebuildElasticIndex extends Maintenance {
 			);
 		}
 
+		$statsFlusher = PeriodicStatsFlusher::newFromGlobalState();
+
 		foreach ( $res as $row ) {
+			$statsFlusher->tick();
 			$this->rebuildFromRow( ++$i, $count, $row, $last );
 		}
 

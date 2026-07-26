@@ -6,7 +6,6 @@ use RuntimeException;
 use SMW\MediaWiki\Connection\Database;
 use SMW\Query\Query;
 use SMW\SQLStore\TableBuilder\TemporaryTableBuilder;
-use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 /**
  * @license GPL-2.0-or-later
@@ -190,15 +189,35 @@ class QuerySegmentListProcessor {
 
 	private function conjunction( QuerySegment &$query ): void {
 		reset( $query->components );
-		$key = false;
 
-		// Pick one subquery as anchor point ...
+		// Pick one subquery as the anchor that the remaining conjuncts are
+		// joined onto. A component that owns a join table is ideal. Otherwise
+		// prefer a non-value component: a nested conjunction or disjunction
+		// resolves to a real table on its first processing pass, after which
+		// the other conjuncts join onto it correctly. A Q_VALUE has no join
+		// table and its processing ignores appended components, so anchoring
+		// on it silently drops all the other conjuncts, for example a concept
+		// combined with a single-page restriction (#6994). Fall back to the
+		// last component only when every component is a bare value restriction.
+		$key = false;
+		$nonValueKey = false;
+		$lastKey = false;
+
 		foreach ( $query->components as $qkey => $qid ) {
-			$key = $qkey;
+			$lastKey = $qkey;
 
 			if ( $this->querySegmentList[$qkey]->joinTable !== '' ) {
+				$key = $qkey;
 				break;
 			}
+
+			if ( $nonValueKey === false && $this->querySegmentList[$qkey]->type !== QuerySegment::Q_VALUE ) {
+				$nonValueKey = $qkey;
+			}
+		}
+
+		if ( $key === false ) {
+			$key = $nonValueKey !== false ? $nonValueKey : $lastKey;
 		}
 
 		$result = $this->querySegmentList[$key];
@@ -233,25 +252,72 @@ class QuerySegmentListProcessor {
 			$this->segment( $subQuery );
 
 			if ( $subQuery->joinTable !== '' ) {
-				// Residual planner-side raw SQL: INSERT IGNORE...SELECT pieced
-				// together from the planner's stringly-typed fragments
-				// (`$subQuery->where`, `$subQuery->from`, `$subQuery->joinfield`).
-				// Cannot be translated to insertSelect() without restructuring
-				// the QuerySegment IR; this is the documented escape hatch.
-				$sql = 'INSERT ' . 'IGNORE ' . 'INTO ' .
-					   $this->connection->tableName( $query->alias ) .
-					   " SELECT $subQuery->joinfield FROM " . $this->connection->tableName( $subQuery->joinTable ) .
-					   " AS $subQuery->alias $subQuery->from" . ( $subQuery->where ? " WHERE $subQuery->where" : '' );
-
-				$this->executedQueries[$query->alias][] = $sql;
+				// Diagnostic log entry: canonical MySQL-style form describing
+				// the logical operation. The real execution is a non-locking
+				// SELECT followed by literal INSERTs (below); this single line
+				// keeps the debug log readable. Emitting a raw
+				// "INSERT IGNORE ... SELECT" for execution broke SQLite and
+				// PostgreSQL (#6979).
+				$this->executedQueries[$query->alias][] = 'INSERT IGNORE INTO ' .
+					$this->connection->tableName( $query->alias ) .
+					" SELECT $subQuery->joinfield FROM " . $this->connection->tableName( $subQuery->joinTable ) .
+					" AS $subQuery->alias $subQuery->from" . ( $subQuery->where ? " WHERE $subQuery->where" : '' );
 
 				// @phan-suppress-next-line PhanImpossibleValueComparisonInLoop
 				if ( $this->queryMode !== Query::MODE_NONE ) {
-					$this->connection->query(
-						$sql,
-						__METHOD__,
-						ISQLPlatform::QUERY_CHANGE_ROWS
-					);
+					// Read the disjunct's matching ids with a plain, non-locking
+					// SELECT and re-insert them as literals, rather than a
+					// locking insertSelect(). insertSelect() routes through
+					// core's generic path on web requests (and on CLI unless a
+					// native INSERT...SELECT is replication-safe), which appends
+					// FOR UPDATE and takes exclusive next-key locks on the
+					// *persistent* property tables a leaf disjunct reads
+					// (smw_fpt_inst, smw_di_wikipage) merely to fill a
+					// session-local temp table; under concurrent writes those
+					// surface as Error 1205 lock-wait timeouts / Error 1213
+					// deadlocks (#7007). A standalone SELECT is a non-locking
+					// snapshot read on every path; this mirrors the
+					// HierarchyTempTableBuilder fix (#7004). It runs on the
+					// primary because a nested disjunct's source is a
+					// session-local temp table that exists only there.
+					//
+					// The structured $fromTables/$joinConditions (kept in
+					// parallel with the raw $from by table()) build portable
+					// SQL, matching the insertSelect() they replace (#6987). The
+					// source table list mirrors QueryEngine's final SELECT: the
+					// anchor table/alias prepended to the accumulated
+					// fromTables; rawTables() reproduces insertSelect()'s
+					// handling of that array, including nested join groups.
+					$ids = $this->connection->newPrimarySelectQueryBuilder()
+						->rawTables( array_merge( [ $subQuery->alias => $subQuery->joinTable ], $subQuery->fromTables ) )
+						->select( $subQuery->joinfield )
+						->where( ( $subQuery->where !== '' && $subQuery->where !== null ) ? $subQuery->where : [] )
+						->joinConds( $subQuery->joinConditions )
+						->caller( __METHOD__ )
+						->fetchFieldValues();
+
+					// A row can be reached under several joins; dedupe so the
+					// literal INSERT stays compact (INSERT IGNORE drops the
+					// duplicates anyway).
+					$ids = array_unique( array_map( 'intval', $ids ) );
+
+					// INSERT the ids as literals in bounded batches so a very
+					// large disjunct cannot produce an oversized statement
+					// (max_allowed_packet). ignore() emits the platform-correct
+					// verb (INSERT IGNORE / INSERT OR IGNORE / ON CONFLICT DO
+					// NOTHING).
+					foreach ( array_chunk( $ids, 1000 ) as $chunk ) {
+						$insertBuilder = $this->connection->newInsertQueryBuilder()
+							->insertInto( $query->alias )
+							->ignore()
+							->caller( __METHOD__ );
+
+						foreach ( $chunk as $id ) {
+							$insertBuilder->row( [ 'id' => $id ] );
+						}
+
+						$insertBuilder->execute();
+					}
 				}
 			} elseif ( $subQuery->joinfield !== '' ) {
 				// NOTE: this works only for single "unconditional" values without further

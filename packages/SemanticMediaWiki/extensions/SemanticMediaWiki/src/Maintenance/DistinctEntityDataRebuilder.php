@@ -15,6 +15,7 @@ use SMW\Query\QueryProcessor;
 use SMW\Query\QueryResult;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 use Throwable;
 
 /**
@@ -33,6 +34,8 @@ class DistinctEntityDataRebuilder {
 	private $reporter;
 
 	private ?ExceptionFileLogger $exceptionFileLogger = null;
+
+	private ?PeriodicStatsFlusher $statsFlusher = null;
 
 	private array $filters = [];
 
@@ -74,6 +77,13 @@ class DistinctEntityDataRebuilder {
 	 */
 	public function setExceptionFileLogger( ExceptionFileLogger $exceptionFileLogger ): void {
 		$this->exceptionFileLogger = $exceptionFileLogger;
+	}
+
+	/**
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
 	}
 
 	/**
@@ -127,6 +137,10 @@ class DistinctEntityDataRebuilder {
 		);
 
 		foreach ( $pages as $key => $page ) {
+
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
 
 			$this->rebuildCount++;
 			$progress = $cliMsgFormatter->progressCompact( $this->rebuildCount, $total );

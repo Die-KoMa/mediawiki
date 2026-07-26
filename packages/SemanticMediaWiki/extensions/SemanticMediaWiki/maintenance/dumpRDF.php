@@ -6,6 +6,7 @@ use MediaWiki\Maintenance\Maintenance;
 use Onoi\MessageReporter\MessageReporter;
 use SMW\Exporter\ExporterFactory;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -192,6 +193,10 @@ class dumpRDF extends Maintenance {
 
 		$exportController = $exporterFactory->newExportController(
 			$exporterFactory->newRDFXMLSerializer()
+		);
+
+		$exportController->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
 		);
 
 		if ( $pages !== [] ) {

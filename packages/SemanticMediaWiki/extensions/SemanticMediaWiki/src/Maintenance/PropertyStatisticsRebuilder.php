@@ -8,6 +8,7 @@ use SMW\SQLStore\PropertyStatisticsStore;
 use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Simple class for rebuilding property usage statistics.
@@ -21,6 +22,8 @@ use SMW\Utils\CliMsgFormatter;
 class PropertyStatisticsRebuilder {
 
 	private MessageReporter $messageReporter;
+
+	private ?PeriodicStatsFlusher $statsFlusher = null;
 
 	/**
 	 * @since 1.9
@@ -37,6 +40,13 @@ class PropertyStatisticsRebuilder {
 	 */
 	public function setMessageReporter( MessageReporter $messageReporter ): void {
 		$this->messageReporter = $messageReporter;
+	}
+
+	/**
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
 	}
 
 	/**
@@ -105,6 +115,10 @@ class PropertyStatisticsRebuilder {
 		$i = 0;
 
 		foreach ( $res as $row ) {
+
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
 
 			$i++;
 

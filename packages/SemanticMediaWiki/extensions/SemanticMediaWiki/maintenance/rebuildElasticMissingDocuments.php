@@ -17,6 +17,7 @@ use SMW\Setup;
 use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -297,7 +298,11 @@ class rebuildElasticMissingDocuments extends Maintenance {
 		$this->reportMessage( "\nInspecting documents ...\n" );
 		$cliMsgFormatter->setStartTime( (int)microtime( true ) );
 
+		$statsFlusher = PeriodicStatsFlusher::newFromGlobalState();
+
 		foreach ( $rows as $row ) {
+
+			$statsFlusher->tick();
 
 			if ( $row->smw_title === '_INST' ) {
 				continue;

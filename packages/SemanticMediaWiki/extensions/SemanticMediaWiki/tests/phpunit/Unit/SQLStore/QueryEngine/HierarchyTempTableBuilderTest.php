@@ -7,6 +7,8 @@ use SMW\MediaWiki\Connection\Database;
 use SMW\SQLStore\QueryEngine\HierarchyTempTableBuilder;
 use SMW\SQLStore\TableBuilder\TemporaryTableBuilder;
 use SMW\Tests\Unit\MediaWiki\Connection\MockWriteQueryBuilderTrait;
+use Wikimedia\Rdbms\FakeResultWrapper;
+use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 /**
  * @covers \SMW\SQLStore\QueryEngine\HierarchyTempTableBuilder
@@ -69,8 +71,14 @@ class HierarchyTempTableBuilderTest extends TestCase {
 	}
 
 	public function testFillTempTable() {
-		$this->connection->expects( $this->never() )
-			->method( 'tableName' );
+		// tableName() is now called inside the depth loop to build the
+		// non-locking frontier SELECT; stub it as an identity passthrough.
+		$this->connection->method( 'tableName' )
+			->willReturnCallback( static fn ( $table ) => $table );
+
+		// Exercise the iterative fallback (no recursive CTE support).
+		$this->connection->method( 'supportsRecursiveCommonTableExpressions' )
+			->willReturn( false );
 
 		$insertTables = [];
 		$insertRows = [];
@@ -85,9 +93,16 @@ class HierarchyTempTableBuilderTest extends TestCase {
 				return $this->createMockDeleteQueryBuilder( $deleteTables );
 			} );
 
-		// affectedRows() returns 0 by default — the depth loop exits at the
-		// first iteration, so insertSelect() is invoked once (for $tmpres)
-		// before the loop breaks.
+		// The depth-loop frontier is read with a plain, non-locking SELECT
+		// (no FOR UPDATE); return one row, then let affectedRows()=0 break the
+		// loop after the temp->temp carryback.
+		$queryCalls = [];
+		$this->connection->method( 'query' )
+			->willReturnCallback( static function ( $sql, $fname, $flags ) use ( &$queryCalls ) {
+				$queryCalls[] = [ 'sql' => $sql, 'flags' => $flags ];
+				return new FakeResultWrapper( [ (object)[ 's_id' => '99' ] ] );
+			} );
+
 		$this->connection->method( 'affectedRows' )->willReturn( 0 );
 
 		$insertSelectCalls = [];
@@ -110,16 +125,24 @@ class HierarchyTempTableBuilderTest extends TestCase {
 
 		$instance->fillTempTable( 'class', 'foobar', '(42)' );
 
-		// Two INSERT IGNORE seed builders: one targeting $tablename ('foobar'),
-		// one targeting $tmpnew ('smw_new'). Each receives a single row.
-		$this->assertSame( [ 'foobar', 'smw_new' ], $insertTables );
-		$this->assertSame( [ [ 'id' => 42 ], [ 'id' => 42 ] ], $insertRows );
+		// Two INSERT IGNORE seed builders ($tablename 'foobar' and $tmpnew
+		// 'smw_new'), then the depth-loop frontier INSERT IGNORE into $tmpres
+		// ('smw_res') with the id read back from the SELECT.
+		$this->assertSame( [ 'foobar', 'smw_new', 'smw_res' ], $insertTables );
+		$this->assertSame( [ [ 'id' => 42 ], [ 'id' => 42 ], [ 'id' => 99 ] ], $insertRows );
 
-		// Pin the depth-loop's insertSelect count: one carryback INSERT into
-		// $tmpres, then affectedRows()=0 breaks the loop before the next call.
+		// The frontier is read with exactly one plain, non-locking SELECT
+		// (QUERY_CHANGE_NONE) joining $smwtable ('bar') and $tmpnew ('smw_new').
+		// The exact string also pins the absence of FOR UPDATE.
+		$this->assertCount( 1, $queryCalls );
+		$this->assertSame( 'SELECT s_id FROM bar,smw_new WHERE o_id=id', $queryCalls[0]['sql'] );
+		$this->assertSame( ISQLPlatform::QUERY_CHANGE_NONE, $queryCalls[0]['flags'] );
+
+		// The only insertSelect left in the loop is the temp->temp carryback
+		// ($tmpres -> $tablename); affectedRows()=0 then breaks the loop.
 		$this->assertCount( 1, $insertSelectCalls );
-		$this->assertSame( 'smw_res', $insertSelectCalls[0]['dest'] );
-		$this->assertSame( [ 'bar', 'smw_new' ], $insertSelectCalls[0]['src'] );
+		$this->assertSame( 'foobar', $insertSelectCalls[0]['dest'] );
+		$this->assertSame( 'smw_res', $insertSelectCalls[0]['src'] );
 		$this->assertSame( [ 'IGNORE' ], $insertSelectCalls[0]['insertOptions'] );
 
 		$expected = [
@@ -138,13 +161,14 @@ class HierarchyTempTableBuilderTest extends TestCase {
 		);
 	}
 
-	public function testFillTempTableUsesCacheOnRepeatComposite() {
-		$this->connection->expects( $this->never() )
-			->method( 'tableName' );
+	public function testFillTempTableStopsWhenFrontierEmpty() {
+		$this->connection->method( 'tableName' )
+			->willReturnCallback( static fn ( $table ) => $table );
 
-		// First fill seeds the cache with insertInto + insertSelect calls;
-		// second fill must hit the cache branch and use insertSelect() to
-		// copy rows from the cached table.
+		// Exercise the iterative fallback (no recursive CTE support).
+		$this->connection->method( 'supportsRecursiveCommonTableExpressions' )
+			->willReturn( false );
+
 		$insertTables = [];
 		$insertRows = [];
 		$this->connection->method( 'newInsertQueryBuilder' )
@@ -155,6 +179,63 @@ class HierarchyTempTableBuilderTest extends TestCase {
 		$this->connection->method( 'newDeleteQueryBuilder' )
 			->willReturnCallback( function () {
 				return $this->createMockDeleteQueryBuilder();
+			} );
+
+		// Empty frontier: the depth loop must break at the $ids === [] check,
+		// before any $tmpres insert or carryback insertSelect.
+		$this->connection->method( 'query' )
+			->willReturn( new FakeResultWrapper( [] ) );
+
+		$insertSelectCalled = false;
+		$this->connection->method( 'insertSelect' )
+			->willReturnCallback( static function () use ( &$insertSelectCalled ) {
+				$insertSelectCalled = true;
+				return true;
+			} );
+
+		$instance = new HierarchyTempTableBuilder(
+			$this->connection,
+			$this->temporaryTableBuilder
+		);
+
+		$instance->setTableDefinitions( [ 'class' => [ 'table' => 'bar', 'depth' => 3 ] ] );
+		$instance->fillTempTable( 'class', 'foobar', '(42)' );
+
+		// Only the two seed inserts ran ($tablename 'foobar' and $tmpnew
+		// 'smw_new'); the empty frontier breaks the loop before $tmpres is
+		// touched and before any carryback.
+		$this->assertSame( [ 'foobar', 'smw_new' ], $insertTables );
+		$this->assertFalse( $insertSelectCalled, 'no carryback insertSelect when the frontier is empty' );
+		$this->assertSame( [ '(42)' => 'foobar' ], $instance->getHierarchyCache() );
+	}
+
+	public function testFillTempTableUsesCacheOnRepeatComposite() {
+		$this->connection->method( 'tableName' )
+			->willReturnCallback( static fn ( $table ) => $table );
+
+		// Exercise the iterative fallback (no recursive CTE support).
+		$this->connection->method( 'supportsRecursiveCommonTableExpressions' )
+			->willReturn( false );
+
+		// First fill seeds the cache with insertInto + (frontier SELECT +
+		// temp->temp carryback) calls; second fill must hit the cache branch
+		// and use insertSelect() to copy rows from the cached table.
+		$insertTables = [];
+		$insertRows = [];
+		$this->connection->method( 'newInsertQueryBuilder' )
+			->willReturnCallback( function () use ( &$insertTables, &$insertRows ) {
+				return $this->createMockInsertQueryBuilder( $insertTables, $insertRows );
+			} );
+
+		$this->connection->method( 'newDeleteQueryBuilder' )
+			->willReturnCallback( function () {
+				return $this->createMockDeleteQueryBuilder();
+			} );
+
+		// First fill's depth loop reads the frontier with a plain SELECT.
+		$this->connection->method( 'query' )
+			->willReturnCallback( static function () {
+				return new FakeResultWrapper( [ (object)[ 's_id' => '99' ] ] );
 			} );
 
 		$this->connection->method( 'affectedRows' )->willReturn( 0 );
@@ -204,6 +285,67 @@ class HierarchyTempTableBuilderTest extends TestCase {
 		// because affectedRows()=0); second fill issues 1 insertSelect (cache
 		// copy). Pin the total so silent regressions in either branch fail.
 		$this->assertCount( 2, $insertSelectCalls );
+	}
+
+	public function testFillTempTableUsesRecursiveCteWhenSupported() {
+		$this->connection->method( 'supportsRecursiveCommonTableExpressions' )
+			->willReturn( true );
+		$this->connection->method( 'tableName' )
+			->willReturnCallback( static fn ( $table ) => $table );
+		$this->connection->method( 'buildIntegerCast' )
+			->willReturnCallback( static fn ( $field ) => "CAST($field AS SIGNED)" );
+
+		// The recursion is a STANDALONE, non-locking SELECT; return the resolved
+		// ids. The CTE path must not use the locking insertSelect.
+		$queryCalls = [];
+		$this->connection->method( 'query' )
+			->willReturnCallback( static function ( $sql, $fname, $flags ) use ( &$queryCalls ) {
+				$queryCalls[] = [ 'sql' => $sql, 'flags' => $flags ];
+				return new FakeResultWrapper( [
+					(object)[ 'id' => '42' ], (object)[ 'id' => '43' ], (object)[ 'id' => '77' ]
+				] );
+			} );
+		$this->connection->expects( $this->never() )->method( 'insertSelect' );
+
+		// Resolved ids are re-inserted as literals into the result table.
+		$insertTables = [];
+		$insertRows = [];
+		$this->connection->method( 'newInsertQueryBuilder' )
+			->willReturnCallback( function () use ( &$insertTables, &$insertRows ) {
+				return $this->createMockInsertQueryBuilder( $insertTables, $insertRows );
+			} );
+
+		$instance = new HierarchyTempTableBuilder(
+			$this->connection,
+			$this->temporaryTableBuilder
+		);
+
+		$instance->setTableDefinitions( [ 'class' => [ 'table' => 'bar', 'depth' => 4 ] ] );
+		$instance->fillTempTable( 'class', 'foobar', '(42),(43)' );
+
+		$this->assertCount( 1, $queryCalls );
+		$sql = $queryCalls[0]['sql'];
+
+		// One STANDALONE recursive SELECT (not a coupled INSERT ... SELECT, which
+		// would take shared locks on the source), with both seed anchors at level
+		// 0, the recursive join, the depth cap, DISTINCT, and no FOR UPDATE; it is
+		// flagged QUERY_CHANGE_NONE (a read).
+		$this->assertStringStartsWith( 'WITH RECURSIVE smw_cte (id, lvl)', $sql );
+		$this->assertStringNotContainsString( 'INSERT', $sql );
+		$this->assertStringContainsString( 'SELECT CAST(42 AS SIGNED) AS id, 0 AS lvl', $sql );
+		$this->assertStringContainsString( 'SELECT CAST(43 AS SIGNED) AS id, 0 AS lvl', $sql );
+		$this->assertStringContainsString( 'CAST(t.s_id AS SIGNED), smw_cte.lvl + 1', $sql );
+		$this->assertStringContainsString( 'FROM bar AS t JOIN smw_cte ON t.o_id = smw_cte.id', $sql );
+		$this->assertStringContainsString( 'WHERE smw_cte.lvl < 4', $sql );
+		$this->assertStringContainsString( 'SELECT DISTINCT id FROM smw_cte', $sql );
+		$this->assertStringNotContainsStringIgnoringCase( 'FOR UPDATE', $sql );
+		$this->assertSame( ISQLPlatform::QUERY_CHANGE_NONE, $queryCalls[0]['flags'] );
+
+		// The resolved ids are inserted as literals into the result table.
+		$this->assertSame( [ 'foobar' ], $insertTables );
+		$this->assertSame( [ [ 'id' => 42 ], [ 'id' => 43 ], [ 'id' => 77 ] ], $insertRows );
+
+		$this->assertSame( [ '(42),(43)' => 'foobar' ], $instance->getHierarchyCache() );
 	}
 
 }

@@ -289,11 +289,20 @@ class SpecialAsk extends SpecialPage {
 		$printer = null;
 
 		if ( $this->queryString !== '' ) {
-			[ $result, $res, $duration ] = $this->fetchResults(
+			$fetched = $this->fetchResults(
 				$printer,
 				$queryobj,
 				$urlArgs
 			);
+
+			// A remote request (request_type) prints its output directly, disables
+			// the OutputPage, and returns the print() status (an int) rather than
+			// the [ result, res, duration ] triple. Destructuring that int is a
+			// fatal on PHP 8.5 ("Cannot use int as array"), so only unpack an
+			// actual result and leave the already emitted response untouched.
+			if ( is_array( $fetched ) ) {
+				[ $result, $res, $duration ] = $fetched;
+			}
 		}
 
 		if ( $printer !== null && $printer->isExportFormat() ) {
@@ -491,7 +500,9 @@ class SpecialAsk extends SpecialPage {
 			}
 		}
 
-		$scoreSet = $res->getScoreSet();
+		// A debug query (format=debug) returns the debug output as a string rather
+		// than a QueryResult, so only query results expose a score set.
+		$scoreSet = $res instanceof QueryResult ? $res->getScoreSet() : null;
 		if ( $this->getRequest()->getVal( 'score_set', false ) && $scoreSet !== null ) {
 			$table = $scoreSet->asTable( 'sortable wikitable smwtable-striped broadtable' );
 

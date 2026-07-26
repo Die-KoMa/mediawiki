@@ -6,6 +6,7 @@ use RuntimeException;
 use SMW\MediaWiki\Connection\Database;
 use SMW\SQLStore\TableBuilder\TemporaryTableBuilder;
 use Wikimedia\Rdbms\IDatabase;
+use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 /**
  * @license GPL-2.0-or-later
@@ -123,12 +124,101 @@ class HierarchyTempTableBuilder {
 	}
 
 	/**
+	 * Populate the already-created result table $tablename with the seed ids in
+	 * $values plus their sub-elements (subcategories / subproperties) down to
+	 * $depth levels, then record it in the per-request cache.
+	 *
+	 * Prefers a single recursive CTE; falls back to an iterative temp-table walk
+	 * on databases without WITH RECURSIVE (MySQL < 8).
+	 */
+	private function buildTempTable( string $tablename, string $values, string $smwtable, int $depth ): void {
+		if ( $this->connection->supportsRecursiveCommonTableExpressions() ) {
+			$this->buildTempTableRecursively( $tablename, $values, $smwtable, $depth );
+		} else {
+			$this->buildTempTableIteratively( $tablename, $values, $smwtable, $depth );
+		}
+
+		$this->hierarchyCache[$values] = $tablename;
+	}
+
+	/**
+	 * Hierarchy resolution via a recursive CTE: resolve the seed ids and their
+	 * sub-elements (down to $depth levels) in a single recursive read, then
+	 * insert them as literals into the result table $tablename.
+	 *
+	 * The recursion is run as a STANDALONE SELECT, not a coupled
+	 * INSERT ... SELECT: under InnoDB REPEATABLE READ an INSERT ... SELECT takes
+	 * shared next-key locks on the persistent $smwtable it reads, which would
+	 * reintroduce the issue #4527 lock-wait contention against concurrent
+	 * writers (rebuild / ChangePropagation). A standalone SELECT is a
+	 * non-locking snapshot read, so the read/write split is preserved exactly as
+	 * in the iterative fallback. The single recursive read still replaces the
+	 * iterative path's per-level round-trips and scratch temp tables.
+	 */
+	private function buildTempTableRecursively( string $tablename, string $values, string $smwtable, int $depth ): void {
+		$db = $this->connection;
+
+		// Anchor members: the seed ids at recursion level 0. `$values` is a
+		// comma-joined string of parenthesised single literals like
+		// '(123),(456)'. buildIntegerCast() keeps the CTE id column type
+		// consistent with the cast s_id of the recursive member across dialects
+		// (MySQL/MariaDB SIGNED, SQLite/PostgreSQL INTEGER), which the stricter
+		// engines require for a recursive CTE.
+		$anchors = [];
+		foreach ( explode( ',', $values ) as $value ) {
+			// $value looks like '(123)'. Strip parens/spaces to get the int id.
+			$id = (int)trim( $value, '() ' );
+			$anchors[] = 'SELECT ' . $db->buildIntegerCast( (string)$id ) . ' AS id, 0 AS lvl';
+		}
+
+		// WITH RECURSIVE smw_cte (id, lvl) AS (
+		//   <seed ids at lvl 0>
+		//   UNION
+		//   SELECT <cast t.s_id>, lvl + 1 FROM <smwtable> t JOIN smw_cte ON t.o_id = smw_cte.id
+		//     WHERE lvl < <depth>
+		// ) SELECT DISTINCT id FROM smw_cte
+		// Termination is bounded by the depth cap (a cycle keeps producing new
+		// rows at higher lvl until lvl reaches $depth); DISTINCT collapses a node
+		// reached at several depths to a single id.
+		$sql = 'WITH RECURSIVE smw_cte (id, lvl) AS ( '
+			. implode( ' UNION ', $anchors )
+			. ' UNION SELECT ' . $db->buildIntegerCast( 't.s_id' ) . ', smw_cte.lvl + 1 '
+			. 'FROM ' . $db->tableName( $smwtable ) . ' AS t JOIN smw_cte ON t.o_id = smw_cte.id '
+			. 'WHERE smw_cte.lvl < ' . $depth
+			. ' ) SELECT DISTINCT id FROM smw_cte';
+
+		$res = $db->query( $sql, __METHOD__, ISQLPlatform::QUERY_CHANGE_NONE );
+
+		$ids = [];
+		foreach ( $res as $row ) {
+			$ids[] = (int)$row->id;
+		}
+
+		// Re-insert the resolved ids as literals into the result table, batched
+		// to bound statement size (see buildTempTableIteratively).
+		foreach ( array_chunk( $ids, 1000 ) as $chunk ) {
+			$qb = $db->newInsertQueryBuilder()
+				->insertInto( $tablename )
+				->ignore()
+				->caller( __METHOD__ );
+
+			foreach ( $chunk as $id ) {
+				$qb->row( [ 'id' => $id ] );
+			}
+
+			$qb->execute();
+		}
+	}
+
+	/**
+	 * Iterative hierarchy resolution for databases without recursive CTEs.
+	 *
 	 * @note we use two helper tables. One holds the results of each new iteration, one holds the
 	 * results of the previous iteration. One could of course do with only the above result table,
 	 * but then every iteration would use all elements of this table, while only the new ones
 	 * obtained in the previous step are relevant. So this is a performance measure.
 	 */
-	private function buildTempTable( string $tablename, string $values, string $smwtable, int $depth ): void {
+	private function buildTempTableIteratively( string $tablename, string $values, string $smwtable, int $depth ): void {
 		$db = $this->connection;
 
 		$tmpnew = 'smw_new';
@@ -162,30 +252,64 @@ class HierarchyTempTableBuilder {
 		$tablenameQb->execute();
 		$tmpnewQb->execute();
 
-		// MySQL rejects CAST( ... AS INTEGER ) and requires SIGNED, while SQLite
-		// and PostgreSQL want INTEGER; buildIntegerCast() emits the form matching
-		// the connection's platform.
-		$idCast = $db->buildIntegerCast( 's_id' );
+		// Resolve the persistent source table's physical (prefix-applied) name
+		// once. The temp-table names are resolved per iteration because $tmpnew
+		// and $tmpres are swapped at the end of each pass.
+		$smwtableName = $db->tableName( $smwtable );
 
 		for ( $i = 0; $i < $depth; $i++ ) {
-			// INSERT IGNORE INTO $tmpres (id)
-			//   SELECT <integer cast of s_id> FROM $smwtable, $tmpnew WHERE o_id=id
-			$db->insertSelect(
-				$tmpres,
-				[ $smwtable, $tmpnew ],
-				[ 'id' => $idCast ],
-				[ 'o_id=id' ],
+			// Read the next hierarchy frontier with a PLAIN, non-locking SELECT
+			// (no FOR UPDATE) and re-insert the ids as literals. Splitting the
+			// read from the write keeps the persistent $smwtable lock-free:
+			// IDatabase::insertSelect() takes a locking SELECT ... FOR UPDATE on
+			// the web-request path (and a shared-lock INSERT ... SELECT on the
+			// native path), which under concurrent writes to $smwtable (rebuild /
+			// ChangePropagation jobs) caused Error 1205 lock-wait timeouts
+			// (issue #4527). A standalone SELECT is a non-locking snapshot read,
+			// so it takes no locks on $smwtable on any path. It runs on the write
+			// connection because $tmpnew is a session-local temporary table that
+			// exists only there.
+			$res = $db->query(
+				"SELECT s_id FROM $smwtableName," . $db->tableName( $tmpnew ) . ' WHERE o_id=id',
 				__METHOD__,
-				[ 'IGNORE' ],
-				[],
-				[]
+				ISQLPlatform::QUERY_CHANGE_NONE
 			);
 
-			if ( $db->affectedRows() == 0 ) { // no change, exit loop
+			$ids = [];
+			foreach ( $res as $row ) {
+				$ids[] = (int)$row->s_id;
+			}
+
+			// A child reachable from several parents appears once per parent;
+			// dedupe so the literal INSERT below stays compact (INSERT IGNORE
+			// would drop the duplicates anyway).
+			$ids = array_unique( $ids );
+
+			if ( $ids === [] ) { // no new ids, exit loop
 				break;
 			}
 
-			// INSERT IGNORE INTO $tablename (id) SELECT $tmpres.id FROM $tmpres
+			// INSERT IGNORE the frontier ids into $tmpres, in bounded batches so
+			// a very wide hierarchy level cannot produce an oversized statement
+			// (max_allowed_packet) or an unbounded PHP buffer. The IGNORE option
+			// produces platform-correct INSERT IGNORE / OR IGNORE / ON CONFLICT
+			// DO NOTHING automatically.
+			foreach ( array_chunk( $ids, 1000 ) as $chunk ) {
+				$tmpresQb = $db->newInsertQueryBuilder()
+					->insertInto( $tmpres )
+					->ignore()
+					->caller( __METHOD__ );
+
+				foreach ( $chunk as $id ) {
+					$tmpresQb->row( [ 'id' => $id ] );
+				}
+
+				$tmpresQb->execute();
+			}
+
+			// INSERT IGNORE INTO $tablename (id) SELECT $tmpres.id FROM $tmpres.
+			// Both are temporary tables, so insertSelect()'s FOR UPDATE is
+			// session-local and harmless here.
 			$db->insertSelect(
 				$tablename,
 				$tmpres,
@@ -211,8 +335,6 @@ class HierarchyTempTableBuilder {
 			$tmpnew = $tmpres;
 			$tmpres = $tmpname;
 		}
-
-		$this->hierarchyCache[$values] = $tablename;
 
 		$this->temporaryTableBuilder->drop( $tmpnew );
 		$this->temporaryTableBuilder->drop( $tmpres );

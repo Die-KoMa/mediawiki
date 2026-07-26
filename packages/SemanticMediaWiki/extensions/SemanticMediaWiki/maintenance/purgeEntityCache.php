@@ -14,6 +14,7 @@ use SMW\Setup;
 use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -212,7 +213,10 @@ class purgeEntityCache extends Maintenance {
 			$cliMsgFormatter->twoCols( "... entities matched ...", "(rows) $count", 3 )
 		);
 
+		$statsFlusher = PeriodicStatsFlusher::newFromGlobalState();
+
 		foreach ( $rows as $row ) {
+			$statsFlusher->tick();
 			$i++;
 
 			$msg = $cliMsgFormatter->progressCompact( $i, $count, $row->smw_id, $this->lastId );

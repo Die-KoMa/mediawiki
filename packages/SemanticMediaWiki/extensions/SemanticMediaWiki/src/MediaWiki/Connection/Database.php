@@ -108,6 +108,20 @@ class Database {
 	}
 
 	/**
+	 * Returns a SelectQueryBuilder bound to the primary (write) connection.
+	 *
+	 * Unlike newSelectQueryBuilder(), which reads from a replica, this reads
+	 * from the primary so it can see session-local temporary tables (which
+	 * exist only on the primary) and writes made earlier in the same request.
+	 * It is still a plain, non-locking SELECT.
+	 *
+	 * @since 7.1.0
+	 */
+	public function newPrimarySelectQueryBuilder(): SelectQueryBuilder {
+		return $this->connRef->getConnection( 'write' )->newSelectQueryBuilder();
+	}
+
+	/**
 	 * @since 7.0.0
 	 */
 	public function newInsertQueryBuilder(): InsertQueryBuilder {
@@ -185,6 +199,41 @@ class Database {
 	 */
 	public function buildIntegerCast( string $field ): string {
 		return $this->connRef->getConnection( 'read' )->buildIntegerCast( $field );
+	}
+
+	/**
+	 * Whether the connected database server supports recursive common table
+	 * expressions (`WITH RECURSIVE`). True for PostgreSQL (>= 8.4) and SQLite
+	 * (>= 3.8.3), which covers every version in practical use under MediaWiki,
+	 * and for MariaDB; for plain MySQL it requires 8.0+, as 5.7 has no
+	 * `WITH RECURSIVE`.
+	 *
+	 * @since 7.1.0
+	 */
+	public function supportsRecursiveCommonTableExpressions(): bool {
+		$type = $this->getType();
+
+		if ( $type === 'postgres' || $type === 'sqlite' ) {
+			return true;
+		}
+
+		if ( $type !== 'mysql' ) {
+			return false;
+		}
+
+		$connection = $this->connRef->getConnection( 'read' );
+
+		// Detect MariaDB explicitly so the numeric gate below only governs plain
+		// MySQL. MariaDB (10.3 is the MediaWiki minimum) has had WITH RECURSIVE
+		// since 10.2; matching the server info string also stays correct even for
+		// a version that exposes the legacy "5.5.5-" MySQL-compatibility prefix,
+		// which version_compare would otherwise misread as 5.5.
+		if ( strpos( $connection->getServerInfo(), 'MariaDB' ) !== false ) {
+			return true;
+		}
+
+		// Plain MySQL: recursive CTEs require 8.0.
+		return version_compare( $connection->getServerVersion(), '8.0', '>=' );
 	}
 
 	/**
@@ -537,7 +586,10 @@ class Database {
 			$fname
 		);
 
-		$this->connRef->getConnection( 'write' )->startAtomic( $fname );
+		// Use a cancelable atomic section so the writes can be rolled back via
+		// `cancelSectionTransaction` when the update throws, instead of leaving
+		// the section (and the underlying atomic) dangling.
+		$this->connRef->getConnection( 'write' )->startAtomic( $fname, IDatabase::ATOMIC_CANCELABLE );
 	}
 
 	/**
@@ -551,6 +603,27 @@ class Database {
 		);
 
 		$this->connRef->getConnection( 'write' )->endAtomic( $fname );
+	}
+
+	/**
+	 * Roll back a section transaction started with `beginSectionTransaction`,
+	 * discarding its writes via `cancelAtomic` and clearing the registered
+	 * section so a subsequent section transaction can be started.
+	 *
+	 * @since 7.1.0
+	 *
+	 * @param string $fname
+	 */
+	public function cancelSectionTransaction( $fname = __METHOD__ ): void {
+		// A rollback path must not raise a secondary error. The section may
+		// already have been detached (e.g. endSectionTransaction() cleared the
+		// flag and then its endAtomic() threw), so only detach when this section
+		// is still registered; the atomic is rolled back either way.
+		if ( $this->transactionHandler->inSectionTransaction( $fname ) ) {
+			$this->transactionHandler->detachSectionTransaction( $fname );
+		}
+
+		$this->connRef->getConnection( 'write' )->cancelAtomic( $fname );
 	}
 
 	/**

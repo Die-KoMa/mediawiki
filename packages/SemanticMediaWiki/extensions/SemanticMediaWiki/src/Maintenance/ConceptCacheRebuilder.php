@@ -11,6 +11,7 @@ use SMW\MediaWiki\TitleLookup;
 use SMW\Settings;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Is part of the `rebuildConceptCache.php` maintenance script to rebuild
@@ -37,6 +38,7 @@ class ConceptCacheRebuilder {
 	private int $endId   = 0;
 	private int $lines   = 0;
 	private bool $verbose = false;
+	private ?PeriodicStatsFlusher $statsFlusher = null;
 
 	/**
 	 * @since 1.9.2
@@ -55,6 +57,13 @@ class ConceptCacheRebuilder {
 	 */
 	public function setMessageReporter( MessageReporter $reporter ): void {
 		$this->reporter = $reporter;
+	}
+
+	/**
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
 	}
 
 	/**
@@ -153,6 +162,9 @@ class ConceptCacheRebuilder {
 		$concepts = $this->getConcepts();
 
 		foreach ( $concepts as $concept ) {
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
 			$this->workOnConcept( $concept );
 		}
 

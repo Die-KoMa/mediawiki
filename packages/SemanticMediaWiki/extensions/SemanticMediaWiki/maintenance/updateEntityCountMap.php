@@ -10,6 +10,7 @@ use SMW\SQLStore\SQLStore;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
 use SMW\Utils\HmacSerializer;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -182,7 +183,11 @@ class updateEntityCountMap extends Maintenance {
 	private function runUpdate() {
 		$connection = $this->store->getConnection( 'mw.db' );
 
+		$statsFlusher = PeriodicStatsFlusher::newFromGlobalState();
+
 		for ( $i = 0; $i <= $this->last; $i++ ) {
+
+			$statsFlusher->tick();
 
 			$row = $connection->newSelectQueryBuilder()
 				->select( [

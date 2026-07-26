@@ -11,6 +11,7 @@ use SMW\Setup;
 use SMW\SQLStore\QueryEngine\FulltextSearchTableFactory;
 use SMW\SQLStore\SQLStore;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -161,6 +162,11 @@ class rebuildFulltextSearchTable extends Maintenance {
 		$maintenanceHelper->initRuntimeValues();
 
 		$searchTableRebuilder->setMessageReporter( $this->messageReporter );
+
+		$searchTableRebuilder->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
+		);
+
 		$result = $searchTableRebuilder->rebuild();
 
 		if ( $this->hasOption( 'report-runtime' ) ) {

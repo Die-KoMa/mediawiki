@@ -12,6 +12,7 @@ use SMW\Setup;
 use SMW\Store;
 use SMW\StoreFactory;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -174,6 +175,10 @@ class rebuildData extends Maintenance {
 			[ $this, 'reportMessage' ]
 		);
 
+		$dataRebuilder->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
+		);
+
 		if ( $this->hasOption( 'f' ) ) {
 			$autoRecovery->enable( true );
 			$autoRecovery->set( $dataRebuilder::AUTO_RECOVERY_ID, false );
@@ -255,6 +260,13 @@ class rebuildData extends Maintenance {
 
 				$this->reportMessage( "\n" );
 			}
+		}
+
+		// A run that logged one or more exceptions under --ignore-exceptions did
+		// not complete cleanly. Return false so MediaWiki exits with a non-zero
+		// status and cron/CI can detect the incomplete rebuild.
+		if ( $result && $dataRebuilder->getExceptionCount() > 0 ) {
+			$result = false;
 		}
 
 		return $result;

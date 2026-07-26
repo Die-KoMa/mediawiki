@@ -15,6 +15,7 @@ use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\SQLStore\Rebuilder\Rebuilder;
 use SMW\Store;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 use Throwable;
 
 /**
@@ -41,6 +42,8 @@ class DataRebuilder {
 	private $reporter;
 
 	private ?AutoRecovery $autoRecovery = null;
+
+	private ?PeriodicStatsFlusher $statsFlusher = null;
 
 	private DistinctEntityDataRebuilder $distinctEntityDataRebuilder;
 
@@ -98,6 +101,14 @@ class DataRebuilder {
 	 */
 	public function setAutoRecovery( AutoRecovery $autoRecovery ): void {
 		$this->autoRecovery = $autoRecovery;
+	}
+
+	/**
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
+		$this->distinctEntityDataRebuilder->setStatsFlusher( $statsFlusher );
 	}
 
 	/**
@@ -362,6 +373,10 @@ class DataRebuilder {
 		$current_id = 0;
 		$max = ( $this->end ? "$this->end" : $maxId );
 
+		// Snapshot the exception count so the data-step failures can be
+		// distinguished from any logged during the preceding property rebuild.
+		$exceptionsBefore = $this->exceptionFileLogger->getExceptionCount();
+
 		while ( ( ( !$this->end ) || ( $id <= $this->end ) ) && ( $id > 0 ) ) {
 
 			if ( $this->autoRecovery !== null ) {
@@ -421,15 +436,25 @@ class DataRebuilder {
 
 		$this->write_to_file( $id );
 
+		$failed = $this->exceptionFileLogger->getExceptionCount() - $exceptionsBefore;
+
 		$this->reportMessage(
-			$this->cliMsgFormatter->twoCols( '   ... refreshed (IDs)', sprintf( "%s", ( $this->rebuildCount - $this->start ) ) )
+			$this->cliMsgFormatter->twoCols( '   ... refreshed (IDs)', sprintf( "%s", ( $this->rebuildCount - $this->start ) - $failed ) )
 		);
 
 		$this->reportMessage(
 			$this->cliMsgFormatter->twoCols( '   ... skipped (IDs)', sprintf( "%s", $skipped_update ) )
 		);
 
-		$this->reportMessage( "   ... done.\n" );
+		if ( $failed > 0 ) {
+			$this->reportMessage(
+				$this->cliMsgFormatter->twoCols( '   ... failed (IDs)', sprintf( "%s", $failed ) )
+			);
+
+			$this->reportMessage( "   ... completed with errors.\n" );
+		} else {
+			$this->reportMessage( "   ... done.\n" );
+		}
 
 		if ( $this->options->safeGet( 'use-job', false ) ) {
 			$text = [
@@ -495,6 +520,10 @@ class DataRebuilder {
 
 		if ( $this->rebuildCount % 100 === 0 ) { // every 100 pages only
 			MediaWikiServices::getInstance()->getLinkCache()->clear(); // avoid memory leaks
+		}
+
+		if ( $this->statsFlusher !== null ) {
+			$this->statsFlusher->tick();
 		}
 
 		$this->rebuildCount++;
@@ -611,6 +640,11 @@ class DataRebuilder {
 		);
 
 		$outdatedDisposer->setMessageReporter( $this->reporter );
+
+		if ( $this->statsFlusher !== null ) {
+			$outdatedDisposer->setStatsFlusher( $this->statsFlusher );
+		}
+
 		$outdatedDisposer->run();
 	}
 

@@ -23,6 +23,7 @@ use SMW\Query\Query;
 use SMW\RequestOptions;
 use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\StoreFactory;
+use SMW\Utils\PeriodicStatsFlusher;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\IReadableDatabase;
 
@@ -70,6 +71,8 @@ class ExportController {
 
 	private ?NamespaceExaminer $namespaceExaminer = null;
 
+	private ?PeriodicStatsFlusher $statsFlusher = null;
+
 	/**
 	 * @since 1.5.5
 	 */
@@ -86,6 +89,13 @@ class ExportController {
 	 */
 	public function enableBacklinks( bool $enable ): void {
 		$this->add_backlinks = $enable;
+	}
+
+	/**
+	 * @since 7.2.0
+	 */
+	public function setStatsFlusher( PeriodicStatsFlusher $statsFlusher ): void {
+		$this->statsFlusher = $statsFlusher;
 	}
 
 	/**
@@ -444,6 +454,10 @@ class ExportController {
 		);
 
 		while ( $this->queue->count() > 0 ) {
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
+
 			$diPage = $this->queue->reset();
 			$this->serializePage( $diPage, $diPage->recdepth );
 			$this->flush();
@@ -527,6 +541,10 @@ class ExportController {
 		$delaycount = $delayeach;
 
 		for ( $id = 1; $id <= $end; $id += 1 ) {
+			if ( $this->statsFlusher !== null ) {
+				$this->statsFlusher->tick();
+			}
+
 			$title = $titleFactory->newFromID( $id );
 			if ( $title === null || !$this->isSemanticEnabled( $title->getNamespace() ) ) {
 				continue;

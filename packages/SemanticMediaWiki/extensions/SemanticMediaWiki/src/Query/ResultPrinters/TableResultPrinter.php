@@ -144,6 +144,20 @@ class TableResultPrinter extends ResultPrinter {
 				// #2702 Use a fixed output on a requested plain printout
 				$mode = $this->isHTML && $isPlain ? SMW_OUTPUT_WIKI : $outputMode;
 				$text = $pr->getText( $mode, ( $isPlain ? null : $this->mLinker ) );
+
+				// getText( SMW_OUTPUT_WIKI ) returns the label unescaped and HtmlTable
+				// emits header content verbatim into <th>, so a user-controlled plain
+				// header (e.g. mainlabel) is escaped here. Non-plain HTML is escaped by
+				// the formatter; inline wikitext output is sanitised by the parser.
+				//
+				// In this branch $mode is SMW_OUTPUT_WIKI with a null linker, so getText()
+				// returns the raw label; Phan cannot narrow the mode and over-taints it as
+				// already escaped via the HTML formatter path, hence the suppression.
+				if ( $this->isHTML && $isPlain ) {
+					// @phan-suppress-next-line SecurityCheck-DoubleEscaped
+					$text = htmlspecialchars( (string)$text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+				}
+
 				$headerList[] = $pr->getCanonicalLabel();
 				// $attributes['class'] is a CSS class built from the (stripped) column
 				// label; HtmlTable escapes attributes once. Phan over-taints it via the
@@ -390,10 +404,42 @@ class TableResultPrinter extends ResultPrinter {
 		} elseif ( !$isSubject && $sep === 'ol' && count( $values ) > 1 ) {
 			$html = '<ol><li>' . implode( '</li><li>', $values ) . '</li></ol>';
 		} else {
-			$html = implode( $this->params['sep'], $values );
+			$html = implode( $this->getValueSeparator( $outputMode ), $values );
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Returns the separator placed between the multiple values of a table cell.
+	 *
+	 * Only wiki output (inline `#ask`) is sanitised downstream by the parser,
+	 * so there the raw value is returned unchanged and legitimate wikitext
+	 * separators keep working. Every other output mode is emitted straight into
+	 * the response and bypasses the parser's tag sanitisation: HTML output
+	 * (`Special:Ask`), RAW output (`Special:Ask` with `request_type=raw`, used
+	 * by remote requests) and FILE output all land in an HTML context where a
+	 * user-supplied `sep` would allow HTML/script injection. In those modes the
+	 * value is escaped, allowlisting only the `<br>` line-break variants that
+	 * are the intended separator markup.
+	 *
+	 * If the renderer ever gains richer separator semantics, keep this
+	 * allowlist explicit rather than widening the allowed HTML surface.
+	 *
+	 * @since 7.2.0
+	 */
+	private function getValueSeparator( int $outputMode ): string {
+		$sep = $this->params['sep'];
+
+		if ( $outputMode === SMW_OUTPUT_WIKI ) {
+			return $sep;
+		}
+
+		if ( preg_match( '#^\s*<br\s*/?>\s*$#i', $sep ) ) {
+			return $sep;
+		}
+
+		return htmlspecialchars( $sep, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 	}
 
 	/**

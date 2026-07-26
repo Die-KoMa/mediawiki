@@ -7,6 +7,7 @@ use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\Setup;
 use SMW\SQLStore\SQLStore;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -80,6 +81,10 @@ class removeDuplicateEntities extends Maintenance {
 		$duplicateEntitiesDisposer = $maintenanceFactory->newDuplicateEntitiesDisposer(
 			$applicationFactory->getStore( SQLStore::class ),
 			[ $this, 'reportMessage' ]
+		);
+
+		$duplicateEntitiesDisposer->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
 		);
 
 		$this->reportMessage(

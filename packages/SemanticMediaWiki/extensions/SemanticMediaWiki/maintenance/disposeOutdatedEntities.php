@@ -9,6 +9,7 @@ use SMW\Maintenance\DataRebuilder\OutdatedDisposer;
 use SMW\Services\ServicesFactory as ApplicationFactory;
 use SMW\Setup;
 use SMW\Utils\CliMsgFormatter;
+use SMW\Utils\PeriodicStatsFlusher;
 
 /**
  * Load the required class
@@ -121,6 +122,10 @@ class disposeOutdatedEntities extends Maintenance {
 		);
 
 		$outdatedDisposer->setShard( $shard, $of );
+
+		$outdatedDisposer->setStatsFlusher(
+			PeriodicStatsFlusher::newFromGlobalState()
+		);
 
 		if ( $this->messageReporter === null ) {
 			$this->messageReporter = new CallbackMessageReporter( [ $this, 'reportMessage' ] );
