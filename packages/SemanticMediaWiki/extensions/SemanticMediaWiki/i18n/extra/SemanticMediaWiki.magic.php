@@ -106,6 +106,7 @@ $magicWords['de'] = [
 	'set' => [ 0, 'setze' ],
 	'set_recurring_event' => [ 0, 'setze_wiederholung' ],
 	'declare' => [ 0, 'deklariere' ],
+	'property_link' => [ 0, 'attributlink' ],
 	'SMW_NOFACTBOX' => [ 0, '__KEINE_FAKTENANZEIGE__', '__KEINEFAKTENANZEIGE__' ],
 	'SMW_SHOWFACTBOX' => [ 0, '__FAKTENANZEIGE__' ],
 ];
@@ -318,6 +319,7 @@ $magicWords['pt'] = [
 	'set' => [ 0, 'definir' ],
 	'set_recurring_event' => [ 0, 'definir_evento_recorrente' ],
 	'declare' => [ 0, 'declarar' ],
+	'property_link' => [ 0, 'link_de_propriedade' ],
 	'SMW_NOFACTBOX' => [ 0, '__SEMCAIXADEFATOS__' ],
 	'SMW_SHOWFACTBOX' => [ 0, '__EXIBIRCAIXADEFATOS__' ],
 ];
@@ -333,6 +335,7 @@ $magicWords['pt-br'] = [
 	'set' => [ 0, 'definir' ],
 	'set_recurring_event' => [ 0, 'definir_evento_recorrente' ],
 	'declare' => [ 0, 'declarar' ],
+	'property_link' => [ 0, 'link_de_propriedade' ],
 	'SMW_NOFACTBOX' => [ 0, '__SEMCAIXADEFATOS__' ],
 	'SMW_SHOWFACTBOX' => [ 0, '__EXIBIRCAIXADEFATOS__' ],
 ];
