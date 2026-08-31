@@ -61,7 +61,9 @@
                   --extension NativeSvgHandler \
                   --extension OpenGraphMeta \
                   --extension UserMerge \
-                  --extension Variables \
+                  --extension Variables
+		mediawiki-extdist \
+                  --mw-version master --output "$TMPDIR" \
                   --extension PageForms
 
                 cp "$TMPDIR"/*.tar.gz .

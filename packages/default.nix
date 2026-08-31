@@ -109,5 +109,5 @@ rec {
   OpenGraphMeta = extdistExtension ./OpenGraphMeta-${_meta.branch}.tar.gz;
   Description2 = extdistExtension ./Description2-${_meta.branch}.tar.gz;
   Interwiki = extdistExtension ./Interwiki-${_meta.branch}.tar.gz;
-  PageForms = extdistExtension ./PageForms-${_meta.branch}.tar.gz;
+  PageForms = extdistExtension ./PageForms-master.tar.gz;
 }
