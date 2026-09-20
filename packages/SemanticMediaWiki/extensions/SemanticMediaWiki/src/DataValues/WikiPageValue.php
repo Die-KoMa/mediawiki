@@ -564,6 +564,7 @@ class WikiPageValue extends DataValue {
 
 		// Should not normally happen, but anyway ...
 		$this->addErrorMsg( [ 'smw_notitle', $errArg ] );
+		return null;
 	}
 
 	/**
