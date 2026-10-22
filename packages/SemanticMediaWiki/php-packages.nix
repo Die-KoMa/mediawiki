@@ -75,10 +75,10 @@ let
     "mediawiki/semantic-media-wiki" = {
       targetDir = "";
       src = composerEnv.buildZipPackage {
-        name = "mediawiki-semantic-media-wiki-2ea382cee576933c0fa272d81d2d7a48f24e10ee";
+        name = "mediawiki-semantic-media-wiki-60637e855c294f3d223ddeef57af24338def7a8a";
         src = fetchurl {
-          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/2ea382cee576933c0fa272d81d2d7a48f24e10ee";
-          sha256 = "0xm0swknv585k11qd9rny4fpb6a0c7fnbh5kphby0990b0smz3k6";
+          url = "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/60637e855c294f3d223ddeef57af24338def7a8a";
+          sha256 = "1a11jb14kyy97gdigj18k1qaxbh17060mf10nbfsmqqasnk6nc6s";
         };
       };
     };

@@ -240,7 +240,9 @@ class SchemaContentFormatter {
 			$text = $codeHighlighter->highlight( $text );
 		} else {
 			if ( !$this->isYaml ) {
-				$text = json_encode( json_decode( $text ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+				$text = json_encode( json_decode( $text ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
+			} else {
+				$text = htmlspecialchars( $text );
 			}
 		}
 
@@ -263,12 +265,12 @@ class SchemaContentFormatter {
 		$tags = $schema->get( Schema::SCHEMA_TAG, [] );
 		if ( $tags !== [] ) {
 			foreach ( $tags as $k => $tag ) {
-				$tags[$k] = Infolink::newPropertySearchLink( $tag, 'Schema tag', $tag, '' )->getHtml();
+				$tags[$k] = Infolink::newPropertySearchLink( htmlspecialchars( $tag ), 'Schema tag', $tag, '' )->getHtml();
 			}
 		}
 
 		$type = $schema->get( 'type', '' );
-		$link = Infolink::newPropertySearchLink( $type, 'Schema type', $type, '' );
+		$link = Infolink::newPropertySearchLink( htmlspecialchars( $type ), 'Schema type', $type, '' );
 
 		$titleFactory = MediaWikiServices::getInstance()->getTitleFactory();
 

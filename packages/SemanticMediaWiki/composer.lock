@@ -553,16 +553,16 @@
         },
         {
             "name": "mediawiki/semantic-media-wiki",
-            "version": "7.3.0",
+            "version": "7.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SemanticMediaWiki/SemanticMediaWiki.git",
-                "reference": "2ea382cee576933c0fa272d81d2d7a48f24e10ee"
+                "reference": "60637e855c294f3d223ddeef57af24338def7a8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/2ea382cee576933c0fa272d81d2d7a48f24e10ee",
-                "reference": "2ea382cee576933c0fa272d81d2d7a48f24e10ee",
+                "url": "https://api.github.com/repos/SemanticMediaWiki/SemanticMediaWiki/zipball/60637e855c294f3d223ddeef57af24338def7a8a",
+                "reference": "60637e855c294f3d223ddeef57af24338def7a8a",
                 "shasum": ""
             },
             "require": {
@@ -651,7 +651,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-09-16T02:27:16+00:00"
+            "time": "2026-09-28T18:23:29+00:00"
         },
         {
             "name": "param-processor/param-processor",

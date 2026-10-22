@@ -25,9 +25,12 @@ class LegacyParserTest extends TestCase {
 
 	private $descriptionFactory;
 	private $queryParser;
+	private $originalMaxDepth;
 
 	protected function setUp(): void {
 		parent::setUp();
+
+		$this->originalMaxDepth = $GLOBALS['smwgQMaxDepth'] ?? null;
 
 		$this->descriptionFactory = new DescriptionFactory();
 
@@ -36,6 +39,16 @@ class LegacyParserTest extends TestCase {
 			new Tokenizer(),
 			new QueryToken()
 		);
+	}
+
+	protected function tearDown(): void {
+		if ( $this->originalMaxDepth === null ) {
+			unset( $GLOBALS['smwgQMaxDepth'] );
+		} else {
+			$GLOBALS['smwgQMaxDepth'] = $this->originalMaxDepth;
+		}
+
+		parent::tearDown();
 	}
 
 	public function testCanConstruct() {
@@ -342,6 +355,65 @@ class LegacyParserTest extends TestCase {
 		$this->assertEmpty(
 			$this->queryParser->getErrors()
 		);
+	}
+
+	public function testSubqueryNestingDeeperThanMaxDepthIsRejected() {
+		$this->setMaxQueryDepth( 1 );
+
+		$this->queryParser->getQueryDescription( '<q><q>[[Category:Foo]]</q></q>' );
+
+		$this->assertStringContainsString(
+			'smw-query-nesting-level-exceeded',
+			implode( ' ', $this->queryParser->getErrors() )
+		);
+	}
+
+	public function testSubqueryNestingWithinMaxDepthParsesToExpectedDescription() {
+		$this->setMaxQueryDepth( 1 );
+
+		$property = Property::newFromUserLabel( 'Born in' );
+		$property->setPropertyValueType( '_wpg' );
+
+		$conjunction = $this->descriptionFactory->newConjunction( [
+			$this->descriptionFactory->newClassDescription( new WikiPage( 'City', NS_CATEGORY ) ),
+			$this->descriptionFactory->newSomeProperty(
+				Property::newFromUserLabel( 'Located in' )->setPropertyValueType( '_wpg' ),
+				$this->descriptionFactory->newValueDescription(
+					new WikiPage( 'Outback', NS_MAIN ),
+					Property::newFromUserLabel( 'Located in' )->setPropertyValueType( '_wpg' ) )
+				)
+			]
+		);
+
+		$expected = $this->descriptionFactory->newSomeProperty(
+			$property,
+			$conjunction
+		);
+
+		$description = $this->queryParser->getQueryDescription(
+			'[[born in::<q>[[Category:City]] [[located in::Outback]]</q>]]'
+		);
+
+		$this->assertEquals( $expected, $description );
+		$this->assertEmpty( $this->queryParser->getErrors() );
+	}
+
+	public function testConjunctionsDoNotCountTowardSubqueryDepthLimit() {
+		$this->setMaxQueryDepth( 1 );
+
+		// One <q> level (permitted at depth 1) but several AND conjuncts. A
+		// conjunction stays at the same nesting level, so it must not consume
+		// depth; the query parses without a nesting error rather than being
+		// truncated.
+		$this->queryParser->getQueryDescription(
+			'[[Category:Foo]] AND <q>[[One::A]] AND [[Two::B]]</q>'
+		);
+
+		$this->assertEmpty( $this->queryParser->getErrors() );
+	}
+
+	private function setMaxQueryDepth( int $depth ): void {
+		$GLOBALS['smwgQMaxDepth'] = $depth;
 	}
 
 }

@@ -102,6 +102,184 @@ class SchemaContentFormatterTest extends TestCase {
 		);
 	}
 
+	public function testMarkupSchemaDescriptionDoesNotRenderAsRawTagInJsonDump() {
+		$schema = $this->newSchemaReturningEmptyValues();
+
+		$text = '{"type":"FOO","description":"<img src=x onerror=alert(1)>"}';
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$html = $instance->getText( $text, $schema, [] );
+
+		$this->assertStringNotContainsString(
+			'<img',
+			$html
+		);
+
+		$this->assertStringContainsString(
+			'onerror=alert(1)',
+			$html
+		);
+	}
+
+	public function testBenignSchemaDescriptionRoundTripsAsValidPrettyJson() {
+		$schema = $this->newSchemaReturningEmptyValues();
+
+		$text = '{"type":"FOO","description":"Just plain text"}';
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$html = $instance->getText( $text, $schema, [] );
+
+		$this->assertStringContainsString(
+			'"description": "Just plain text"',
+			$html
+		);
+	}
+
+	public function testMarkupSchemaDescriptionDoesNotRenderAsRawTagInYamlDump() {
+		$schema = $this->newSchemaReturningEmptyValues();
+
+		$text = "type: FOO\ndescription: \"<img src=x onerror=alert(1)>\"\n";
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$instance->isYaml( true );
+
+		$html = $instance->getText( $text, $schema, [] );
+
+		$this->assertStringNotContainsString(
+			'<img',
+			$html
+		);
+
+		$this->assertStringContainsString(
+			'onerror=alert(1)',
+			$html
+		);
+	}
+
+	public function testBenignYamlSchemaDescriptionIsShownAsText() {
+		$schema = $this->newSchemaReturningEmptyValues();
+
+		$text = "type: FOO\ndescription: Just plain text\n";
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$instance->isYaml( true );
+
+		$html = $instance->getText( $text, $schema, [] );
+
+		$this->assertStringContainsString(
+			'description: Just plain text',
+			$html
+		);
+	}
+
+	public function testMarkupSchemaTagRendersEscapedInSummaryTable() {
+		$schema = $this->newSchemaReturningTags( [ '<img src=x onerror=alert(1)>' ] );
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$html = $instance->getText( '...', $schema, [] );
+
+		$this->assertStringNotContainsString(
+			'<img src=x onerror=alert(1)>',
+			$html
+		);
+
+		$this->assertStringContainsString(
+			'&lt;img src=x onerror=alert(1)&gt;',
+			$html
+		);
+	}
+
+	public function testBenignSchemaTagRendersAsPropertySearchLink() {
+		$schema = $this->newSchemaReturningTags( [ 'Benign' ] );
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$html = $instance->getText( '...', $schema, [] );
+
+		$this->assertStringContainsString(
+			'SearchByProperty',
+			$html
+		);
+
+		$this->assertStringContainsString(
+			'>Benign</a>',
+			$html
+		);
+	}
+
+	public function testMarkupSchemaTypeRendersEscapedInSummaryTable() {
+		$schema = $this->newSchemaReturningType( '<img src=x onerror=alert(1)>' );
+
+		$instance = new SchemaContentFormatter(
+			$this->store
+		);
+
+		$html = $instance->getText( '...', $schema, [] );
+
+		$this->assertStringNotContainsString(
+			'<img src=x onerror=alert(1)>',
+			$html
+		);
+
+		$this->assertStringContainsString(
+			'&lt;img src=x onerror=alert(1)&gt;',
+			$html
+		);
+	}
+
+	private function newSchemaReturningTags( array $tags ) {
+		$schema = $this->getMockBuilder( Schema::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$schema->expects( $this->any() )
+			->method( 'get' )
+			->willReturnCallback( static fn ( $key ) => $key === Schema::SCHEMA_TAG ? $tags : '' );
+
+		return $schema;
+	}
+
+	private function newSchemaReturningType( string $type ) {
+		$schema = $this->getMockBuilder( Schema::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$schema->expects( $this->any() )
+			->method( 'get' )
+			->willReturnCallback( static fn ( $key, $default = '' ) => $key === 'type' ? $type : $default );
+
+		return $schema;
+	}
+
+	private function newSchemaReturningEmptyValues() {
+		$schema = $this->getMockBuilder( Schema::class )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$schema->expects( $this->any() )
+			->method( 'get' )
+			->willReturnCallback( [ $this, 'schema_get' ] );
+
+		return $schema;
+	}
+
 	public function testGetUsage_Empty() {
 		$schema = $this->getMockBuilder( Schema::class )
 			->disableOriginalConstructor()
